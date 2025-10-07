@@ -1,4 +1,4 @@
-package pt.isel.http
+package pt.isel
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -7,11 +7,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.domain.AuthenticatedUser
-import pt.isel.http.model.UserCreateTokenInputModel
-import pt.isel.http.model.UserCreateTokenOutputModel
-import pt.isel.http.model.UserHomeOutputModel
-import pt.isel.http.model.UserInput
-import pt.isel.service.UserAuthService
+import pt.isel.model.UserCreateTokenInputModel
+import pt.isel.model.UserCreateTokenOutputModel
+import pt.isel.model.UserHomeOutputModel
+import pt.isel.model.UserInput
 
 @RestController
 class UserController(

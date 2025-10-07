@@ -1,4 +1,4 @@
-package pt.isel.service
+package pt.isel
 
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
@@ -8,7 +8,6 @@ import pt.isel.domain.TokenEncoder
 import pt.isel.domain.TokenExternalInfo
 import pt.isel.domain.User
 import pt.isel.domain.UsersDomainConfig
-import pt.isel.RepositoryUser
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Duration

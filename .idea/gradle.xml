@@ -4,17 +4,16 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/PokerDice" />
-        <option name="gradleHome" value="" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/code/jvm/PokerDice" />
         <option name="gradleJvm" value="ms-21" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/PokerDice" />
-            <option value="$PROJECT_DIR$/PokerDice/app" />
-            <option value="$PROJECT_DIR$/PokerDice/domain" />
-            <option value="$PROJECT_DIR$/PokerDice/http" />
-            <option value="$PROJECT_DIR$/PokerDice/repo" />
-            <option value="$PROJECT_DIR$/PokerDice/service" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice/app" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice/domain" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice/http" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice/repo" />
+            <option value="$PROJECT_DIR$/code/jvm/PokerDice/service" />
           </set>
         </option>
       </GradleProjectSettings>

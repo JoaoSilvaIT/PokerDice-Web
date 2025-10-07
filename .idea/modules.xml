@@ -3,24 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/2025-daw-leic51d-2025-leic51d-06.iml" filepath="$PROJECT_DIR$/.idea/2025-daw-leic51d-2025-leic51d-06.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/PokerDice.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/PokerDice.app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/PokerDice.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/PokerDice.app.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/PokerDice.app.test.iml" filepath="$PROJECT_DIR$/.idea/modules/app/PokerDice.app.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.main.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.test.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/PokerDice.domain.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/http/PokerDice.http.iml" filepath="$PROJECT_DIR$/.idea/modules/http/PokerDice.http.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/http/PokerDice.http.main.iml" filepath="$PROJECT_DIR$/.idea/modules/http/PokerDice.http.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/http/PokerDice.http.test.iml" filepath="$PROJECT_DIR$/.idea/modules/http/PokerDice.http.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/PokerDice.main.iml" filepath="$PROJECT_DIR$/.idea/modules/PokerDice.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.iml" filepath="$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.main.iml" filepath="$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.test.iml" filepath="$PROJECT_DIR$/.idea/modules/repo/PokerDice.repo.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/service/PokerDice.service.iml" filepath="$PROJECT_DIR$/.idea/modules/service/PokerDice.service.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/service/PokerDice.service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/service/PokerDice.service.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/service/PokerDice.service.test.iml" filepath="$PROJECT_DIR$/.idea/modules/service/PokerDice.service.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/PokerDice.test.iml" filepath="$PROJECT_DIR$/.idea/modules/PokerDice.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/http/org.example.PokerDice.http.main.iml" filepath="$PROJECT_DIR$/.idea/modules/http/org.example.PokerDice.http.main.iml" />
     </modules>
   </component>
 </project>

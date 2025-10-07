@@ -1,4 +1,4 @@
-package pt.isel.http
+package pt.isel
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter

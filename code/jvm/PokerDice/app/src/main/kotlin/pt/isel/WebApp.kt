@@ -1,4 +1,4 @@
-package pt.isel.app
+package pt.isel
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -10,8 +10,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import pt.isel.domain.Sha256TokenEncoder
 import pt.isel.domain.UsersDomainConfig
-import pt.isel.http.AuthenticatedUserArgumentResolver
-import pt.isel.http.AuthenticationInterceptor
 import pt.isel.mem.RepositoryUserInMem
 import java.time.Clock
 import java.time.Duration

@@ -18,10 +18,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     api(project(":service"))
-
-    api("org.springframework.security:spring-security-core:6.5.5")
-
-    testImplementation(kotlin("test"))
 }
 
 tasks.test {

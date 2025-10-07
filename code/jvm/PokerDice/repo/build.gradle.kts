@@ -11,11 +11,6 @@ repositories {
 
 dependencies {
     api(project(":domain"))
-    testImplementation(kotlin("test"))
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    api("org.springframework.security:spring-security-core:6.5.5")
 }
 
 tasks.test {
