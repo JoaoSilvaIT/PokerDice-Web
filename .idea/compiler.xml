@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="org.example.PokerDice.http.main" target="21" />
+      <module name="PokerDice" target="21" />
+      <module name="PokerDice.app" target="21" />
+      <module name="PokerDice.app.main" target="21" />
+      <module name="PokerDice.app.test" target="21" />
+      <module name="PokerDice.domain" target="21" />
+      <module name="PokerDice.domain.main" target="21" />
+      <module name="PokerDice.domain.test" target="21" />
+      <module name="PokerDice.http" target="21" />
+      <module name="PokerDice.http.main" target="21" />
+      <module name="PokerDice.http.test" target="21" />
+      <module name="PokerDice.main" target="21" />
+      <module name="PokerDice.repo" target="21" />
+      <module name="PokerDice.repo.main" target="21" />
+      <module name="PokerDice.repo.test" target="21" />
+      <module name="PokerDice.service" target="21" />
+      <module name="PokerDice.service.main" target="21" />
+      <module name="PokerDice.service.test" target="21" />
+      <module name="PokerDice.test" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="PokerDice.app" options="-parameters" />
+      <module name="PokerDice.app.main" options="-parameters" />
+      <module name="PokerDice.app.test" options="-parameters" />
+      <module name="PokerDice.http" options="-parameters" />
+      <module name="PokerDice.http.main" options="-parameters" />
+      <module name="PokerDice.http.test" options="-parameters" />
+      <module name="org.example.PokerDice.http.main" options="-parameters" />
+    </option>
+  </component>
+</project>
