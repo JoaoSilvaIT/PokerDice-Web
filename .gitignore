@@ -1,0 +1,16 @@
+# Ignorar diretório de configurações do IntelliJ IDEA
+.idea/
+
+# Ignorar diretórios de build e Gradle temporários
+build/
+*/build/
+.gradle/
+
+# Ignorar ficheiros do sistema
+*.iml
+*.log
+.DS_Store
+
+# Ignorar ficheiros temporários do Windows e macOS
+Thumbs.db
+.vscode/

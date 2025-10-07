@@ -1,5 +1,6 @@
 plugins {
-    kotlin("jvm")
+    kotlin("jvm") version "1.9.25"
+    kotlin("plugin.spring") version "1.9.25"
 }
 
 group = "org.example"
@@ -11,6 +12,7 @@ repositories {
 
 dependencies {
     api(project(":domain"))
+    implementation("org.springframework.boot:spring-boot-starter-web:3.5.6")
 }
 
 tasks.test {

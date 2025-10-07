@@ -1,8 +1,6 @@
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.5.6"
-    id("io.spring.dependency-management") version "1.1.7"
+    kotlin("jvm") version "1.9.25"
+    kotlin("plugin.spring")
 }
 
 group = "org.example"
@@ -13,11 +11,11 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-
     api(project(":service"))
+    implementation("org.springframework.boot:spring-boot-starter-web:3.5.6")
+
+    // To get password encode
+    api("org.springframework.security:spring-security-core:6.5.5")
 }
 
 tasks.test {

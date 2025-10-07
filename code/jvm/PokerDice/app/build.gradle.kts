@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
@@ -16,10 +16,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    api(project(":domain"))
-    api(project(":service"))
-    api(project(":repo"))
-    api(project(":http"))
+
+    implementation(project(":domain"))
+    implementation(project(":service"))
+    implementation(project(":repo"))
+    implementation(project(":http"))
 }
 
 tasks.test {
