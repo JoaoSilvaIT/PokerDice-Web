@@ -6,7 +6,7 @@ enum class Face {
     QUEEN,
     JACK,
     TEN,
-    NINE
+    NINE,
 }
 
 enum class State {

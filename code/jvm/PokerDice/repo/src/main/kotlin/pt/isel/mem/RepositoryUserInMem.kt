@@ -1,10 +1,10 @@
 package pt.isel.mem
 
+import pt.isel.RepositoryUser
 import pt.isel.domain.PasswordValidationInfo
 import pt.isel.domain.Token
 import pt.isel.domain.TokenValidationInfo
 import pt.isel.domain.User
-import pt.isel.RepositoryUser
 import java.time.Instant
 
 class RepositoryUserInMem : RepositoryUser {

@@ -11,6 +11,7 @@ import pt.isel.model.UserCreateTokenInputModel
 import pt.isel.model.UserCreateTokenOutputModel
 import pt.isel.model.UserHomeOutputModel
 import pt.isel.model.UserInput
+import pt.isel.utilis.Either
 
 @RestController
 class UserController(
@@ -55,10 +56,23 @@ class UserController(
     fun token(
         @RequestBody input: UserCreateTokenInputModel,
     ): ResponseEntity<*> {
-        val tokenInfo = userService.createToken(input.email, input.password)
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(UserCreateTokenOutputModel(tokenInfo.tokenValue))
+        val result = userService.createToken(input.email, input.password)
+        return when (result) {
+            is Either.Right ->
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(UserCreateTokenOutputModel(result.value.tokenValue))
+            is Either.Left -> {
+                val status =
+                    when (result.value) {
+                        is AuthTokenError.BlankEmail, is AuthTokenError.BlankPassword -> HttpStatus.BAD_REQUEST
+                        is AuthTokenError.UserNotFoundOrInvalidCredentials -> HttpStatus.UNAUTHORIZED
+                    }
+                ResponseEntity
+                    .status(status)
+                    .body(mapOf("error" to (result.value::class.simpleName ?: "AuthError")))
+            }
+        }
     }
 
     /**
