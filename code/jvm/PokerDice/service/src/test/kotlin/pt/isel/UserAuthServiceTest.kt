@@ -74,32 +74,32 @@ class UserAuthServiceTest {
     }
 
     @Test
-    fun `createToken returns Left for blank inputs`() {
+    fun `createToken returns Failure for blank inputs`() {
         val (service, _, _) = newService()
-        assertTrue(service.createToken("", "p") is Either.Left)
-        assertTrue(service.createToken("a@b", "") is Either.Left)
+        assertTrue(service.createToken("", "p") is Either.Failure)
+        assertTrue(service.createToken("a@b", "") is Either.Failure)
     }
 
     @Test
-    fun `createToken returns Left for non-existing user or wrong password`() {
+    fun `createToken returns Failure for non-existing user or wrong password`() {
         val (service, _, _) = newService()
         // non-existing user
         val r1 = service.createToken("nobody@nowhere", "p")
-        assertTrue(r1 is Either.Left)
+        assertTrue(r1 is Either.Failure)
 
         // wrong password
         service.createUser("John", "john@doe.com", "secret")
         val r2 = service.createToken("john@doe.com", "bad")
-        assertTrue(r2 is Either.Left)
+        assertTrue(r2 is Either.Failure)
     }
 
     @Test
-    fun `createToken returns Right and token authenticates`() {
+    fun `createToken returns Success and token authenticates`() {
         val (service, _, _) = newService()
         service.createUser("John", "john@doe.com", "secret")
         val result = service.createToken("john@doe.com", "secret")
-        assertTrue(result is Either.Right)
-        result as Either.Right<TokenExternalInfo>
+        assertTrue(result is Either.Success)
+        result as Either.Success<TokenExternalInfo>
         assertNotNull(result.value.tokenValue)
 
         val user = service.getUserByToken(result.value.tokenValue)
@@ -119,7 +119,7 @@ class UserAuthServiceTest {
     fun `revokeToken returns true only when token existed`() {
         val (service, _, _) = newService()
         service.createUser("John", "john@doe.com", "secret")
-        val result = service.createToken("john@doe.com", "secret") as Either.Right<TokenExternalInfo>
+        val result = service.createToken("john@doe.com", "secret") as Either.Success<TokenExternalInfo>
         val tokenValue = result.value.tokenValue
 
         assertTrue(service.revokeToken(tokenValue))
@@ -139,7 +139,7 @@ class UserAuthServiceTest {
                 tokenRollingTtl = Duration.ofSeconds(100),
             )
         serviceAtT0.createUser("John", "john@doe.com", "secret")
-        val token = (serviceAtT0.createToken("john@doe.com", "secret") as Either.Right<TokenExternalInfo>).value.tokenValue
+        val token = (serviceAtT0.createToken("john@doe.com", "secret") as Either.Success<TokenExternalInfo>).value.tokenValue
 
         // Advance beyond absolute TTL
         val (serviceAtT0Plus11, _, _) =
@@ -165,7 +165,7 @@ class UserAuthServiceTest {
                 tokenRollingTtl = Duration.ofSeconds(5),
             )
         serviceAtT0.createUser("John", "john@doe.com", "secret")
-        val token = (serviceAtT0.createToken("john@doe.com", "secret") as Either.Right<TokenExternalInfo>).value.tokenValue
+        val token = (serviceAtT0.createToken("john@doe.com", "secret") as Either.Success<TokenExternalInfo>).value.tokenValue
 
         // Advance beyond rolling TTL
         val (serviceAtT0Plus6, _, _) =

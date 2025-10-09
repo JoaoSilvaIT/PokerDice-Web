@@ -16,15 +16,6 @@ import java.time.Instant
 import java.util.Base64.getUrlDecoder
 import java.util.Base64.getUrlEncoder
 
-sealed class AuthTokenError {
-    data object BlankEmail : AuthTokenError()
-
-    data object BlankPassword : AuthTokenError()
-
-    // Collapse not-found and invalid-credentials to avoid user enumeration
-    data object UserNotFoundOrInvalidCredentials : AuthTokenError()
-}
-
 @Component
 class UserAuthService(
     private val passwordEncoder: PasswordEncoder,
@@ -46,9 +37,6 @@ class UserAuthService(
             validationInfo = passwordEncoder.encode(password),
         )
 
-    /**
-     * Creates a new user after validating input and ensuring email uniqueness.
-     */
     fun createUser(
         name: String,
         email: String,
@@ -69,15 +57,15 @@ class UserAuthService(
         email: String,
         password: String,
     ): Either<AuthTokenError, TokenExternalInfo> { // Replaced by Either
-        if (email.isBlank()) return Either.Left(AuthTokenError.BlankEmail)
-        if (password.isBlank()) return Either.Left(AuthTokenError.BlankPassword)
+        if (email.isBlank()) return Either.Failure(AuthTokenError.BlankEmail)
+        if (password.isBlank()) return Either.Failure(AuthTokenError.BlankPassword)
 
         val user =
             repoUsers.findByEmail(email.trim())
-                ?: return Either.Left(AuthTokenError.UserNotFoundOrInvalidCredentials)
+                ?: return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
 
         if (!validatePassword(password, user.passwordValidation)) {
-            return Either.Left(AuthTokenError.UserNotFoundOrInvalidCredentials)
+            return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
         }
         val tokenValue = generateTokenValue()
         val now = clock.instant()
@@ -89,7 +77,7 @@ class UserAuthService(
                 lastUsedAt = now,
             )
         repoUsers.createToken(newToken, config.maxTokensPerUser)
-        return Either.Right(
+        return Either.Success(
             TokenExternalInfo(
                 tokenValue,
                 getTokenExpiration(newToken),

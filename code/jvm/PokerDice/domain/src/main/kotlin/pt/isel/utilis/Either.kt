@@ -1,18 +1,15 @@
 package pt.isel.utilis
 
-sealed class Either<out L, out R> {
-    data class Left<out L>(
+sealed class Either<out F, out S> {
+    data class Failure<out L>(
         val value: L,
     ) : Either<L, Nothing>()
 
-    data class Right<out R>(
+    data class Success<out R>(
         val value: R,
     ) : Either<Nothing, R>()
 }
 
-fun <R> success(value: R) = Either.Right(value)
+fun <S> success(value: S) = Either.Success(value)
 
-fun <L> failure(error: L) = Either.Left(error)
-
-typealias Success<S> = Either.Right<S>
-typealias Failure<F> = Either.Left<F>
+fun <F> failure(error: F) = Either.Failure(error)

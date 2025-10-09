@@ -58,11 +58,11 @@ class UserController(
     ): ResponseEntity<*> {
         val result = userService.createToken(input.email, input.password)
         return when (result) {
-            is Either.Right ->
+            is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
-            is Either.Left -> {
+            is Either.Failure -> {
                 val status =
                     when (result.value) {
                         is AuthTokenError.BlankEmail, is AuthTokenError.BlankPassword -> HttpStatus.BAD_REQUEST
