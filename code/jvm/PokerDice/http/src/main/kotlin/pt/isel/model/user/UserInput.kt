@@ -1,4 +1,4 @@
-package pt.isel.model.User
+package pt.isel.model.user
 
 data class UserInput(
     val name: String,

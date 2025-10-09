@@ -1,8 +1,13 @@
 package pt.isel
 
+import org.springframework.stereotype.Component
 import pt.isel.domain.Game
 import pt.isel.domain.Lobby
 
+/**
+ * Repository interface for managing games, extends the generic Repository
+ */
+@Component
 interface RepositoryGame : Repository<Game> {
     fun createGame(
         startedAt: Long,

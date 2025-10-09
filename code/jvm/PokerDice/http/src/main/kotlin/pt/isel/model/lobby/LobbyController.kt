@@ -1,4 +1,4 @@
-package pt.isel.model.Lobby
+package pt.isel.model.lobby
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

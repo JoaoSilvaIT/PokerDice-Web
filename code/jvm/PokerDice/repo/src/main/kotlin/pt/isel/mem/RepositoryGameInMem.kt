@@ -14,7 +14,7 @@ class RepositoryGameInMem : RepositoryGame {
         lobby: Lobby,
         numberOfRounds: Int,
     ): Game {
-        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING)
+        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
         games.add(game)
         return game
     }
@@ -23,7 +23,7 @@ class RepositoryGameInMem : RepositoryGame {
         game: Game,
         endedAt: Long,
     ): Game {
-        val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED)
+        val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED, null)
         return newGame
     }
 

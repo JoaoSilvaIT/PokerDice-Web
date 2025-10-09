@@ -1,4 +1,4 @@
-package pt.isel.model.Lobby
+package pt.isel.model.lobby
 
 import pt.isel.domain.Lobby
 import pt.isel.domain.User

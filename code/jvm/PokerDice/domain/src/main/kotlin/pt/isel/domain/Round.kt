@@ -1,7 +1,8 @@
 package pt.isel.domain
 
 data class Round(
-    val numberOfRounds: Int,
-    val game: Game,
+    // round number in the game
+    val number: Int,
     val turn: Turn,
+    val users: List<User>,
 )

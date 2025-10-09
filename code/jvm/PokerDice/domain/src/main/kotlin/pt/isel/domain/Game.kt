@@ -9,4 +9,5 @@ data class Game(
     val lobby: Lobby,
     val numberOfRounds: Int,
     val state: State,
+    val currentRound: Round?,
 )
