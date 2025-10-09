@@ -13,6 +13,8 @@ repositories {
 dependencies {
     api(project(":domain"))
     implementation("org.springframework.boot:spring-boot-starter-web:3.5.6")
+
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {

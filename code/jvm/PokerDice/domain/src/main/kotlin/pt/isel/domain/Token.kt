@@ -2,7 +2,7 @@ package pt.isel.domain
 
 import java.time.Instant
 
-class Token(
+data class Token(
     val tokenValidationInfo: TokenValidationInfo,
     val userId: Int,
     val createdAt: Instant,

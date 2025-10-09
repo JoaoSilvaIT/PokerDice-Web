@@ -15,3 +15,5 @@ enum class State {
     WAITING,
     FINISHED,
 }
+
+const val MAX_PLAYERS = 10
