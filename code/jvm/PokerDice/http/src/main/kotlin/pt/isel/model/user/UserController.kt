@@ -1,4 +1,4 @@
-package pt.isel.model.User
+package pt.isel.model.user
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

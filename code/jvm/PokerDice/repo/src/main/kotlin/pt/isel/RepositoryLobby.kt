@@ -1,8 +1,10 @@
 package pt.isel
 
+import org.springframework.stereotype.Component
 import pt.isel.domain.Lobby
 import pt.isel.domain.User
 
+@Component
 interface RepositoryLobby : Repository<Lobby> {
     fun createLobby(
         name: String,

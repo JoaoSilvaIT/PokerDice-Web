@@ -1,4 +1,4 @@
-package pt.isel.model.User
+package pt.isel.model.user
 
 data class UserHomeOutputModel(
     val id: Int,
