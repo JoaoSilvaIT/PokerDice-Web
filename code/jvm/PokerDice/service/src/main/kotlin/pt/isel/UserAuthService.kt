@@ -8,6 +8,7 @@ import pt.isel.domain.TokenEncoder
 import pt.isel.domain.TokenExternalInfo
 import pt.isel.domain.User
 import pt.isel.domain.UsersDomainConfig
+import pt.isel.utilis.Either
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Duration
@@ -36,30 +37,35 @@ class UserAuthService(
             validationInfo = passwordEncoder.encode(password),
         )
 
-    /**
-     * Still missing validation if given email already exists.
-     */
     fun createUser(
         name: String,
         email: String,
         password: String,
     ): User {
+        require(name.isNotBlank()) { "Name cannot be blank" }
+        require(email.isNotBlank()) { "Email cannot be blank" }
+        require(password.isNotBlank()) { "Password cannot be blank" }
+
+        val emailTrimmed = email.trim()
+        require(repoUsers.findByEmail(emailTrimmed) == null) { "Email already in use" }
+
         val passwordValidationInfo = createPasswordValidationInformation(password)
-        return repoUsers.createUser(name, email, passwordValidationInfo)
+        return repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
     }
 
     fun createToken(
         email: String,
         password: String,
-    ): TokenExternalInfo { // TO DO: Replace by Either
-        require(email.isNotBlank()) { "Email cannot be blank" } // Replace by Either.Failure
-        require(password.isNotBlank()) { "Password cannot be blank" } // Replace by Either.Failure
+    ): Either<AuthTokenError, TokenExternalInfo> { // Replaced by Either
+        if (email.isBlank()) return Either.Failure(AuthTokenError.BlankEmail)
+        if (password.isBlank()) return Either.Failure(AuthTokenError.BlankPassword)
 
-        val user = repoUsers.findByEmail(email)
-        requireNotNull(user) // Replace by Either.Failure
+        val user =
+            repoUsers.findByEmail(email.trim())
+                ?: return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
 
         if (!validatePassword(password, user.passwordValidation)) {
-            throw IllegalArgumentException("Passwords do not match") // Replace by Either.Failure
+            return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
         }
         val tokenValue = generateTokenValue()
         val now = clock.instant()
@@ -71,16 +77,18 @@ class UserAuthService(
                 lastUsedAt = now,
             )
         repoUsers.createToken(newToken, config.maxTokensPerUser)
-        return TokenExternalInfo(
-            tokenValue,
-            getTokenExpiration(newToken),
+        return Either.Success(
+            TokenExternalInfo(
+                tokenValue,
+                getTokenExpiration(newToken),
+            ),
         )
     }
 
     fun revokeToken(token: String): Boolean {
         val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
-        repoUsers.removeTokenByValidationInfo(tokenValidationInfo)
-        return true
+        val removed = repoUsers.removeTokenByValidationInfo(tokenValidationInfo)
+        return removed > 0
     }
 
     fun getUserByToken(token: String): User? {
@@ -111,8 +119,8 @@ class UserAuthService(
     ): Boolean {
         val now = clock.instant()
         return token.createdAt <= now &&
-            Duration.between(now, token.createdAt) <= config.tokenTtl &&
-            Duration.between(now, token.lastUsedAt) <= config.tokenRollingTtl
+            Duration.between(token.createdAt, now) <= config.tokenTtl &&
+            Duration.between(token.lastUsedAt, now) <= config.tokenRollingTtl
     }
 
     private fun generateTokenValue(): String =
