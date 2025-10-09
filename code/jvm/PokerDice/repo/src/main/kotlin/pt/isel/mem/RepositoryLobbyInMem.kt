@@ -10,7 +10,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
     private var lobby = 0
 
     override fun deleteLobbyByHost(host: User) {
-        lobbies.removeAll{ it.host == host }
+        lobbies.removeAll { it.host == host }
     }
 
     override fun createLobby(name: String, description: String, minPlayers: Int, host: User): Lobby {
@@ -18,6 +18,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
         lobbies.add(lobby)
         return lobby
     }
+
     override fun findByName(name: String) = lobbies.firstOrNull { it.name == name }
 
     override fun findById(id: Int) = lobbies.firstOrNull { it.id == id }
@@ -28,8 +29,13 @@ class RepositoryLobbyInMem : RepositoryLobby {
         lobbies.removeIf { it.id == entity.id }
         lobbies.add(entity)
     }
+
     override fun deleteById(id: Int) {
         lobbies.removeIf { it.id == id }
+    }
+
+    override fun deleteLobbyById(id: Int) {
+        deleteById(id)
     }
 
     override fun clear() = lobbies.clear()

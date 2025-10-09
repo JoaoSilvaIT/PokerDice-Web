@@ -1,4 +1,4 @@
-package pt.isel
+package pt.isel.model.User
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -6,12 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import pt.isel.UserAuthService
 import pt.isel.domain.AuthenticatedUser
-import pt.isel.model.UserCreateTokenInputModel
-import pt.isel.model.UserCreateTokenOutputModel
-import pt.isel.model.UserHomeOutputModel
-import pt.isel.model.UserInput
 import pt.isel.utilis.Either
+import pt.isel.errors.AuthTokenError
 
 @RestController
 class UserController(
@@ -56,8 +54,7 @@ class UserController(
     fun token(
         @RequestBody input: UserCreateTokenInputModel,
     ): ResponseEntity<*> {
-        val result = userService.createToken(input.email, input.password)
-        return when (result) {
+        return when (val result = userService.createToken(input.email, input.password)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)

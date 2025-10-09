@@ -1,4 +1,4 @@
-package pt.isel.model
+package pt.isel.model.User
 
 data class UserCreateTokenInputModel(
     val email: String,

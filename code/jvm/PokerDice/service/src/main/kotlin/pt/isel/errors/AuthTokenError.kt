@@ -1,4 +1,4 @@
-package pt.isel
+package pt.isel.errors
 
 sealed class AuthTokenError {
     data object BlankEmail : AuthTokenError()
