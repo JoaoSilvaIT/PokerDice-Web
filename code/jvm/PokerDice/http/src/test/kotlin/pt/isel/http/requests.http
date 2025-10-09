@@ -1,0 +1,54 @@
+
+### Create user
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "Paul Atreides",
+  "email": "paul@atreides.com",
+  "password": "muadib"
+}
+
+### Get token
+POST http://localhost:8080/api/users/token
+Content-Type: application/json
+
+{
+  "email": "paul@atreides.com",
+  "password": "muadib"
+}
+
+### Logout (requires valid token)
+POST http://localhost:8080/api/logout
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+
+### Get user info (requires valid token)
+GET http://localhost:8080/api/me
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+
+
+### Create lobby (requires valid token)
+POST http://localhost:8080/api/lobbies
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Content-Type: application/json
+
+{
+  "name": "My Poker Lobby",
+  "description": "Friendly poker game",
+  "minPlayers": 2
+}
+
+### List lobbies
+GET http://localhost:8080/api/lobbies
+
+### Join lobby (requires valid token)
+POST http://localhost:8080/api/lobbies/0/join
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+
+### Leave lobby (requires valid token)
+POST http://localhost:8080/api/lobbies/0/leave
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+
+### Close lobby (requires valid token)
+DELETE http://localhost:8080/api/lobbies/1
+Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
