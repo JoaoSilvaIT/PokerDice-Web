@@ -12,7 +12,7 @@ import pt.isel.domain.Sha256TokenEncoder
 import pt.isel.domain.TokenExternalInfo
 import pt.isel.domain.UsersDomainConfig
 import pt.isel.mem.RepositoryUserInMem
-import pt.isel.utilis.Either
+import pt.isel.utils.Either
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant

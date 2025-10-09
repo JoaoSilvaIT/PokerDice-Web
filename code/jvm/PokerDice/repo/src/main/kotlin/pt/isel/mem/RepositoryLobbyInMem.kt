@@ -3,7 +3,7 @@ package pt.isel.mem
 import pt.isel.RepositoryLobby
 import pt.isel.domain.Lobby
 import pt.isel.domain.User
-import pt.isel.utilis.MAX_PLAYERS
+import pt.isel.utils.MAX_PLAYERS
 
 class RepositoryLobbyInMem : RepositoryLobby {
     private val lobbies = mutableListOf<Lobby>()
@@ -13,7 +13,12 @@ class RepositoryLobbyInMem : RepositoryLobby {
         lobbies.removeAll { it.host == host }
     }
 
-    override fun createLobby(name: String, description: String, minPlayers: Int, host: User): Lobby {
+    override fun createLobby(
+        name: String,
+        description: String,
+        minPlayers: Int,
+        host: User,
+    ): Lobby {
         val lobby = Lobby(lobby++, name, description, minPlayers, MAX_PLAYERS, listOf(host), host)
         lobbies.add(lobby)
         return lobby

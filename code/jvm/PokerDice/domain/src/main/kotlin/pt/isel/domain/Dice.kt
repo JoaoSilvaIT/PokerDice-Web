@@ -1,6 +1,6 @@
 package pt.isel.domain
 
-import pt.isel.utilis.Face
+import pt.isel.utils.Face
 
 data class Dice(
     val face: Face,

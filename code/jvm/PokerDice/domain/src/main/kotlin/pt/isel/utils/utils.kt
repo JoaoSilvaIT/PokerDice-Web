@@ -1,4 +1,4 @@
-package pt.isel.utilis
+package pt.isel.utils
 
 enum class Face {
     ACE,

@@ -2,7 +2,6 @@ package pt.isel
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import pt.isel.domain.Lobby
@@ -10,7 +9,7 @@ import pt.isel.domain.PasswordValidationInfo
 import pt.isel.domain.User
 import pt.isel.errors.LobbyError
 import pt.isel.mem.RepositoryLobbyInMem
-import pt.isel.utilis.Either
+import pt.isel.utils.Either
 
 class LobbyServiceTest {
     private fun newService(): Pair<LobbyService, RepositoryLobbyInMem> {

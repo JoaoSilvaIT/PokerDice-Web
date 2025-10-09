@@ -3,19 +3,26 @@ package pt.isel.mem
 import pt.isel.RepositoryGame
 import pt.isel.domain.Game
 import pt.isel.domain.Lobby
-import pt.isel.utilis.State
+import pt.isel.utils.State
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
     private var game = 0
 
-    override fun createGame(startedAt: Long, lobby: Lobby, numberOfRounds: Int): Game {
+    override fun createGame(
+        startedAt: Long,
+        lobby: Lobby,
+        numberOfRounds: Int,
+    ): Game {
         val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING)
         games.add(game)
         return game
     }
 
-    override fun endGame(game: Game, endedAt: Long): Game {
+    override fun endGame(
+        game: Game,
+        endedAt: Long,
+    ): Game {
         val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED)
         return newGame
     }

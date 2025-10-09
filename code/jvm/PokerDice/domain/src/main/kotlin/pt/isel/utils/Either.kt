@@ -1,4 +1,4 @@
-package pt.isel.utilis
+package pt.isel.utils
 
 sealed class Either<out F, out S> {
     data class Failure<out L>(

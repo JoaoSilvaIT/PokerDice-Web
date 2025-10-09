@@ -3,10 +3,10 @@ package pt.isel
 import org.springframework.stereotype.Component
 import pt.isel.domain.Lobby
 import pt.isel.domain.User
-import pt.isel.utilis.Either
-import pt.isel.utilis.failure
-import pt.isel.utilis.success
 import pt.isel.errors.LobbyError
+import pt.isel.utils.Either
+import pt.isel.utils.failure
+import pt.isel.utils.success
 
 @Component
 class LobbyService(
@@ -27,10 +27,12 @@ class LobbyService(
         return success(repoLobby.createLobby(trimmedName, trimmedDesc, minPlayers, host))
     }
 
-    fun listVisibleLobbies(): List<Lobby> =
-        repoLobby.findAll().filter { it.users.size < it.maxPlayers }
+    fun listVisibleLobbies(): List<Lobby> = repoLobby.findAll().filter { it.users.size < it.maxPlayers }
 
-    fun joinLobby(lobbyId: Int, user: User): Either<LobbyError, Lobby> {
+    fun joinLobby(
+        lobbyId: Int,
+        user: User,
+    ): Either<LobbyError, Lobby> {
         val lobby = repoLobby.findById(lobbyId) ?: return Either.Failure(LobbyError.LobbyNotFound)
         if (lobby.users.size >= lobby.maxPlayers) return Either.Failure(LobbyError.LobbyFull)
         if (lobby.users.any { it.id == user.id }) return success(lobby) // already joined
@@ -39,7 +41,10 @@ class LobbyService(
         return success(updated)
     }
 
-    fun leaveLobby(lobbyId: Int, user: User): Either<LobbyError, Boolean> {
+    fun leaveLobby(
+        lobbyId: Int,
+        user: User,
+    ): Either<LobbyError, Boolean> {
         val lobby = repoLobby.findById(lobbyId) ?: return Either.Failure(LobbyError.LobbyNotFound)
         if (lobby.host.id == user.id) {
             // Host leaves before match starts: close lobby
@@ -51,7 +56,10 @@ class LobbyService(
         return success(false)
     }
 
-    fun closeLobby(lobbyId: Int, host: User): Either<LobbyError, Unit> {
+    fun closeLobby(
+        lobbyId: Int,
+        host: User,
+    ): Either<LobbyError, Unit> {
         val lobby = repoLobby.findById(lobbyId) ?: return Either.Failure(LobbyError.LobbyNotFound)
         if (lobby.host.id != host.id) return Either.Failure(LobbyError.NotHost)
         repoLobby.deleteLobbyById(lobbyId)

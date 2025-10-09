@@ -8,8 +8,8 @@ import pt.isel.domain.TokenEncoder
 import pt.isel.domain.TokenExternalInfo
 import pt.isel.domain.User
 import pt.isel.domain.UsersDomainConfig
-import pt.isel.utilis.Either
 import pt.isel.errors.AuthTokenError
+import pt.isel.utils.Either
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Duration

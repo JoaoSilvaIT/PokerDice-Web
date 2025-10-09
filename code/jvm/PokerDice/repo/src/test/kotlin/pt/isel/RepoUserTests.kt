@@ -1,7 +1,8 @@
-package pt.isel.mem
+package pt.isel
 
 import org.junit.jupiter.api.*
 import pt.isel.domain.*
+import pt.isel.mem.RepositoryUserInMem
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -9,7 +10,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RepositoryUserInMemTest {
-
     private lateinit var repo: RepositoryUserInMem
 
     @BeforeEach
@@ -113,5 +113,4 @@ class RepositoryUserInMemTest {
         assertTrue(repo.findAll().isEmpty())
         assertNull(repo.getTokenByTokenValidationInfo(TokenValidationInfo("t")))
     }
-
 }

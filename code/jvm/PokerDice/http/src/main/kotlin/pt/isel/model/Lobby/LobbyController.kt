@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.LobbyService
 import pt.isel.domain.AuthenticatedUser
-import pt.isel.utilis.Either
 import pt.isel.errors.LobbyError
+import pt.isel.utils.Either
 
 @RestController
 class LobbyController(
@@ -78,12 +78,13 @@ class LobbyController(
     }
 
     private fun errorResponse(error: LobbyError): ResponseEntity<*> {
-        val status = when (error) {
-            LobbyError.BlankName, LobbyError.MinPlayersTooLow -> HttpStatus.BAD_REQUEST
-            LobbyError.NameAlreadyUsed, LobbyError.LobbyFull -> HttpStatus.CONFLICT
-            LobbyError.LobbyNotFound -> HttpStatus.NOT_FOUND
-            LobbyError.NotHost -> HttpStatus.FORBIDDEN
-        }
+        val status =
+            when (error) {
+                LobbyError.BlankName, LobbyError.MinPlayersTooLow -> HttpStatus.BAD_REQUEST
+                LobbyError.NameAlreadyUsed, LobbyError.LobbyFull -> HttpStatus.CONFLICT
+                LobbyError.LobbyNotFound -> HttpStatus.NOT_FOUND
+                LobbyError.NotHost -> HttpStatus.FORBIDDEN
+            }
         return ResponseEntity
             .status(status)
             .body(mapOf("error" to (error::class.simpleName ?: "LobbyError")))

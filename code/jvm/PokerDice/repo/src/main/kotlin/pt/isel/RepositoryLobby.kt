@@ -8,8 +8,8 @@ interface RepositoryLobby : Repository<Lobby> {
         name: String,
         description: String,
         minPlayers: Int,
-        host : User
-    ) : Lobby
+        host: User,
+    ): Lobby
 
     fun findByName(name: String): Lobby?
 
