@@ -21,4 +21,6 @@ interface RepositoryGame : Repository<Game> {
         game: Game,
         endedAt: Long,
     ): Game
+
+    fun nextRound(game: Game): Game
 }

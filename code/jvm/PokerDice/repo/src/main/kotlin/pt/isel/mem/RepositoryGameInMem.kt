@@ -3,7 +3,10 @@ package pt.isel.mem
 import pt.isel.RepositoryGame
 import pt.isel.domain.Game
 import pt.isel.domain.Lobby
+import pt.isel.domain.Round
+import pt.isel.domain.Turn
 import pt.isel.utils.State
+import kotlin.math.round
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
@@ -50,5 +53,25 @@ class RepositoryGameInMem : RepositoryGame {
 
     override fun findById(id: Int): Game? {
         return games.find { it.gid == id }
+    }
+
+    override fun nextRound(game: Game): Game {
+
+        val users = game.lobby.users
+        val nextRoundNr = (game.currentRound?.number ?: 0) + 1
+        val firstPlayerIndex = (nextRoundNr - 1) % users.size
+
+        val newRound = Round(
+            nextRoundNr,
+            Turn(users[firstPlayerIndex], emptyList()),
+            users
+        )
+        val updatedGame = game.copy(currentRound = newRound)
+        val index = games.indexOfFirst { it.gid == game.gid }
+        if (index != -1) {
+            games[index] = updatedGame
+        }
+
+        return updatedGame
     }
 }
