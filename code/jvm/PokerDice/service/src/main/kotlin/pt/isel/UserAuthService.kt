@@ -10,6 +10,8 @@ import pt.isel.domain.User
 import pt.isel.domain.UsersDomainConfig
 import pt.isel.errors.AuthTokenError
 import pt.isel.utils.Either
+import pt.isel.utils.failure
+import pt.isel.utils.success
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Duration
@@ -58,15 +60,15 @@ class UserAuthService(
         email: String,
         password: String,
     ): Either<AuthTokenError, TokenExternalInfo> { // Replaced by Either
-        if (email.isBlank()) return Either.Failure(AuthTokenError.BlankEmail)
-        if (password.isBlank()) return Either.Failure(AuthTokenError.BlankPassword)
+        if (email.isBlank()) return failure(AuthTokenError.BlankEmail)
+        if (password.isBlank()) return failure(AuthTokenError.BlankPassword)
 
         val user =
             repoUsers.findByEmail(email.trim())
-                ?: return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+                ?: return failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
 
         if (!validatePassword(password, user.passwordValidation)) {
-            return Either.Failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+            return failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
         }
         val tokenValue = generateTokenValue()
         val now = clock.instant()
@@ -78,7 +80,7 @@ class UserAuthService(
                 lastUsedAt = now,
             )
         repoUsers.createToken(newToken, config.maxTokensPerUser)
-        return Either.Success(
+        return success(
             TokenExternalInfo(
                 tokenValue,
                 getTokenExpiration(newToken),

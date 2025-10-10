@@ -15,16 +15,6 @@ import pt.isel.utils.Either
 class UserController(
     private val userService: UserAuthService,
 ) {
-    /**
-     * Try with:
-     curl -i -X POST http://localhost:8080/api/users \
-     -H "Content-Type: application/json" \
-     -d '{
-     "name": "Paul Atreides",
-     "email": "paul@atreides.com",
-     "password": "muadib"
-     }'
-     */
     @PostMapping("/api/users")
     fun createUser(
         @RequestBody userInput: UserInput,
@@ -41,15 +31,6 @@ class UserController(
             ).build<Unit>()
     }
 
-    /**
-     * Try with:
-     curl -i -X POST http://localhost:8080/api/users/token \
-     -H "Content-Type: application/json" \
-     -d '{
-     "email": "paul@atreides.com",
-     "password": "muadib"
-     }'
-     */
     @PostMapping("/api/users/token")
     fun token(
         @RequestBody input: UserCreateTokenInputModel,
@@ -59,6 +40,7 @@ class UserController(
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
+
             is Either.Failure -> {
                 val status =
                     when (result.value) {
@@ -72,31 +54,11 @@ class UserController(
         }
     }
 
-    /**
-     * This handler requires an authenticated user.
-     * The {@link AuthenticatedUser} is resolved by an ArgumentResolver
-     * using data extracted from the HTTP request headers.
-     * Try:
-
-     curl -i -X POST http://localhost:8080/api/logout
-     -H "Authorization: Bearer lCZVAG-_OZx0Fq52MllDklc706vnLjGPWaMwRXKHJTM="
-
-     */
     @PostMapping("api/logout")
     fun logout(user: AuthenticatedUser) {
         userService.revokeToken(user.token)
     }
 
-    /**
-     * This handler requires an authenticated user.
-     * The {@link AuthenticatedUser} is resolved by an ArgumentResolver
-     * using data extracted from the HTTP request headers.
-     * Try:
-
-     curl -i http://localhost:8080/api/me \
-     -H "Authorization: Bearer lCZVAG-_OZx0Fq52MllDklc706vnLjGPWaMwRXKHJTM="
-
-     */
     @GetMapping("/api/me")
     fun userHome(userAuthenticatedUser: AuthenticatedUser): ResponseEntity<UserHomeOutputModel> =
         ResponseEntity

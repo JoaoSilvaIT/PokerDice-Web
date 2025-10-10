@@ -9,7 +9,17 @@ Content-Type: application/json
   "password": "muadib"
 }
 
-### Get token
+### Create a Second User
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "Duncan Idaho",
+  "email": "duncan@idaho.com",
+  "password": "swordmaster"
+}
+
+### Get token       8qvJdMP48JXyjTjx0Me4nPo7CWBYgX6iNd9JymFDoSM=            AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
 POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
@@ -18,37 +28,52 @@ Content-Type: application/json
   "password": "muadib"
 }
 
+
+### Get token for second user
+
+POST http://localhost:8080/api/users/token
+Content-Type: application/json
+
+{
+    "email": "duncan@idaho.com",
+    "password": "swordmaster"
+}
+
+
 ### Logout (requires valid token)
 POST http://localhost:8080/api/logout
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer Xbn-boARybQ4QjzhNfjgJ5jqUVuCKvjS4HBbIjL15rE=
 Content-Type: application/json
 
 {
-  "name": "My Poker Lobby",
-  "description": "Friendly poker game",
+  "name": "Dune Champions",
+  "description": "Desert warriors",
+  "maxPlayers": 6,
   "minPlayers": 2
 }
 
 ### List lobbies
 GET http://localhost:8080/api/lobbies
+//When the same Host creates two lobbies, both stay open resulting in two hobbies being listed with the same player(the host)
+
 
 ### Join lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/0/join
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer Xbn-boARybQ4QjzhNfjgJ5jqUVuCKvjS4HBbIjL15rE= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/0/leave
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer Xbn-boARybQ4QjzhNfjgJ5jqUVuCKvjS4HBbIjL15rE=// Leaving the loby as an host reutunrs "closed = true", and closes the lobby
 
 ### Close lobby (requires valid token)
 DELETE http://localhost:8080/api/lobbies/1
-Authorization: Bearer i82qIq9LFCQctfPkbFGz0ij9Z_WNrR7LBe6p8_VTbcQ=
+Authorization: Bearer 1mim21MKqELA5niHec6dsvtji8hY3gA8W0uZHuv2ioA=  // Returns 204

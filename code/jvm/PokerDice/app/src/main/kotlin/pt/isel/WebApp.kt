@@ -13,7 +13,6 @@ import pt.isel.domain.UsersDomainConfig
 import pt.isel.mem.RepositoryGameInMem
 import pt.isel.mem.RepositoryLobbyInMem
 import pt.isel.mem.RepositoryUserInMem
-import pt.isel.mem.RepositoryGameInMem
 import java.time.Clock
 import java.time.Duration
 

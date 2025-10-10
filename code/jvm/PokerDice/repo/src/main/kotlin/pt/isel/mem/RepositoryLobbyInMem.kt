@@ -3,7 +3,6 @@ package pt.isel.mem
 import pt.isel.RepositoryLobby
 import pt.isel.domain.Lobby
 import pt.isel.domain.User
-import pt.isel.utils.MAX_PLAYERS
 
 class RepositoryLobbyInMem : RepositoryLobby {
     private val lobbies = mutableListOf<Lobby>()
@@ -17,9 +16,10 @@ class RepositoryLobbyInMem : RepositoryLobby {
         name: String,
         description: String,
         minPlayers: Int,
+        maxPlayers: Int,
         host: User,
     ): Lobby {
-        val lobby = Lobby(lobby++, name, description, minPlayers, MAX_PLAYERS, listOf(host), host)
+        val lobby = Lobby(lobby++, name, description, minPlayers, maxPlayers, listOf(host), host)
         lobbies.add(lobby)
         return lobby
     }

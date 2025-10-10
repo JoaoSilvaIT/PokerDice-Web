@@ -22,20 +22,47 @@ class LobbyController(
         user: AuthenticatedUser,
         @RequestBody input: LobbyCreateInputModel,
     ): ResponseEntity<*> {
-        val result = lobbyService.createLobby(user.user, input.name, input.description, input.minPlayers)
+        val result = lobbyService.createLobby(user.user, input.name, input.description, input.minPlayers, input.maxPlayers)
         return when (result) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
                     .header("Location", "/api/lobbies/${result.value.id}")
-                    .body(result.value.toOutputModel())
+                    .body(
+                        LobbyOutputModel(
+                            id = result.value.id,
+                            name = result.value.name,
+                            description = result.value.description,
+                            minPlayers = result.value.minPlayers,
+                            maxPlayers = result.value.maxPlayers,
+                            players =
+                                result.value.users.map {
+                                    LobbyPlayerOutputModel(it.id, it.name, it.email)
+                                },
+                            hostId = result.value.host.id,
+                        ),
+                    )
             is Either.Failure -> errorResponse(result.value)
         }
     }
 
     @GetMapping("/api/lobbies")
     fun list(): ResponseEntity<LobbyListOutputModel> {
-        val lobbies = lobbyService.listVisibleLobbies().map { it.toOutputModel() }
+        val lobbies =
+            lobbyService.listVisibleLobbies().map { lobby ->
+                LobbyOutputModel(
+                    id = lobby.id,
+                    name = lobby.name,
+                    description = lobby.description,
+                    minPlayers = lobby.minPlayers,
+                    maxPlayers = lobby.maxPlayers,
+                    players =
+                        lobby.users.map {
+                            LobbyPlayerOutputModel(it.id, it.name, it.email)
+                        },
+                    hostId = lobby.host.id,
+                )
+            }
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(LobbyListOutputModel(lobbies))
@@ -46,9 +73,22 @@ class LobbyController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        val result = lobbyService.joinLobby(id, user.user)
-        return when (result) {
-            is Either.Success -> ResponseEntity.status(HttpStatus.OK).body(result.value.toOutputModel())
+        return when (val result = lobbyService.joinLobby(id, user.user)) {
+            is Either.Success ->
+                ResponseEntity.status(HttpStatus.OK).body(
+                    LobbyOutputModel(
+                        id = result.value.id,
+                        name = result.value.name,
+                        description = result.value.description,
+                        minPlayers = result.value.minPlayers,
+                        maxPlayers = result.value.maxPlayers,
+                        players =
+                            result.value.users.map {
+                                LobbyPlayerOutputModel(it.id, it.name, it.email)
+                            },
+                        hostId = result.value.host.id,
+                    ),
+                )
             is Either.Failure -> errorResponse(result.value)
         }
     }
@@ -58,8 +98,7 @@ class LobbyController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        val result = lobbyService.leaveLobby(id, user.user)
-        return when (result) {
+        return when (val result = lobbyService.leaveLobby(id, user.user)) {
             is Either.Success -> ResponseEntity.status(HttpStatus.OK).body(mapOf("closed" to result.value))
             is Either.Failure -> errorResponse(result.value)
         }
@@ -70,8 +109,7 @@ class LobbyController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        val result = lobbyService.closeLobby(id, user.user)
-        return when (result) {
+        return when (val result = lobbyService.closeLobby(id, user.user)) {
             is Either.Success -> ResponseEntity.status(HttpStatus.NO_CONTENT).build<Unit>()
             is Either.Failure -> errorResponse(result.value)
         }
@@ -84,6 +122,9 @@ class LobbyController(
                 LobbyError.NameAlreadyUsed, LobbyError.LobbyFull -> HttpStatus.CONFLICT
                 LobbyError.LobbyNotFound -> HttpStatus.NOT_FOUND
                 LobbyError.NotHost -> HttpStatus.FORBIDDEN
+                LobbyError.UserAlreadyInLobby -> TODO()
+                LobbyError.UserNotInLobby -> TODO()
+                LobbyError.MaxPlayersTooHigh -> TODO()
             }
         return ResponseEntity
             .status(status)

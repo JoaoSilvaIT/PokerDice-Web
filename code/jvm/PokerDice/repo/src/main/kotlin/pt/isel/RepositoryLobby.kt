@@ -10,6 +10,7 @@ interface RepositoryLobby : Repository<Lobby> {
         name: String,
         description: String,
         minPlayers: Int,
+        maxPlayers: Int,
         host: User,
     ): Lobby
 

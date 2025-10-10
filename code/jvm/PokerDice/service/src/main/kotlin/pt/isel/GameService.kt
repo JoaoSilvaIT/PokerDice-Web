@@ -15,7 +15,7 @@ class GameService(
     fun createGame(
         startedAt: Long,
         lobby: Lobby,
-        numberOfRounds: Int
+        numberOfRounds: Int,
     ): Either<GameError, Game> {
         if (numberOfRounds < 1) return failure(GameError.InvalidNumberOfRounds)
         if (repoGame.findByLobby(lobby) != null) return failure(GameError.InvalidLobby)
@@ -23,5 +23,4 @@ class GameService(
 
         return success(repoGame.createGame(startedAt, lobby, numberOfRounds))
     }
-
 }

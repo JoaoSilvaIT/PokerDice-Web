@@ -5,6 +5,8 @@ sealed class LobbyError {
 
     data object MinPlayersTooLow : LobbyError()
 
+    data object MaxPlayersTooHigh : LobbyError()
+
     data object NameAlreadyUsed : LobbyError()
 
     data object LobbyNotFound : LobbyError()
@@ -12,4 +14,8 @@ sealed class LobbyError {
     data object LobbyFull : LobbyError()
 
     data object NotHost : LobbyError()
+
+    data object UserNotInLobby : LobbyError()
+
+    data object UserAlreadyInLobby : LobbyError()
 }

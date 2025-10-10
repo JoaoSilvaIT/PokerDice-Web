@@ -28,7 +28,7 @@ class LobbyServiceTest {
     fun `createLobby fails on blank name`() {
         val (service, _) = newService()
         val host = user(1)
-        val result = service.createLobby(host, " ", "desc", minPlayers = 2)
+        val result = service.createLobby(host, " ", "desc", maxPlayers = 10, minPlayers = 2)
         assertTrue(result is Either.Failure)
         assertTrue((result as Either.Failure<LobbyError>).value is LobbyError.BlankName)
     }
@@ -37,7 +37,7 @@ class LobbyServiceTest {
     fun `createLobby fails when minPlayers too low`() {
         val (service, _) = newService()
         val host = user(1)
-        val result = service.createLobby(host, "Lobby", "desc", minPlayers = 1)
+        val result = service.createLobby(host, "Lobby", "desc", maxPlayers = 10, minPlayers = 1)
         assertTrue(result is Either.Failure)
         assertTrue((result as Either.Failure<LobbyError>).value is LobbyError.MinPlayersTooLow)
     }
@@ -46,10 +46,10 @@ class LobbyServiceTest {
     fun `createLobby fails when name already used`() {
         val (service, _) = newService()
         val host = user(1)
-        val ok = service.createLobby(host, "Poker Room", "desc", minPlayers = 2)
+        val ok = service.createLobby(host, "Poker Room", "desc", maxPlayers = 2, minPlayers = 2)
         assertTrue(ok is Either.Success)
 
-        val dup = service.createLobby(host, "Poker Room", "desc 2", minPlayers = 2)
+        val dup = service.createLobby(host, "Poker Room", "desc 2", maxPlayers = 2, minPlayers = 2)
         assertTrue(dup is Either.Failure)
         assertTrue((dup as Either.Failure<LobbyError>).value is LobbyError.NameAlreadyUsed)
     }
@@ -58,7 +58,7 @@ class LobbyServiceTest {
     fun `createLobby success trims fields and includes host as player`() {
         val (service, _) = newService()
         val host = user(42, name = "  Alice  ")
-        val created = service.createLobby(host, "  My Lobby  ", "  Something  ", minPlayers = 2)
+        val created = service.createLobby(host, "  My Lobby  ", "  Something  ", maxPlayers = 2, minPlayers = 2)
         assertTrue(created is Either.Success)
         created as Either.Success<Lobby>
         assertEquals("My Lobby", created.value.name)
@@ -72,8 +72,8 @@ class LobbyServiceTest {
     fun `listVisibleLobbies filters out full lobbies`() {
         val (service, repo) = newService()
         val host = user(1)
-        val l1 = (service.createLobby(host, "L1", "", 2) as Either.Success<Lobby>).value
-        val l2 = (service.createLobby(host, "L2", "", 2) as Either.Success<Lobby>).value
+        val l1 = (service.createLobby(host, "L1", "", 2, 10) as Either.Success<Lobby>).value
+        val l2 = (service.createLobby(host, "L2", "", 2, 10) as Either.Success<Lobby>).value
 
         // Make L2 full by setting users to maxPlayers
         val fullUsers = (0 until l2.maxPlayers).map { user(100 + it) }
@@ -94,10 +94,10 @@ class LobbyServiceTest {
     }
 
     @Test
-    fun `joinLobby adds user and is idempotent`() {
+    fun `joinLobby adds user and fails on duplicate join`() {
         val (service, repo) = newService()
         val host = user(1)
-        val created = (service.createLobby(host, "Joinable", "", 2) as Either.Success<Lobby>).value
+        val created = (service.createLobby(host, "Joinable", "", 2, 10) as Either.Success<Lobby>).value
         val bob = user(2)
 
         val r1 = service.joinLobby(created.id, bob)
@@ -105,23 +105,22 @@ class LobbyServiceTest {
         val lobby1 = (r1 as Either.Success<Lobby>).value
         assertTrue(lobby1.users.any { it.id == bob.id })
 
-        // second join should succeed and not duplicate
+        // second join should fail with UserAlreadyInLobby
         val r2 = service.joinLobby(created.id, bob)
-        assertTrue(r2 is Either.Success)
-        val lobby2 = (r2 as Either.Success<Lobby>).value
-        val count = lobby2.users.count { it.id == bob.id }
-        assertEquals(1, count)
+        assertTrue(r2 is Either.Failure)
+        assertTrue((r2 as Either.Failure<LobbyError>).value is LobbyError.UserAlreadyInLobby)
 
-        // repo has the latest saved
+        // repo should still have only one instance of bob
         val fromRepo = repo.findById(created.id)!!
-        assertEquals(lobby2.users.size, fromRepo.users.size)
+        val bobCount = fromRepo.users.count { it.id == bob.id }
+        assertEquals(1, bobCount)
     }
 
     @Test
     fun `joinLobby fails when full`() {
         val (service, repo) = newService()
         val host = user(1)
-        val lobby = (service.createLobby(host, "FullLobby", "", 2) as Either.Success<Lobby>).value
+        val lobby = (service.createLobby(host, "FullLobby", "", 2, 10) as Either.Success<Lobby>).value
         val filled = lobby.copy(users = (0 until lobby.maxPlayers).map { user(100 + it) })
         repo.save(filled)
 
@@ -134,7 +133,7 @@ class LobbyServiceTest {
     fun `leaveLobby returns Success(false) for non-host and removes user`() {
         val (service, repo) = newService()
         val host = user(1)
-        val lobby = (service.createLobby(host, "Leavable", "", 2) as Either.Success<Lobby>).value
+        val lobby = (service.createLobby(host, "Leavable", "", 2, 10) as Either.Success<Lobby>).value
         val bob = user(2)
         service.joinLobby(lobby.id, bob)
 
@@ -150,7 +149,7 @@ class LobbyServiceTest {
     fun `leaveLobby by host closes lobby and returns Success(true)`() {
         val (service, repo) = newService()
         val host = user(1)
-        val lobby = (service.createLobby(host, "HostLeaves", "", 2) as Either.Success<Lobby>).value
+        val lobby = (service.createLobby(host, "HostLeaves", "", 2, 10) as Either.Success<Lobby>).value
 
         val res = service.leaveLobby(lobby.id, host)
         assertTrue(res is Either.Success)
@@ -163,7 +162,7 @@ class LobbyServiceTest {
         val (service, repo) = newService()
         val host = user(1)
         val other = user(2)
-        val lobby = (service.createLobby(host, "Closable", "", 2) as Either.Success<Lobby>).value
+        val lobby = (service.createLobby(host, "Closable", "", 2, 10) as Either.Success<Lobby>).value
 
         // not found
         val nf = service.closeLobby(999, host)

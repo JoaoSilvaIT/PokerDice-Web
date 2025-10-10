@@ -1,13 +1,13 @@
 package pt.isel.utils
 
 sealed class Either<out F, out S> {
-    data class Failure<out L>(
-        val value: L,
-    ) : Either<L, Nothing>()
+    data class Failure<out F>(
+        val value: F,
+    ) : Either<F, Nothing>()
 
-    data class Success<out R>(
-        val value: R,
-    ) : Either<Nothing, R>()
+    data class Success<out S>(
+        val value: S,
+    ) : Either<Nothing, S>()
 }
 
 fun <S> success(value: S) = Either.Success(value)
