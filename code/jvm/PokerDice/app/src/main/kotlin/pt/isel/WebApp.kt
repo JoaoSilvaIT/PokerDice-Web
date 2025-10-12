@@ -8,8 +8,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-import pt.isel.domain.Sha256TokenEncoder
-import pt.isel.domain.UsersDomainConfig
+import pt.isel.domain.users.Sha256TokenEncoder
+import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.mem.RepositoryGameInMem
 import pt.isel.mem.RepositoryLobbyInMem
 import pt.isel.mem.RepositoryUserInMem

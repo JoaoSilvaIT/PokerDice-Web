@@ -1,4 +1,4 @@
-package pt.isel.domain
+package pt.isel.domain.users
 
 /**
  * Strongly typed information of token hashed by a TokenEncoder.

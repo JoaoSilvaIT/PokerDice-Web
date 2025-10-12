@@ -1,4 +1,4 @@
-package pt.isel.domain
+package pt.isel.domain.games
 
 import pt.isel.utils.Face
 

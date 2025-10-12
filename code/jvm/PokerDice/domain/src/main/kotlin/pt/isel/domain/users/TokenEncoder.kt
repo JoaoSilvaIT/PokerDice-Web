@@ -1,4 +1,4 @@
-package pt.isel.domain
+package pt.isel.domain.users
 
 /**
  * Defines the contract for encoding tokens into a validation representation.

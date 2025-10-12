@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import pt.isel.domain.Sha256TokenEncoder
-import pt.isel.domain.TokenExternalInfo
-import pt.isel.domain.UsersDomainConfig
+import pt.isel.domain.users.Sha256TokenEncoder
+import pt.isel.domain.users.TokenExternalInfo
+import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.mem.RepositoryUserInMem
 import pt.isel.utils.Either
 import java.time.Clock

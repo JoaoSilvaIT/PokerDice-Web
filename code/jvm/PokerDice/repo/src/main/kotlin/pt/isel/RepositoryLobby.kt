@@ -1,8 +1,8 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.Lobby
-import pt.isel.domain.User
+import pt.isel.domain.games.Lobby
+import pt.isel.domain.users.User
 
 @Component
 interface RepositoryLobby : Repository<Lobby> {

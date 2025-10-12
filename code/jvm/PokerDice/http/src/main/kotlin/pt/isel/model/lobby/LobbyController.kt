@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.LobbyService
-import pt.isel.domain.AuthenticatedUser
+import pt.isel.domain.users.AuthenticatedUser
 import pt.isel.errors.LobbyError
 import pt.isel.utils.Either
 

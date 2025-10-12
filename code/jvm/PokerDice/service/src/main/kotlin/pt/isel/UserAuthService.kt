@@ -2,12 +2,12 @@ package pt.isel
 
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import pt.isel.domain.PasswordValidationInfo
-import pt.isel.domain.Token
-import pt.isel.domain.TokenEncoder
-import pt.isel.domain.TokenExternalInfo
-import pt.isel.domain.User
-import pt.isel.domain.UsersDomainConfig
+import pt.isel.domain.users.PasswordValidationInfo
+import pt.isel.domain.users.Token
+import pt.isel.domain.users.TokenEncoder
+import pt.isel.domain.users.TokenExternalInfo
+import pt.isel.domain.users.User
+import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.errors.AuthTokenError
 import pt.isel.utils.Either
 import pt.isel.utils.failure

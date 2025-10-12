@@ -1,10 +1,10 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.PasswordValidationInfo
-import pt.isel.domain.Token
-import pt.isel.domain.TokenValidationInfo
-import pt.isel.domain.User
+import pt.isel.domain.users.PasswordValidationInfo
+import pt.isel.domain.users.Token
+import pt.isel.domain.users.TokenValidationInfo
+import pt.isel.domain.users.User
 import java.time.Instant
 
 /**

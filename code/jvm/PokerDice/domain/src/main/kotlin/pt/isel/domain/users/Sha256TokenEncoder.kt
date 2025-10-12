@@ -1,4 +1,4 @@
-package pt.isel.domain
+package pt.isel.domain.users
 
 import java.security.MessageDigest
 import java.util.Base64

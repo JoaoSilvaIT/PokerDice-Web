@@ -1,4 +1,6 @@
-package pt.isel.domain
+package pt.isel.domain.games
+
+import pt.isel.domain.users.User
 
 data class Turn(
     val user: User,

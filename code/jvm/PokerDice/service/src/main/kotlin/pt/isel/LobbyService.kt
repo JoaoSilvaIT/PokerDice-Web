@@ -1,8 +1,8 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.Lobby
-import pt.isel.domain.User
+import pt.isel.domain.games.Lobby
+import pt.isel.domain.users.User
 import pt.isel.errors.LobbyError
 import pt.isel.utils.Either
 import pt.isel.utils.failure
