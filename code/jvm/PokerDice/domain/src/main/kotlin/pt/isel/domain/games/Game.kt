@@ -10,4 +10,8 @@ data class Game(
     val numberOfRounds: Int,
     val state: State,
     val currentRound: Round?,
-)
+) {
+    init {
+        require(numberOfRounds >= lobby.users.size) { "There must be an equally number of rounds as players" }
+    }
+}

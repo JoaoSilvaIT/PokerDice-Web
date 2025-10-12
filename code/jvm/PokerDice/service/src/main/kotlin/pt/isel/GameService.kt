@@ -1,16 +1,19 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.Game
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.Game
+import pt.isel.domain.Lobby
+import pt.isel.domain.Round
 import pt.isel.errors.GameError
 import pt.isel.utils.Either
+import pt.isel.utils.State
 import pt.isel.utils.failure
 import pt.isel.utils.success
 
 @Component
 class GameService(
     private val repoGame: RepositoryGame,
+    private val repoLobby: RepositoryLobby,
 ) {
     fun createGame(
         startedAt: Long,
@@ -18,9 +21,36 @@ class GameService(
         numberOfRounds: Int,
     ): Either<GameError, Game> {
         if (numberOfRounds < 1) return failure(GameError.InvalidNumberOfRounds)
-        if (repoGame.findByLobby(lobby) != null) return failure(GameError.InvalidLobby)
-        if (startedAt <= 0) return failure(GameError.InvalidStartTime)
+        if (repoLobby.findById(lobby.id) != null) return failure(GameError.InvalidLobby)
+        if (startedAt <= 0) return failure(GameError.InvalidTime)
 
         return success(repoGame.createGame(startedAt, lobby, numberOfRounds))
     }
+
+    fun endGame(
+        game: Game,
+        endedAt: Long,
+    ): Either<GameError, Game> {
+        if (endedAt <= 0 || endedAt < game.startedAt) return failure(GameError.InvalidTime)
+        if (repoGame.findById(game.gid) != null) return failure(GameError.GameNotFound)
+
+        return success(repoGame.endGame(game, endedAt))
+    }
+
+    fun debitOfRound(
+        game: Game,
+    ): Either<GameError, Game> {
+        if (repoGame.findById(game.gid) != null) return failure(GameError.GameNotFound)
+        if (game.state != State.RUNNING) return failure(GameError.GameNotStarted)
+        if (game.currentRound == null) {
+            return failure(GameError.GameNotStarted)
+        } else {
+
+        }
+
+       
+       
+       
+    }
+
 }

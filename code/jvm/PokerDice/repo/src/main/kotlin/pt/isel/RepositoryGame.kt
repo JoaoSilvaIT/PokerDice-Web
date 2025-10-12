@@ -9,5 +9,14 @@ import pt.isel.domain.games.Lobby
  */
 @Component
 interface RepositoryGame : Repository<Game> {
+    fun createGame(
+        startedAt: Long,
+        lobby: Lobby,
+        numberOfRounds: Int,
+    ): Game
 
+    fun endGame(
+        game: Game,
+        endedAt: Long,
+    ): Game
 }
