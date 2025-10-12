@@ -62,17 +62,22 @@ class GameLogic {
         return Pair(hand, rank)
     }
 
-    /*
-    fun decideRoundWinner(round: Round): User {
-        val hands = round.userHands
-        val rankedHands: List<Pair<User, HandRank>> = round.userHands.map { (user, hand) ->
-            Pair(user, defineHandRank(hand).second)
+    fun calculateFullHandValue(handit : Pair<Hand, HandRank>) : Int {
+        val numberOfHand = handit.second.strength
+        val numberOfMajorDice = handit.first.dices.maxOf { it.face.strength }
+
+        return numberOfHand + numberOfMajorDice
+    }
+
+    fun decideRoundWinner(round: Round): List<User> {
+        val userHandValues: List<Pair<User, Int>> = round.userHands.map { (user, hand) ->
+            val handRank = defineHandRank(hand)
+            val handValue = calculateFullHandValue(handRank)
+            Pair(user, handValue)
         }
-        val sorted = rankedHands.sortedByDescending { it.second }
 
+        val winnerValue = userHandValues.maxOf { it.second }
 
-
-
-    }*/
-
+        return userHandValues.filter { it.second == winnerValue }.map { it.first }
+    }
 }
