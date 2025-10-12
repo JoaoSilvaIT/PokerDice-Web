@@ -1,9 +1,8 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.Game
-import pt.isel.domain.Lobby
-import pt.isel.domain.Round
+import pt.isel.domain.games.Game
+import pt.isel.domain.games.Lobby
 import pt.isel.errors.GameError
 import pt.isel.utils.Either
 import pt.isel.utils.State
@@ -36,21 +35,4 @@ class GameService(
 
         return success(repoGame.endGame(game, endedAt))
     }
-
-    fun debitOfRound(
-        game: Game,
-    ): Either<GameError, Game> {
-        if (repoGame.findById(game.gid) != null) return failure(GameError.GameNotFound)
-        if (game.state != State.RUNNING) return failure(GameError.GameNotStarted)
-        if (game.currentRound == null) {
-            return failure(GameError.GameNotStarted)
-        } else {
-
-        }
-
-       
-       
-       
-    }
-
 }

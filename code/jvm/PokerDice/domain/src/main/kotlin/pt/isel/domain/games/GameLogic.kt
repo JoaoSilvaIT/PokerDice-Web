@@ -16,7 +16,7 @@ class GameLogic {
         games.add(game)
         return game
     }
-
+    /*
     fun startNewRound(game: Game): Game {
 
         val users = game.lobby.users
@@ -40,4 +40,8 @@ class GameLogic {
 
         return updatedGame
     }
+
+
+     */
+
 }

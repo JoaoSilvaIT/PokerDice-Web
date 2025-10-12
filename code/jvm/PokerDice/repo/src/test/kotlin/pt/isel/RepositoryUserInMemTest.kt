@@ -38,7 +38,6 @@ class RepositoryUserInMemTest {
 
     @Test
     fun `findById should return correct user`() {
-        val u1 = repo.createUser("A", "a@x.com", PasswordValidationInfo("h1"))
         val u2 = repo.createUser("B", "b@x.com", PasswordValidationInfo("h2"))
         assertEquals(u2, repo.findById(u2.id))
         assertNull(repo.findById(99))

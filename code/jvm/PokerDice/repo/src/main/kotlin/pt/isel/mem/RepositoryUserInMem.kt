@@ -15,7 +15,7 @@ class RepositoryUserInMem : RepositoryUser {
         name: String,
         email: String,
         passwordValidation: PasswordValidationInfo,
-    ): User = User(users.size, name, email, passwordValidation).also { users.add(it) }
+    ): User = User(id = users.size, name = name, email = email, passwordValidation = passwordValidation).also { users.add(it) }
 
     override fun findByEmail(email: String): User? = users.firstOrNull { it.email == email }
 

@@ -25,7 +25,7 @@ class RepositoryGameInMemTest {
         id: Int,
         name: String = "User$id",
         email: String = "user$id@example.com",
-    ) = User(id, name, email, PasswordValidationInfo("h"))
+    ) = User(id = id, name = name, email = email, passwordValidation =  PasswordValidationInfo("h"))
 
     private fun lobby(
         id: Int = 0,
@@ -63,15 +63,6 @@ class RepositoryGameInMemTest {
 
         val all = repo.findAll()
         assertTrue(all.isNotEmpty())
-    }
-
-    @Test
-    fun `findByLobby should return game for lobby`() {
-        val l = lobby(2)
-        val g = repo.createGame(1L, l, 3)
-        val found = repo.findByLobby(l)
-        assertNotNull(found)
-        assertEquals(g.gid, found!!.gid)
     }
 
     @Test

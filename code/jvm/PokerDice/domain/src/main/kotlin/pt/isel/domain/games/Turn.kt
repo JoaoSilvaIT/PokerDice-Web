@@ -4,11 +4,13 @@ import pt.isel.domain.users.User
 
 data class Turn(
     val user: User,
-    val rolls: List<Hand>,
+    val hand: Hand?,
 ) {
-    init {
-        require(rolls.size <= 3) { "A turn can have at most 3 rolls." }
+    fun rollDices() : Hand {
+        val listOfDice = mutableListOf<Dice>()
+        val newHand = repeat(5) {
+                listOfDice.add(Dice.roll())
+            }
+        return Hand(listOfDice)
     }
-
-
 }
