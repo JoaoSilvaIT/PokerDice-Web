@@ -1,10 +1,10 @@
 package pt.isel.domain.games
 
 data class Hand(
-    val hand: List<Dice>,
+    val dices: List<Dice>,
 ) {
     init {
-        require(hand.size == 5) { "The hand must have 5 dices." }
+        require(dices.size == 5) { "The hand must have 5 dices." }
     }
     companion object {
         fun rollDices() : Hand {
