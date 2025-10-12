@@ -1,5 +1,6 @@
 package pt.isel.domain.games
 
+import pt.isel.domain.users.User
 import pt.isel.utils.Face
 import pt.isel.utils.HandRank
 import pt.isel.utils.State
@@ -60,5 +61,18 @@ class GameLogic {
 
         return Pair(hand, rank)
     }
+
+    /*
+    fun decideRoundWinner(round: Round): User {
+        val hands = round.userHands
+        val rankedHands: List<Pair<User, HandRank>> = round.userHands.map { (user, hand) ->
+            Pair(user, defineHandRank(hand).second)
+        }
+        val sorted = rankedHands.sortedByDescending { it.second }
+
+
+
+
+    }*/
 
 }

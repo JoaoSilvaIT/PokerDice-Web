@@ -9,6 +9,7 @@ data class Round(
     val number: Int,
     val turn: Turn,
     val users: List<User>,
+    val userHands: Map<User, Hand>,
     val ante: Int = MIN_ANTE,
 ) {
     fun setAnte(newAnte: Int): Round {
