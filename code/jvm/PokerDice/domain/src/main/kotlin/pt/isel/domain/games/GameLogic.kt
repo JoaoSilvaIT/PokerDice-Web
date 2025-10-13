@@ -6,23 +6,8 @@ import pt.isel.utils.HandRank
 import pt.isel.utils.State
 
 class GameLogic {
-
-    private val games = mutableListOf<Game>()
-    private var game = 0
-
-    fun startGame(
-        startedAt: Long,
-        lobby: Lobby,
-        numberOfRounds: Int,
-    ): Game {
-        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
-        games.add(game)
-        return game
-    }
-
     fun defineHandRank(hand: Hand) : Pair<Hand, HandRank> {
         val equalDice = hand.dices.groupingBy { it }.eachCount()
-
 
         val rank = when (equalDice.entries.size) {
             1 -> HandRank.FIVE_OF_A_KIND

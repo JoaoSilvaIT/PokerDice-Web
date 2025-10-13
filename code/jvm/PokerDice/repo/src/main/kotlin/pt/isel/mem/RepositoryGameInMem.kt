@@ -27,6 +27,11 @@ class RepositoryGameInMem : RepositoryGame {
         return newGame
     }
 
+    override fun updateGame(game: Game) {
+        val index = games.indexOf(game)
+        games[index] = game
+    }
+
     override fun clear() {
         games.clear()
     }
