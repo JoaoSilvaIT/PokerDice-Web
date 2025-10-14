@@ -11,6 +11,7 @@ data class Round(
     val users: List<User>,
     val userHands: Map<User, Hand>,
     val ante: Int = MIN_ANTE,
+    val pot: Int = 0
 ) {
     fun setAnte(newAnte: Int): Round {
         require(newAnte > 0 && newAnte >= MIN_ANTE) { "Cost must be positive and at least $MIN_ANTE" }
@@ -21,7 +22,8 @@ data class Round(
         val updatedUsers = users.map { user ->
             user.copy(balance = user.balance - ante)
         }
-        return this.copy(users = updatedUsers)
+        val updatedPot = pot + users.size * ante
+        return this.copy(users = updatedUsers, pot = updatedPot)
     }
 
     fun nextTurn(round : Round) : Round {

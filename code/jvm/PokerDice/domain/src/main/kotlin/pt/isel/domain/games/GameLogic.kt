@@ -3,9 +3,9 @@ package pt.isel.domain.games
 import pt.isel.domain.users.User
 import pt.isel.utils.Face
 import pt.isel.utils.HandRank
-import pt.isel.utils.State
 
 class GameLogic {
+
     fun defineHandRank(hand: Hand) : Pair<Hand, HandRank> {
         val equalDice = hand.dices.groupingBy { it }.eachCount()
 
@@ -20,7 +20,7 @@ class GameLogic {
         return Pair(hand, rank)
     }
 
-    fun calculateFullHandValue(handit : Pair<Hand, HandRank>) : Int {
+    private fun calculateFullHandValue(handit : Pair<Hand, HandRank>) : Int {
         val numberOfHand = handit.second.strength
         val numberOfMajorDice = handit.first.dices.maxOf { it.face.strength }
 
@@ -38,4 +38,12 @@ class GameLogic {
 
         return userHandValues.filter { it.second == winnerValue }.map { it.first }
     }
+
+    fun distributeWinnings(winners: List<User>, pot: Int): List<User> {
+        val winningsPerWinner = pot / winners.size
+        return winners.map { winner ->
+            winner.copy(balance = winner.balance + winningsPerWinner)
+        }
+    }
+
 }
