@@ -122,9 +122,9 @@ class LobbyController(
                 LobbyError.NameAlreadyUsed, LobbyError.LobbyFull -> HttpStatus.CONFLICT
                 LobbyError.LobbyNotFound -> HttpStatus.NOT_FOUND
                 LobbyError.NotHost -> HttpStatus.FORBIDDEN
-                LobbyError.UserAlreadyInLobby -> TODO()
-                LobbyError.UserNotInLobby -> TODO()
-                LobbyError.MaxPlayersTooHigh -> TODO()
+                LobbyError.UserAlreadyInLobby -> HttpStatus.CONFLICT
+                LobbyError.UserNotInLobby -> HttpStatus.BAD_REQUEST
+                LobbyError.MaxPlayersTooHigh -> HttpStatus.BAD_REQUEST
             }
         return ResponseEntity
             .status(status)

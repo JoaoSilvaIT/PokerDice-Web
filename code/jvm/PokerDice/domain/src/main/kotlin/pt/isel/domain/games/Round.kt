@@ -17,25 +17,30 @@ data class Round(
         return this.copy(ante = newAnte)
     }
 
-    fun payAnte() : Round {
-        val updatedUsers = users.map { user ->
-            user.copy(balance = user.balance - ante)
-        }
+    fun payAnte(): Round {
+        val updatedUsers =
+            users.map { user ->
+                require(user.balance >= ante) {
+                    "User ${user.name} has insufficient balance (${user.balance}) to pay ante ($ante)"
+                }
+                user.copy(balance = user.balance - ante)
+            }
         return this.copy(users = updatedUsers)
     }
 
-    fun nextTurn(round : Round) : Round {
+    fun nextTurn(round: Round): Round {
         val playoflastUser = Pair(round.turn.user, round.turn.hand)
         val nextRoundNumber = round.number + 1
         val nextPlayerIdx = (nextRoundNumber - 1) % round.users.size
-        val newRound = Round(
-            nextRoundNumber,
-            Turn(
-                user = round.users[nextPlayerIdx]
-            ),
-            round.users,
-            round.userHands + playoflastUser
-        )
+        val newRound =
+            Round(
+                nextRoundNumber,
+                Turn(
+                    user = round.users[nextPlayerIdx],
+                ),
+                round.users,
+                round.userHands + playoflastUser,
+            )
         return newRound
     }
 }

@@ -3,24 +3,24 @@ package pt.isel.domain.games
 import pt.isel.domain.users.User
 import pt.isel.utils.Face
 import pt.isel.utils.HandRank
-import pt.isel.utils.State
 
 class GameLogic {
-    fun defineHandRank(hand: Hand) : Pair<Hand, HandRank> {
+    fun defineHandRank(hand: Hand): Pair<Hand, HandRank> {
         val equalDice = hand.dices.groupingBy { it }.eachCount()
 
-        val rank = when (equalDice.entries.size) {
-            1 -> HandRank.FIVE_OF_A_KIND
-            2 -> if (equalDice.values.any { it > 3 }) HandRank.FOUR_OF_A_KIND else HandRank.FULL_HOUSE
-            3 -> if (equalDice.values.any { it == 3 }) HandRank.THREE_OF_A_KIND else HandRank.TWO_PAIR
-            4 -> HandRank.ONE_PAIR
-            else -> if (equalDice.entries.any {it.key.face == Face.NINE}) HandRank.HIGH_DICE else HandRank.STRAIGHT
-        }
+        val rank =
+            when (equalDice.entries.size) {
+                1 -> HandRank.FIVE_OF_A_KIND
+                2 -> if (equalDice.values.any { it > 3 }) HandRank.FOUR_OF_A_KIND else HandRank.FULL_HOUSE
+                3 -> if (equalDice.values.any { it == 3 }) HandRank.THREE_OF_A_KIND else HandRank.TWO_PAIR
+                4 -> HandRank.ONE_PAIR
+                else -> if (equalDice.entries.any { it.key.face == Face.NINE }) HandRank.HIGH_DICE else HandRank.STRAIGHT
+            }
 
         return Pair(hand, rank)
     }
 
-    fun calculateFullHandValue(handit : Pair<Hand, HandRank>) : Int {
+    fun calculateFullHandValue(handit: Pair<Hand, HandRank>): Int {
         val numberOfHand = handit.second.strength
         val numberOfMajorDice = handit.first.dices.maxOf { it.face.strength }
 
@@ -28,11 +28,12 @@ class GameLogic {
     }
 
     fun decideRoundWinner(round: Round): List<User> {
-        val userHandValues: List<Pair<User, Int>> = round.userHands.map { (user, hand) ->
-            val handRank = defineHandRank(hand)
-            val handValue = calculateFullHandValue(handRank)
-            Pair(user, handValue)
-        }
+        val userHandValues: List<Pair<User, Int>> =
+            round.userHands.map { (user, hand) ->
+                val handRank = defineHandRank(hand)
+                val handValue = calculateFullHandValue(handRank)
+                Pair(user, handValue)
+            }
 
         val winnerValue = userHandValues.maxOf { it.second }
 

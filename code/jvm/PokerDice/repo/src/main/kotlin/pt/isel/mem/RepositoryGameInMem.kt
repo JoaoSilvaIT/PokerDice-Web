@@ -24,12 +24,15 @@ class RepositoryGameInMem : RepositoryGame {
         endedAt: Long,
     ): Game {
         val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED, null)
+        save(newGame)
         return newGame
     }
 
     override fun updateGame(game: Game) {
-        val index = games.indexOf(game)
-        games[index] = game
+        val index = games.indexOfFirst { it.gid == game.gid }
+        if (index != -1) { // avoids updating non-existing games
+            games[index] = game
+        }
     }
 
     override fun clear() {

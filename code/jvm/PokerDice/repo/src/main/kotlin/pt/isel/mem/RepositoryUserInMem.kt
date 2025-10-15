@@ -47,13 +47,13 @@ class RepositoryUserInMem : RepositoryUser {
         now: Instant,
     ) {
         tokens.removeIf { it.tokenValidationInfo == token.tokenValidationInfo }
-        tokens.add(token)
+        tokens.add(token.copy(lastUsedAt = now))
     }
 
     override fun removeTokenByValidationInfo(tokenValidationInfo: TokenValidationInfo): Int {
-        val count = tokens.count { it.tokenValidationInfo == tokenValidationInfo }
-        tokens.removeAll { it.tokenValidationInfo == tokenValidationInfo }
-        return count
+        val initialSize = tokens.size
+        tokens.removeIf { it.tokenValidationInfo == tokenValidationInfo }
+        return initialSize - tokens.size
     }
 
     override fun findById(id: Int): User? = users.firstOrNull { it.id == id }
@@ -70,7 +70,7 @@ class RepositoryUserInMem : RepositoryUser {
     }
 
     override fun clear() {
-        tokens.clear()
         users.clear()
+        tokens.clear()
     }
 }

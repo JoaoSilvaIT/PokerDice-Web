@@ -17,11 +17,17 @@ dependencies {
 
     // To get password encode
     api("org.springframework.security:spring-security-core:6.5.5")
-
     implementation("org.springframework.boot:spring-boot-starter-web:3.5.6")
+    implementation(project(":repo-jdbi"))
 
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    testImplementation(platform("org.junit:junit-bom:5.12.2"))
+    testImplementation("org.springframework:spring-test:6.2.11")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("com.h2database:h2:2.2.224")
+    testImplementation("org.jdbi:jdbi3-core:3.45.1")
+    testImplementation("org.jdbi:jdbi3-kotlin:3.45.1")
+    testImplementation("org.jdbi:jdbi3-postgres:3.45.1")
 }
 
 tasks.test {

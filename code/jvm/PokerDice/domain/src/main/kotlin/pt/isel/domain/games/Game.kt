@@ -12,25 +12,26 @@ data class Game(
     val currentRound: Round?,
 ) {
     init {
-        require(numberOfRounds >= lobby.users.size) { "There must be an equally number of rounds as players" }
+        require(numberOfRounds >= lobby.users.size) {
+            "Number of rounds ($numberOfRounds) must be at least equal to the number of players (${lobby.users.size})"
+        }
     }
 
     fun startNewRound(game: Game): Game {
-
         val users = game.lobby.users
         val nextRoundNr = (game.currentRound?.number ?: 0) + 1
         val firstPlayerIndex = (nextRoundNr - 1) % users.size
 
-        val newRound = Round(
-            nextRoundNr,
-            Turn(users[firstPlayerIndex], Hand(emptyList())),
-            users,
-            emptyMap()
-        )
+        val newRound =
+            Round(
+                nextRoundNr,
+                Turn(users[firstPlayerIndex], Hand(emptyList())),
+                users,
+                emptyMap(),
+            )
 
         val updatedGame = game.copy(currentRound = newRound, state = State.RUNNING)
 
         return updatedGame
     }
-
 }

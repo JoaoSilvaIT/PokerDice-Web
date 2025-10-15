@@ -17,10 +17,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-
+    implementation("org.postgresql:postgresql")
+    implementation("org.jdbi:jdbi3-core:3.37.1")
+    implementation("org.jdbi:jdbi3-kotlin:3.37.1")
+    implementation("org.jdbi:jdbi3-postgres:3.37.1")
     implementation(project(":domain"))
     implementation(project(":service"))
     implementation(project(":repo"))
+    implementation(project(":repo-jdbi"))
     implementation(project(":http"))
 }
 

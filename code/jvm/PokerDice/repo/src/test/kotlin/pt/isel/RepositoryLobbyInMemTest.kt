@@ -23,7 +23,8 @@ class RepositoryLobbyInMemTest {
         id: Int,
         name: String = "User$id",
         email: String = "user$id@example.com",
-    ) = User(id, name, email, PasswordValidationInfo("h"))
+        balance: Int = 10,
+    ) = User(id, name, email, balance, passwordValidation = PasswordValidationInfo("h"))
 
     @Test
     fun `createLobby should add lobby with host as first user and allow finding by id and name`() {
@@ -117,5 +118,125 @@ class RepositoryLobbyInMemTest {
 
         repo.clear()
         assertTrue(repo.findAll().isEmpty())
+    }
+
+    @Test
+    fun `createLobby should auto-increment ids`() {
+        val host1 = user(1)
+        val host2 = user(2)
+
+        val lobby1 = repo.createLobby("L1", "desc1", 2, 4, host1)
+        val lobby2 = repo.createLobby("L2", "desc2", 2, 4, host2)
+        val lobby3 = repo.createLobby("L3", "desc3", 2, 4, host1)
+
+        assertEquals(0, lobby1.id)
+        assertEquals(1, lobby2.id)
+        assertEquals(2, lobby3.id)
+    }
+
+    @Test
+    fun `findAll should return all lobbies`() {
+        val host1 = user(1)
+        val host2 = user(2)
+
+        repo.createLobby("L1", "d", 2, 4, host1)
+        repo.createLobby("L2", "d", 2, 4, host2)
+        repo.createLobby("L3", "d", 2, 4, host1)
+
+        val lobbies = repo.findAll()
+        assertEquals(3, lobbies.size)
+    }
+
+    @Test
+    fun `findById should return null for non-existent id`() {
+        assertNull(repo.findById(999))
+    }
+
+    @Test
+    fun `findByName should handle multiple lobbies with different names`() {
+        val host = user(1)
+        repo.createLobby("Poker Room 1", "d", 2, 4, host)
+        repo.createLobby("Poker Room 2", "d", 2, 4, host)
+
+        assertNotNull(repo.findByName("Poker Room 1"))
+        assertNotNull(repo.findByName("Poker Room 2"))
+        assertNull(repo.findByName("Poker Room 3"))
+    }
+
+    @Test
+    fun `save should preserve lobby properties when updating`() {
+        val host = user(1)
+        val lobby = repo.createLobby("Original", "desc", 2, 4, host)
+
+        val player2 = user(2)
+        val updated =
+            lobby.copy(
+                name = "Updated Name",
+                users = lobby.users + player2,
+            )
+        repo.save(updated)
+
+        val found = repo.findById(lobby.id)
+        assertNotNull(found)
+        assertEquals("Updated Name", found.name)
+        assertEquals(2, found.users.size)
+    }
+
+    @Test
+    fun `deleteLobbyByHost should only delete lobbies for specific host`() {
+        val host1 = user(1)
+        val host2 = user(2)
+        val host3 = user(3)
+
+        val l1 = repo.createLobby("H1-L1", "d", 2, 4, host1)
+        val l2 = repo.createLobby("H2-L1", "d", 2, 4, host2)
+        val l3 = repo.createLobby("H3-L1", "d", 2, 4, host3)
+
+        repo.deleteLobbyByHost(host2)
+
+        assertNotNull(repo.findById(l1.id))
+        assertNull(repo.findById(l2.id))
+        assertNotNull(repo.findById(l3.id))
+    }
+
+    @Test
+    fun `deleteLobbyByHost should do nothing if host has no lobbies`() {
+        val host1 = user(1)
+        val host2 = user(2)
+
+        repo.createLobby("L1", "d", 2, 4, host1)
+        val sizeBefore = repo.findAll().size
+
+        repo.deleteLobbyByHost(host2) // host2 has no lobbies
+
+        assertEquals(sizeBefore, repo.findAll().size)
+    }
+
+    @Test
+    fun `deleteById should not affect other lobbies`() {
+        val host = user(1)
+        val l1 = repo.createLobby("L1", "d", 2, 4, host)
+        val l2 = repo.createLobby("L2", "d", 2, 4, host)
+        val l3 = repo.createLobby("L3", "d", 2, 4, host)
+
+        repo.deleteById(l2.id)
+
+        assertNotNull(repo.findById(l1.id))
+        assertNull(repo.findById(l2.id))
+        assertNotNull(repo.findById(l3.id))
+    }
+
+    @Test
+    fun `createLobby should initialize with correct default values`() {
+        val host = user(1)
+        val lobby = repo.createLobby("Test Lobby", "A test lobby", 3, 6, host)
+
+        assertEquals("Test Lobby", lobby.name)
+        assertEquals("A test lobby", lobby.description)
+        assertEquals(3, lobby.minPlayers)
+        assertEquals(6, lobby.maxPlayers)
+        assertEquals(host, lobby.host)
+        assertEquals(1, lobby.users.size)
+        assertTrue(lobby.users.contains(host))
     }
 }

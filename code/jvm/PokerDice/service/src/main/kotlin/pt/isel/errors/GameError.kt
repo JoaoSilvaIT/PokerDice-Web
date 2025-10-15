@@ -10,4 +10,6 @@ sealed class GameError {
     data object GameNotFound : GameError()
 
     data object GameNotStarted : GameError()
+
+    data object GameAlreadyEnded : GameError()
 }

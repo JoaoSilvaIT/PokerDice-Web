@@ -1,6 +1,6 @@
 package pt.isel.utils
 
-enum class Face (val strength: Int) {
+enum class Face(val strength: Int) {
     ACE(6),
     KING(5),
     QUEEN(4),

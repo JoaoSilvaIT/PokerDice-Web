@@ -1,5 +1,7 @@
 package pt.isel
 
+import org.jdbi.v3.core.Jdbi
+import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -10,9 +12,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import pt.isel.domain.users.Sha256TokenEncoder
 import pt.isel.domain.users.UsersDomainConfig
-import pt.isel.mem.RepositoryGameInMem
-import pt.isel.mem.RepositoryLobbyInMem
-import pt.isel.mem.RepositoryUserInMem
+import pt.isel.repo.TransactionManagerJdbi
 import java.time.Clock
 import java.time.Duration
 
@@ -42,15 +42,6 @@ class WebApp {
     fun clock(): Clock = Clock.systemUTC()
 
     @Bean
-    fun repositoryUser() = RepositoryUserInMem()
-
-    @Bean
-    fun repositoryLobby() = RepositoryLobbyInMem()
-
-    @Bean
-    fun repositoryGame() = RepositoryGameInMem()
-
-    @Bean
     fun usersDomainConfig() =
         UsersDomainConfig(
             tokenSizeInBytes = 256 / 8,
@@ -58,6 +49,19 @@ class WebApp {
             tokenRollingTtl = Duration.ofHours(1),
             maxTokensPerUser = 3,
         )
+
+    @Bean
+    fun jdbi(): Jdbi =
+        Jdbi.create(
+            PGSimpleDataSource().apply {
+                setURL(
+                    Environment.getDbUrl(),
+                )
+            },
+        ).configureWithAppRequirements()
+
+    @Bean
+    fun transactionManager(jdbi: Jdbi): TransactionManagerJdbi = TransactionManagerJdbi(jdbi)
 }
 
 fun main() {

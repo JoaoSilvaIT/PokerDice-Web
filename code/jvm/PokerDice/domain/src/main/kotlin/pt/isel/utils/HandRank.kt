@@ -8,5 +8,5 @@ enum class HandRank(val strength: Int) {
     THREE_OF_A_KIND(4),
     TWO_PAIR(3),
     ONE_PAIR(2),
-    HIGH_DICE(1)
+    HIGH_DICE(1),
 }

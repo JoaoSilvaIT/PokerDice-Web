@@ -25,7 +25,7 @@ class RepositoryGameInMemTest {
         id: Int,
         name: String = "User$id",
         email: String = "user$id@example.com",
-    ) = User(id = id, name = name, email = email, passwordValidation =  PasswordValidationInfo("h"))
+    ) = User(id = id, name = name, email = email, passwordValidation = PasswordValidationInfo("h"))
 
     private fun lobby(
         id: Int = 0,
@@ -102,5 +102,152 @@ class RepositoryGameInMemTest {
         assertTrue(repo.findAll().isNotEmpty())
         repo.clear()
         assertTrue(repo.findAll().isEmpty())
+    }
+
+    @Test
+    fun `createGame should auto-increment ids`() {
+        val l1 = lobby(1)
+        val l2 = lobby(2)
+        val l3 = lobby(3)
+
+        val g1 = repo.createGame(100L, l1, 3)
+        val g2 = repo.createGame(200L, l2, 4)
+        val g3 = repo.createGame(300L, l3, 5)
+
+        assertEquals(0, g1.gid)
+        assertEquals(1, g2.gid)
+        assertEquals(2, g3.gid)
+    }
+
+    @Test
+    fun `findById should return null for non-existent id`() {
+        assertNull(repo.findById(999))
+    }
+
+    @Test
+    fun `findAll should return all games`() {
+        val l = lobby(1)
+        repo.createGame(100L, l, 3)
+        repo.createGame(200L, l, 4)
+        repo.createGame(300L, l, 5)
+
+        val games = repo.findAll()
+        assertEquals(3, games.size)
+    }
+
+    @Test
+    fun `save should update existing game without duplicating`() {
+        val l = lobby(1)
+        val game = repo.createGame(100L, l, 3)
+
+        val updated = game.copy(state = State.RUNNING)
+        repo.save(updated)
+
+        val found = repo.findById(game.gid)
+        assertNotNull(found)
+        assertEquals(State.RUNNING, found.state)
+
+        // Ensure no duplication
+        val all = repo.findAll()
+        assertEquals(1, all.size)
+    }
+
+    @Test
+    fun `save should add new game if not exists`() {
+        val l = lobby(1)
+        val newGame = Game(99, 500L, null, l, 5, State.WAITING, null)
+        repo.save(newGame)
+
+        val found = repo.findById(99)
+        assertNotNull(found)
+        assertEquals(99, found.gid)
+    }
+
+    @Test
+    fun `updateGame should modify existing game in repository`() {
+        val l = lobby(1)
+        val game = repo.createGame(100L, l, 3)
+
+        val modified = game.copy(state = State.RUNNING)
+        repo.updateGame(modified)
+
+        val found = repo.findById(game.gid)
+        assertNotNull(found)
+        assertEquals(State.RUNNING, found.state)
+    }
+
+    @Test
+    fun `updateGame should not throw for non-existent game`() {
+        val l = lobby(1)
+        val nonExistentGame = Game(999, 100L, null, l, 3, State.WAITING, null)
+
+        // Should not throw
+        repo.updateGame(nonExistentGame)
+
+        // Game should not be added by updateGame
+        assertNull(repo.findById(999))
+    }
+
+    @Test
+    fun `deleteById should not affect other games`() {
+        val l = lobby(1)
+        val g1 = repo.createGame(100L, l, 3)
+        val g2 = repo.createGame(200L, l, 4)
+        val g3 = repo.createGame(300L, l, 5)
+
+        repo.deleteById(g2.gid)
+
+        assertNotNull(repo.findById(g1.gid))
+        assertNull(repo.findById(g2.gid))
+        assertNotNull(repo.findById(g3.gid))
+    }
+
+    @Test
+    fun `endGame should preserve all game properties except endedAt and state`() {
+        val l = lobby(1)
+        val game = repo.createGame(1000L, l, 10)
+
+        val ended = repo.endGame(game, 2000L)
+
+        assertEquals(game.gid, ended.gid)
+        assertEquals(game.startedAt, ended.startedAt)
+        assertEquals(2000L, ended.endedAt)
+        assertEquals(game.lobby, ended.lobby)
+        assertEquals(game.numberOfRounds, ended.numberOfRounds)
+        assertEquals(State.FINISHED, ended.state)
+        assertNull(ended.currentRound)
+    }
+
+    @Test
+    fun `createGame should initialize with WAITING state and null endedAt and currentRound`() {
+        val l = lobby(1)
+        val game = repo.createGame(5000L, l, 8)
+
+        assertEquals(State.WAITING, game.state)
+        assertNull(game.endedAt)
+        assertNull(game.currentRound)
+    }
+
+    @Test
+    fun `multiple operations should maintain consistency`() {
+        val l = lobby(1)
+        val g1 = repo.createGame(100L, l, 3)
+        val g2 = repo.createGame(200L, l, 4)
+
+        // Update first game
+        val updated = g1.copy(state = State.RUNNING)
+        repo.save(updated)
+
+        // Delete second game
+        repo.deleteById(g2.gid)
+
+        // Create a new game
+        val g3 = repo.createGame(300L, l, 5)
+
+        val all = repo.findAll()
+        assertEquals(2, all.size)
+        assertTrue(all.any { it.gid == g1.gid && it.state == State.RUNNING })
+        assertTrue(all.any { it.gid == g3.gid })
+        assertTrue(all.none { it.gid == g2.gid })
     }
 }

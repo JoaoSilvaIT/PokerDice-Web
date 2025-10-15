@@ -9,6 +9,7 @@ import pt.isel.domain.users.TokenExternalInfo
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.errors.AuthTokenError
+import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
 import pt.isel.utils.failure
 import pt.isel.utils.success
@@ -24,22 +25,9 @@ class UserAuthService(
     private val passwordEncoder: PasswordEncoder,
     private val tokenEncoder: TokenEncoder,
     private val config: UsersDomainConfig,
-    private val repoUsers: RepositoryUser,
+    private val trxManager: TransactionManager,
     private val clock: Clock,
 ) {
-    private fun validatePassword(
-        password: String,
-        validationInfo: PasswordValidationInfo,
-    ) = passwordEncoder.matches(
-        password,
-        validationInfo.validationInfo,
-    )
-
-    private fun createPasswordValidationInformation(password: String) =
-        PasswordValidationInfo(
-            validationInfo = passwordEncoder.encode(password),
-        )
-
     fun createUser(
         name: String,
         email: String,
@@ -50,64 +38,78 @@ class UserAuthService(
         require(password.isNotBlank()) { "Password cannot be blank" }
 
         val emailTrimmed = email.trim()
-        require(repoUsers.findByEmail(emailTrimmed) == null) { "Email already in use" }
 
-        val passwordValidationInfo = createPasswordValidationInformation(password)
-        return repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
+        return trxManager.run {
+            require(repoUsers.findByEmail(emailTrimmed) == null) { "Email already in use" }
+            val passwordValidationInfo = createPasswordValidationInformation(password)
+            repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
+        }
     }
 
     fun createToken(
         email: String,
         password: String,
-    ): Either<AuthTokenError, TokenExternalInfo> { // Replaced by Either
+    ): Either<AuthTokenError, TokenExternalInfo> {
         if (email.isBlank()) return failure(AuthTokenError.BlankEmail)
         if (password.isBlank()) return failure(AuthTokenError.BlankPassword)
 
-        val user =
-            repoUsers.findByEmail(email.trim())
-                ?: return failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+        return trxManager.run {
+            val user =
+                repoUsers.findByEmail(email.trim())
+                    ?: return@run failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
 
-        if (!validatePassword(password, user.passwordValidation)) {
-            return failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+            if (!validatePassword(password, user.passwordValidation)) {
+                return@run failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+            }
+
+            val tokenValue = generateTokenValue()
+            val now = clock.instant()
+            val newToken =
+                Token(
+                    tokenEncoder.createValidationInformation(tokenValue),
+                    user.id,
+                    createdAt = now,
+                    lastUsedAt = now,
+                )
+            repoUsers.createToken(newToken, config.maxTokensPerUser)
+
+            success(TokenExternalInfo(tokenValue, getTokenExpiration(newToken)))
         }
-        val tokenValue = generateTokenValue()
-        val now = clock.instant()
-        val newToken =
-            Token(
-                tokenEncoder.createValidationInformation(tokenValue),
-                user.id,
-                createdAt = now,
-                lastUsedAt = now,
-            )
-        repoUsers.createToken(newToken, config.maxTokensPerUser)
-        return success(
-            TokenExternalInfo(
-                tokenValue,
-                getTokenExpiration(newToken),
-            ),
-        )
     }
 
     fun revokeToken(token: String): Boolean {
         val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
-        val removed = repoUsers.removeTokenByValidationInfo(tokenValidationInfo)
-        return removed > 0
+        return trxManager.run {
+            repoUsers.removeTokenByValidationInfo(tokenValidationInfo)
+            true
+        }
     }
 
     fun getUserByToken(token: String): User? {
         if (!canBeToken(token)) {
             return null
         }
-        val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
 
-        val userAndToken: Pair<User, Token>? = repoUsers.getTokenByTokenValidationInfo(tokenValidationInfo)
-        return if (userAndToken != null && isTokenTimeValid(clock, userAndToken.second)) {
-            repoUsers.updateTokenLastUsed(userAndToken.second, clock.instant())
-            userAndToken.first
-        } else {
-            null
+        return trxManager.run {
+            val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
+            val userAndToken = repoUsers.getTokenByTokenValidationInfo(tokenValidationInfo)
+
+            if (userAndToken != null && isTokenTimeValid(clock, userAndToken.second)) {
+                repoUsers.updateTokenLastUsed(userAndToken.second, clock.instant())
+                userAndToken.first
+            } else {
+                null
+            }
         }
     }
+
+    private fun validatePassword(
+        password: String,
+        validationInfo: PasswordValidationInfo,
+    ) = passwordEncoder.matches(password, validationInfo.validationInfo)
+
+    private fun createPasswordValidationInformation(password: String) =
+        PasswordValidationInfo(validationInfo = passwordEncoder.encode(password))
 
     private fun canBeToken(token: String): Boolean =
         try {
