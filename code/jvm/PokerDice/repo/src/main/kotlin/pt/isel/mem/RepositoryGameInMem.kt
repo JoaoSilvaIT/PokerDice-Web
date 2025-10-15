@@ -24,7 +24,6 @@ class RepositoryGameInMem : RepositoryGame {
         endedAt: Long,
     ): Game {
         val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED, null)
-        save(newGame)
         return newGame
     }
 

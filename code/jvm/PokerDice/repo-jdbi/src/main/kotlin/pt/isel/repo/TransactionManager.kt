@@ -1,12 +1,10 @@
 package pt.isel.repo
 
 import org.jdbi.v3.core.Jdbi
-import org.springframework.stereotype.Component
 import pt.isel.JdbiGamesRepository
 import pt.isel.JdbiLobbiesRepository
 import pt.isel.JdbiUsersRepository
 
-@Component
 class TransactionManagerJdbi(
     private val jdbi: Jdbi,
 ) : TransactionManager {

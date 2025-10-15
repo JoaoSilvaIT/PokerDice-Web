@@ -125,7 +125,7 @@ class GameServiceTest {
         assertIs<Either.Success<Game>>(gameResult)
         val game = gameResult.value
 
-        val result = serviceGame.endGame(game, startTime + 1000)
+        val result = serviceGame.endGame(game.gid, startTime + 1000)
 
         assertIs<Either.Success<Game>>(result)
         assertNotNull(result.value.endedAt)
@@ -140,7 +140,7 @@ class GameServiceTest {
         val gameResult = serviceGame.createGame(startTime, lobbyResult.value, 5)
         assertIs<Either.Success<Game>>(gameResult)
 
-        val result = serviceGame.endGame(gameResult.value, startTime - 1000)
+        val result = serviceGame.endGame(gameResult.value.gid, startTime - 1000)
 
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.InvalidTime, result.value)
@@ -154,9 +154,9 @@ class GameServiceTest {
         val startTime = System.currentTimeMillis()
         val gameResult = serviceGame.createGame(startTime, lobbyResult.value, 5)
         assertIs<Either.Success<Game>>(gameResult)
-        serviceGame.endGame(gameResult.value, startTime + 1000)
+        serviceGame.endGame(gameResult.value.gid, startTime + 1000)
 
-        val result = serviceGame.endGame(gameResult.value, startTime + 2000)
+        val result = serviceGame.endGame(gameResult.value.gid, startTime + 2000)
 
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.GameAlreadyEnded, result.value)

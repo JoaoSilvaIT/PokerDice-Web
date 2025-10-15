@@ -48,6 +48,20 @@ class GameService(
             repoGame.findById(gameId)
         }
 
+    fun endGame(
+        game: Game,
+        endedAt: Long,
+    ): Either<GameError, Game> {
+        if (endedAt <= 0 || endedAt < game.startedAt) return failure(GameError.InvalidTime)
+
+        return trxManager.run {
+            val currentGame = repoGame.findById(game.gid) ?: return@run failure(GameError.GameNotFound)
+            if (currentGame.endedAt != null) return@run failure(GameError.GameAlreadyEnded)
+            val endedGame = repoGame.endGame(currentGame, endedAt)
+            repoGame.save(endedGame)
+            success(endedGame)
+        }
+    }
 
     fun endGame(
         gameId: Int,
@@ -57,6 +71,8 @@ class GameService(
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (endedAt <= 0 || endedAt < game.startedAt) return@run failure(GameError.InvalidTime)
             if (game.endedAt != null) return@run failure(GameError.GameAlreadyEnded)
-            success(repoGame.endGame(game, endedAt))
+            val endedGame = repoGame.endGame(game, endedAt)
+            repoGame.save(endedGame)
+            success(endedGame)
         }
 }
