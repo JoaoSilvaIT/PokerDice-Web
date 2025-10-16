@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import pt.isel.domain.users.Sha256TokenEncoder
 import pt.isel.domain.users.UsersDomainConfig
-import pt.isel.repo.TransactionManagerJdbi
+import pt.isel.repo.JdbiTransactionManager
 import java.time.Clock
 import java.time.Duration
 
@@ -61,9 +61,18 @@ class WebApp {
         ).configureWithAppRequirements()
 
     @Bean
-    fun transactionManager(jdbi: Jdbi): TransactionManagerJdbi = TransactionManagerJdbi(jdbi)
+    fun userAuthService() =
+        UserAuthService(
+            passwordEncoder(),
+            tokenEncoder(),
+            usersDomainConfig(),
+            trxManager = JdbiTransactionManager(jdbi()),
+            clock = clock(),
+        )
 }
 
 fun main() {
     runApplication<WebApp>()
 }
+
+// DB_URL = jdbc:postgresql://localhost:5432/pokerdice?user=pokerdice&password=password

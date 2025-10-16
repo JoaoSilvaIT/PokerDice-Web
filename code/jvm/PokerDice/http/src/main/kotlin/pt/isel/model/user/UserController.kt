@@ -54,7 +54,7 @@ class UserController(
         }
     }
 
-    @PostMapping("api/logout")
+    @PostMapping("/api/logout")
     fun logout(user: AuthenticatedUser) {
         userService.revokeToken(user.token)
     }

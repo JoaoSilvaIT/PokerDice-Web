@@ -12,22 +12,12 @@ import pt.isel.mapper.PasswordValidationInfoMapper
 import pt.isel.mapper.TokenValidationInfoMapper
 import java.time.Instant
 
-/**
- * Configures JDBI with all required plugins, mappers, and configurations
- * for the PokerDice application.
- */
 fun Jdbi.configureWithAppRequirements(): Jdbi {
-    // Install plugins
     installPlugin(KotlinPlugin())
     installPlugin(PostgresPlugin())
-
-    // Register custom column mappers for value objects
+    registerRowMapper(ConstructorMapper.factory(User::class.java))
     registerColumnMapper(PasswordValidationInfo::class.java, PasswordValidationInfoMapper())
     registerColumnMapper(TokenValidationInfo::class.java, TokenValidationInfoMapper())
     registerColumnMapper(Instant::class.java, InstantMapper())
-
-    // Register row mappers for domain entities
-    registerRowMapper(ConstructorMapper.factory(User::class.java))
-
     return this
 }

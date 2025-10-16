@@ -121,6 +121,27 @@ class JdbiUsersRepository(
         token: Token,
         maxTokens: Int,
     ) {
+        // Remove oldest tokens if user has reached the maximum
+        handle
+            .createUpdate(
+                """
+                DELETE FROM dbo.TOKEN
+                WHERE user_id = :user_id
+                AND token IN (
+                    SELECT token FROM dbo.TOKEN
+                    WHERE user_id = :user_id
+                    ORDER BY created_at ASC
+                    LIMIT (
+                        SELECT COUNT(*) - :max_tokens + 1
+                        FROM dbo.TOKEN
+                        WHERE user_id = :user_id
+                    )
+                )
+                """
+            ).bind("user_id", token.userId)
+            .bind("max_tokens", maxTokens)
+            .execute()
+
         handle
             .createUpdate(
                 """

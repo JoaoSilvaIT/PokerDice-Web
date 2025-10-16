@@ -1,10 +1,13 @@
 ### Create user
 POST http://localhost:8080/api/users
+
+### Create user
+POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "Paul Atreides",
-  "email": "paul@atreides.com",
+  "name": "Paul Atr121233123eides",
+  "email": "paul@atre11212333ides.com",
   "password": "muadib"
 }
 
@@ -41,16 +44,16 @@ Content-Type: application/json
 
 ### Logout (requires valid token)
 POST http://localhost:8080/api/logout
-Authorization: Bearer AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
+Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer dev-token-12345
+Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
 Content-Type: application/json
 
 {
@@ -79,11 +82,11 @@ Authorization: Bearer 1mim21MKqELA5niHec6dsvtji8hY3gA8W0uZHuv2ioA=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
 Content-Type: application/json
 
 {
-  "lobbyId": 0,
+  "lobbyId": 1,
   "numberOfRounds": 5
 }
 
@@ -99,7 +102,7 @@ Content-Type: application/json
 
 ### Create game with invalid number of rounds (too low)
 POST http://localhost:8080/api/games
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
 Content-Type: application/json
 
 {
@@ -116,11 +119,7 @@ Content-Type: application/json
   "lobbyId": 0,
   "numberOfRounds": 100
 }
-
-### Get game by ID (requires valid token)
-GET http://localhost:8080/api/games/0
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
-
+w
 ### Get non-existent game
 GET http://localhost:8080/api/games/999
 Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
@@ -129,12 +128,12 @@ Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
 GET http://localhost:8080/api/games/0
 
 ### End game (requires valid token)
-POST http://localhost:8080/api/games/0/end
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+POST http://localhost:8080/api/games/1/end
+Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
 
 ### End non-existent game
 POST http://localhost:8080/api/games/999/end
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
 
 ### End game without authentication
 POST http://localhost:8080/api/games/0/end
