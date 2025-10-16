@@ -28,11 +28,11 @@ data class Round(
         return this.copy(users = updatedUsers)
     }
 
-    fun nextTurn(): Round {
-        val currentIndex = users.indexOf(turn.user)
-        val updatedUserHands = userHands + (turn.user to turn.hand)
+    fun nextTurn(round : Round): Round {
+        val currentIndex = round.users.indexOf(round.turn.user)
+        val updatedUserHands = round.userHands + (round.turn.user to round.turn.hand)
         return this.copy(
-            turn = Turn(users[(currentIndex + 1) % users.size]),
+            turn = Turn(round.users[(currentIndex + 1) % round.users.size]),
             userHands = updatedUserHands,
         )
     }

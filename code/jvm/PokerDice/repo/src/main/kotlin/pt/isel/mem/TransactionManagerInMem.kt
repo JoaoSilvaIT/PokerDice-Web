@@ -1,8 +1,5 @@
-package pt.isel.repo.mem
+package pt.isel.mem
 
-import pt.isel.mem.RepositoryGameInMem
-import pt.isel.mem.RepositoryLobbyInMem
-import pt.isel.mem.RepositoryUserInMem
 import pt.isel.repo.Transaction
 import pt.isel.repo.TransactionManager
 

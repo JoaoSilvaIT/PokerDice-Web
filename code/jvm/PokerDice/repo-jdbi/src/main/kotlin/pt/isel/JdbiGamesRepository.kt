@@ -56,13 +56,13 @@ class JdbiGamesRepository(
                 """,
             ).bind("id", entity.gid)
             .bind("state", entity.state.name)
-            .bind("current_round", entity.currentRound?.number ?: 0)
+            .bind("current_round", entity.currentRoundNumber?.number ?: 0)
             .bind("total_rounds", entity.numberOfRounds)
             .bind("ended_at", entity.endedAt)
             .execute()
 
         // Update round data if current round exists
-        entity.currentRound?.let { round ->
+        entity.currentRoundNumber?.let { round ->
             saveRound(entity.gid, round)
         }
     }
@@ -232,7 +232,7 @@ class JdbiGamesRepository(
             lobby = lobby,
             numberOfRounds = rs.getInt("total_rounds"),
             state = State.valueOf(rs.getString("state")),
-            currentRound = currentRound,
+            currentRoundNumber = currentRound,
         )
     }
 

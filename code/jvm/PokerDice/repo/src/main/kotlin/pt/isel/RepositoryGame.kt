@@ -21,12 +21,4 @@ interface RepositoryGame : Repository<Game> {
         game: Game,
         endedAt: Long,
     ): Game
-
-    fun startNewRound(game: Game): Game
-
-    fun nextTurnMem(game: Game): Game
-
-    fun setAnte(game: Game, ante: Int): Game
-
-    fun payAnte(game: Game): Game
 }

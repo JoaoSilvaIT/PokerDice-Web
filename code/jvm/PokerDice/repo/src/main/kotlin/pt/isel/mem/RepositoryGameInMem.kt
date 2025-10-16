@@ -36,22 +36,6 @@ class RepositoryGameInMem : RepositoryGame {
         }
     }
 
-    override fun startNewRound(game: Game): Game {
-        val users = game.lobby.users
-        val nextRoundNr = (game.currentRound?: 0) + 1
-        val firstPlayerIndex = (nextRoundNr - 1) % users.size
-        val newRound =
-            Round(
-                nextRoundNr,
-                Turn(users[firstPlayerIndex], Hand(emptyList())),
-                users,
-                emptyMap(),
-            )
-        val updatedGame = game.copy(currentRound = nextRoundNr, rounds = game.rounds + newRound, state = State.RUNNING)
-        save(updatedGame)
-        return updatedGame
-    }
-
     override fun clear() {
         games.clear()
     }
@@ -71,32 +55,5 @@ class RepositoryGameInMem : RepositoryGame {
 
     override fun findById(id: Int): Game? {
         return games.find { it.gid == id }
-    }
-
-    override fun nextTurnMem(game: Game): Game {
-        val currentRound = game.rounds.find { game.currentRound == it.number }
-        requireNotNull(currentRound) { "Round can't be null"}
-        val newRound = currentRound.nextTurn()
-        val updatedRounds = game.rounds.map { if (it.number == newRound.number) newRound else it }
-        val updatedGame = game.copy(rounds = updatedRounds)
-        save(updatedGame)
-        return updatedGame
-    }
-
-    override fun setAnte(game: Game, ante: Int): Game {
-        val currentRound = game.rounds.find { game.currentRound == it.number }
-        requireNotNull(currentRound) { "Round can't be null"}
-        val newRound = currentRound.setAnte(ante)
-        val updatedRounds = game.rounds.map { if (it.number == newRound.number) newRound else it }
-        val updatedGame = game.copy(rounds = updatedRounds)
-        save(updatedGame)
-        return updatedGame
-    }
-
-    override fun payAnte(game: Game): Game {
-        val updatedAnte = game.rounds.find { game.currentRound == it.number }?.payAnte()
-        requireNotNull(updatedAnte) { "Round can't be null"}
-        val newUsersRound = updatedAnte.payAnte()
-        newUsersRound.users.forEach { user -> RepositoryUser.save(user) }
     }
 }

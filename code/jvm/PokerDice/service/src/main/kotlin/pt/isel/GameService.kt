@@ -2,10 +2,13 @@ package pt.isel
 
 import org.springframework.stereotype.Component
 import pt.isel.domain.games.Game
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.games.Hand
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
+import pt.isel.utils.State
+import pt.isel.domain.games.Round
+import pt.isel.domain.games.Turn
 import pt.isel.utils.failure
 import pt.isel.utils.success
 
@@ -15,30 +18,13 @@ class GameService(
 ) {
     fun createGame(
         startedAt: Long,
-        lobby: Lobby,
-        numberOfRounds: Int,
-    ): Either<GameError, Game> {
-        if (numberOfRounds < 1) return failure(GameError.InvalidNumberOfRounds)
-        if (startedAt <= 0) return failure(GameError.InvalidTime)
-
-        return trxManager.run {
-            val lobbyExists = repoLobby.findById(lobby.id) != null
-            if (!lobbyExists) return@run failure(GameError.InvalidLobby)
-
-            success(repoGame.createGame(startedAt, lobby, numberOfRounds))
-        }
-    }
-
-    fun createGame(
-        startedAt: Long,
         lobbyId: Int,
         numberOfRounds: Int,
     ): Either<GameError, Game> {
         if (numberOfRounds < 1) return failure(GameError.InvalidNumberOfRounds)
         if (startedAt <= 0) return failure(GameError.InvalidTime)
-
         return trxManager.run {
-            val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.InvalidLobby)
+            val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
             success(repoGame.createGame(startedAt, lobby, numberOfRounds))
         }
     }
@@ -48,18 +34,15 @@ class GameService(
             repoGame.findById(gameId)
         }
 
-    fun endGame(
-        game: Game,
-        endedAt: Long,
+    fun startGame(
+        gameId : Int,
+        numberOfRounds: Int
     ): Either<GameError, Game> {
-        if (endedAt <= 0 || endedAt < game.startedAt) return failure(GameError.InvalidTime)
-
         return trxManager.run {
-            val currentGame = repoGame.findById(game.gid) ?: return@run failure(GameError.GameNotFound)
-            if (currentGame.endedAt != null) return@run failure(GameError.GameAlreadyEnded)
-            val endedGame = repoGame.endGame(currentGame, endedAt)
-            repoGame.save(endedGame)
-            success(endedGame)
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            val newGame = game.copy(state = State.RUNNING)
+            repoGame.save(newGame)
+            success(newGame)
         }
     }
 
@@ -74,5 +57,51 @@ class GameService(
             val endedGame = repoGame.endGame(game, endedAt)
             repoGame.save(endedGame)
             success(endedGame)
+        }
+
+    fun startNewRound(gameId: Int): Either<GameError, Game> =
+        trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val newGame = game.startNewRound()
+            repoGame.save(newGame)
+            success(newGame)
+        }
+
+    fun setAnte(gameId: Int, ante: Int): Either<GameError, Game> =
+        trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+            val newRound = round.setAnte(ante)
+            val updatedGame = game.copy(currentRound = newRound)
+            repoGame.save(updatedGame)
+            success(updatedGame)
+        }
+
+    fun nextTurn(
+        gameId: Int
+    ) : Either<GameError, Game> =
+        trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+            val newRound = round.nextTurn(round)
+            val updatedGame = game.copy(
+                currentRound = newRound,
+            )
+            repoGame.save(updatedGame)
+            success(updatedGame)
+        }
+
+    fun payAnte(gameId: Int, ante: Int): Either<GameError, Game> =
+        trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+            val roundAfterPay = round.payAnte()
+            roundAfterPay.users.forEach {repoUsers.save(it)}
+            val newGame = game.copy(currentRound = roundAfterPay)
+            repoGame.save(newGame)
+            success(newGame)
         }
 }

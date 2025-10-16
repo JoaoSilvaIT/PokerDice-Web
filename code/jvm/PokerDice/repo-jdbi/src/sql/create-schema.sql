@@ -26,11 +26,6 @@ create table dbo.LOBBY (
     max_players integer not null check (max_players >= min_players)
 );
 
-create table dbo.LOBBY_PLAYER (
-    lobby_id integer not null references dbo.LOBBY(id) on delete cascade,
-    user_id integer not null references dbo.USERS(id),
-    primary key (lobby_id, user_id)
-);
 
 -- Game State
 create type dbo.GAME_STATE as enum ('WAITING', 'RUNNING', 'TERMINATED', 'FINISHED');

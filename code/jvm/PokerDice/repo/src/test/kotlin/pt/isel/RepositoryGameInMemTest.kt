@@ -215,7 +215,7 @@ class RepositoryGameInMemTest {
         assertEquals(game.lobby, ended.lobby)
         assertEquals(game.numberOfRounds, ended.numberOfRounds)
         assertEquals(State.FINISHED, ended.state)
-        assertNull(ended.currentRound)
+        assertNull(ended.currentRoundNumber)
     }
 
     @Test
@@ -225,7 +225,7 @@ class RepositoryGameInMemTest {
 
         assertEquals(State.WAITING, game.state)
         assertNull(game.endedAt)
-        assertNull(game.currentRound)
+        assertNull(game.currentRoundNumber)
     }
 
     @Test

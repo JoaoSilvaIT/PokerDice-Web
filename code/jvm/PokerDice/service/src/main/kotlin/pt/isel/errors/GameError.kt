@@ -5,6 +5,8 @@ sealed class GameError {
 
     data object InvalidLobby : GameError()
 
+    data object LobbyNotFound : GameError()
+
     data object InvalidTime : GameError()
 
     data object GameNotFound : GameError()
@@ -12,4 +14,8 @@ sealed class GameError {
     data object GameNotStarted : GameError()
 
     data object GameAlreadyEnded : GameError()
+
+    data object RoundNotStarted : GameError()
+
+    data object RoundNotFounded : GameError()
 }
