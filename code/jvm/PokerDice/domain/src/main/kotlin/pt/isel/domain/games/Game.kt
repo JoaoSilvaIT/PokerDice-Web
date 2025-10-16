@@ -24,14 +24,14 @@ data class Game(
         val users = this.lobby.users
         val nextRoundNr = (this.currentRound?.number ?: 0) + 1
         val firstPlayerIndex = (nextRoundNr - 1) % users.size
-        val newRound = Round(
-            number = nextRoundNr,
-            turn = Turn(users[firstPlayerIndex], Hand(emptyList())),
-            users = users,
-            userHands = emptyMap()
-        )
+        val newRound =
+            Round(
+                number = nextRoundNr,
+                turn = Turn(users[firstPlayerIndex], Hand(emptyList())),
+                users = users,
+                userHands = emptyMap(),
+            )
         val updatedGame = this.copy(currentRound = newRound)
         return updatedGame
     }
-
 }

@@ -14,11 +14,20 @@ class TransactionManagerInMem : TransactionManager {
 
     override fun <R> run(block: Transaction.() -> R): R {
         val transaction =
-            Transaction(
+            TransactionInMem(
                 repoUsers = repoUsers,
                 repoLobby = repoLobby,
                 repoGame = repoGame,
             )
         return transaction.block()
+    }
+}
+
+class TransactionInMem(
+    override val repoUsers: RepositoryUserInMem,
+    override val repoLobby: RepositoryLobbyInMem,
+    override val repoGame: RepositoryGameInMem,
+) : Transaction {
+    override fun rollback() {
     }
 }

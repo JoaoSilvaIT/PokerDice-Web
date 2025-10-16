@@ -28,7 +28,7 @@ data class Round(
         return this.copy(users = updatedUsers)
     }
 
-    fun nextTurn(round : Round): Round {
+    fun nextTurn(round: Round): Round {
         val currentIndex = round.users.indexOf(round.turn.user)
         val updatedUserHands = round.userHands + (round.turn.user to round.turn.hand)
         return this.copy(

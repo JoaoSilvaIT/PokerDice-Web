@@ -1,7 +1,6 @@
 package pt.isel.mem
 
 import pt.isel.RepositoryGame
-import pt.isel.RepositoryUser
 import pt.isel.domain.games.*
 import pt.isel.utils.State
 import kotlin.collections.plus
@@ -15,7 +14,7 @@ class RepositoryGameInMem : RepositoryGame {
         lobby: Lobby,
         numberOfRounds: Int,
     ): Game {
-        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING,null)
+        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
         games.add(game)
         return game
     }
