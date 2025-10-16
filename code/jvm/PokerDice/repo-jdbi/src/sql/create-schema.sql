@@ -39,7 +39,7 @@ create table dbo.GAME (
     id serial primary key,
     lobby_id integer unique not null references dbo.LOBBY(id),
     state dbo.GAME_STATE not null,
-    current_round integer not null default 0,
+    current_round integer not null default 1,
     total_rounds integer not null,
     created_at bigint not null,
     ended_at bigint
@@ -48,7 +48,6 @@ create table dbo.GAME (
 create table dbo.GAME_PLAYER (
     game_id integer not null references dbo.GAME(id) on delete cascade,
     user_id integer not null references dbo.USERS(id),
-    score integer not null default 0,
     primary key (game_id, user_id)
 );
 

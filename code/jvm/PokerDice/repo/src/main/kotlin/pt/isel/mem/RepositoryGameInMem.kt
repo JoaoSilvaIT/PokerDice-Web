@@ -3,7 +3,10 @@ package pt.isel.mem
 import pt.isel.RepositoryGame
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Lobby
+import pt.isel.domain.games.Round
+import pt.isel.domain.games.Turn
 import pt.isel.utils.State
+import kotlin.collections.plus
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
