@@ -24,7 +24,7 @@ data class GameOutputModel(
                 numberOfRounds = game.numberOfRounds,
                 state = game.state.name,
                 currentRound =
-                    game.currentRoundNumber?.let { round ->
+                    game.currentRound?.let { round ->
                         GameRoundOutputModel(
                             number = round.number,
                             ante = round.ante,

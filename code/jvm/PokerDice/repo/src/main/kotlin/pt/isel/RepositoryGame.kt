@@ -15,8 +15,6 @@ interface RepositoryGame : Repository<Game> {
         numberOfRounds: Int,
     ): Game
 
-    fun updateGame(game: Game)
-
     fun endGame(
         game: Game,
         endedAt: Long,

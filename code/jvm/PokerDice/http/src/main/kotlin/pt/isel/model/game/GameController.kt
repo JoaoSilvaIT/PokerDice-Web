@@ -66,6 +66,9 @@ class GameController(
                 GameError.GameNotFound -> HttpStatus.NOT_FOUND
                 GameError.GameNotStarted -> HttpStatus.CONFLICT
                 GameError.GameAlreadyEnded -> HttpStatus.CONFLICT
+                GameError.LobbyNotFound -> TODO()
+                GameError.RoundNotFounded -> TODO()
+                GameError.RoundNotStarted -> TODO()
             }
         return ResponseEntity
             .status(status)

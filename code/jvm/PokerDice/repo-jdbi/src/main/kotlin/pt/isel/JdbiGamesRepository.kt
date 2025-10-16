@@ -56,13 +56,13 @@ class JdbiGamesRepository(
                 """,
             ).bind("id", entity.gid)
             .bind("state", entity.state.name)
-            .bind("current_round", entity.currentRoundNumber?.number ?: 0)
+            .bind("current_round", entity.currentRound?.number ?: 0)
             .bind("total_rounds", entity.numberOfRounds)
             .bind("ended_at", entity.endedAt)
             .execute()
 
         // Update round data if current round exists
-        entity.currentRoundNumber?.let { round ->
+        entity.currentRound?.let { round ->
             saveRound(entity.gid, round)
         }
     }
@@ -114,10 +114,6 @@ class JdbiGamesRepository(
         }
 
         return Game(id, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
-    }
-
-    override fun updateGame(game: Game) {
-        save(game)
     }
 
     override fun endGame(
@@ -232,7 +228,7 @@ class JdbiGamesRepository(
             lobby = lobby,
             numberOfRounds = rs.getInt("total_rounds"),
             state = State.valueOf(rs.getString("state")),
-            currentRoundNumber = currentRound,
+            currentRound = currentRound,
         )
     }
 
