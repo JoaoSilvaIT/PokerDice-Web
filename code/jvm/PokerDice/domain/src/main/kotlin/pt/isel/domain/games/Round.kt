@@ -28,19 +28,12 @@ data class Round(
         return this.copy(users = updatedUsers)
     }
 
-    fun nextTurn(round: Round): Round {
-        val playoflastUser = Pair(round.turn.user, round.turn.hand)
-        val nextRoundNumber = round.number + 1
-        val nextPlayerIdx = (nextRoundNumber - 1) % round.users.size
-        val newRound =
-            Round(
-                nextRoundNumber,
-                Turn(
-                    user = round.users[nextPlayerIdx],
-                ),
-                round.users,
-                round.userHands + playoflastUser,
-            )
-        return newRound
+    fun nextTurn(round : Round): Round {
+        val currentIndex = round.users.indexOf(round.turn.user)
+        val updatedUserHands = round.userHands + (round.turn.user to round.turn.hand)
+        return this.copy(
+            turn = Turn(round.users[(currentIndex + 1) % round.users.size]),
+            userHands = updatedUserHands,
+        )
     }
 }

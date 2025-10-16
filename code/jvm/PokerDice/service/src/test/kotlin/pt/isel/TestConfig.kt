@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import pt.isel.domain.users.Sha256TokenEncoder
 import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.repo.TransactionManager
-import pt.isel.repo.mem.TransactionManagerInMem
+import pt.isel.mem.TransactionManagerInMem
 import java.time.Clock
 import java.time.Duration
 

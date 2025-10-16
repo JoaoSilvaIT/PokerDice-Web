@@ -1,9 +1,10 @@
 package pt.isel.mem
 
 import pt.isel.RepositoryGame
-import pt.isel.domain.games.Game
-import pt.isel.domain.games.Lobby
+import pt.isel.RepositoryUser
+import pt.isel.domain.games.*
 import pt.isel.utils.State
+import kotlin.collections.plus
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
@@ -14,7 +15,7 @@ class RepositoryGameInMem : RepositoryGame {
         lobby: Lobby,
         numberOfRounds: Int,
     ): Game {
-        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
+        val game = Game(game++, startedAt, null, lobby, numberOfRounds, State.WAITING,null)
         games.add(game)
         return game
     }
@@ -24,6 +25,7 @@ class RepositoryGameInMem : RepositoryGame {
         endedAt: Long,
     ): Game {
         val newGame = Game(game.gid, game.startedAt, endedAt, game.lobby, game.numberOfRounds, State.FINISHED, null)
+        save(newGame)
         return newGame
     }
 
