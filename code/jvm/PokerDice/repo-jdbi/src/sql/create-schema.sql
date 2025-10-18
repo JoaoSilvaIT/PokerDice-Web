@@ -1,5 +1,6 @@
 create schema if not exists dbo;
 
+
 -- Users and Authentication
 create table dbo.USERS (
     id serial primary key,
@@ -40,12 +41,6 @@ create table dbo.GAME (
     ended_at bigint
 );
 
-create table dbo.GAME_PLAYER (
-    game_id integer not null references dbo.GAME(id) on delete cascade,
-    user_id integer not null references dbo.USERS(id),
-    primary key (game_id, user_id)
-);
-
 create table dbo.ROUND (
     game_id integer not null references dbo.GAME(id) on delete cascade,
     round_number integer not null,
@@ -66,6 +61,4 @@ create table dbo.PLAYER_HAND (
 );
 
 -- Performance indexes
-create index idx_lobby_player_user_id on dbo.LOBBY_PLAYER(user_id);
-create index idx_game_player_user_id on dbo.GAME_PLAYER(user_id);
 create index idx_game_lobby_id on dbo.GAME(lobby_id);

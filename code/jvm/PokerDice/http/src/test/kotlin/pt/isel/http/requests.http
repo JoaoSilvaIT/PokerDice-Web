@@ -6,9 +6,9 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "Paul Atr121233123eides",
-  "email": "paul@atre11212333ides.com",
-  "password": "muadib"
+  "name": "teste2",
+  "email": "teste2@gmail.com",
+  "password": "teste2"
 }
 
 ### Create a Second User
@@ -119,7 +119,7 @@ Content-Type: application/json
   "lobbyId": 0,
   "numberOfRounds": 100
 }
-w
+
 ### Get non-existent game
 GET http://localhost:8080/api/games/999
 Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
