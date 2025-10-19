@@ -78,6 +78,7 @@ class JdbiGamesRepository(
         handle.createUpdate("DELETE FROM dbo.GAME").execute()
     }
 
+
     override fun createGame(
         startedAt: Long,
         lobby: Lobby,
@@ -87,34 +88,21 @@ class JdbiGamesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.GAME (lobby_id, state, current_round_number, total_rounds, created_at)
-                    VALUES (:lobby_id, :state::dbo.GAME_STATE, :current_round_number, :total_rounds, :created_at)
-                    """,
+                INSERT INTO dbo.GAME (lobby_id, state, current_round_number, total_rounds, started_at)
+                VALUES (:lobby_id, :state::dbo.GAME_STATE, :current_round_number, :total_rounds, :started_at)
+                """,
                 ).bind("lobby_id", lobby.id)
                 .bind("state", State.WAITING.name)
                 .bind("current_round_number", 0)
                 .bind("total_rounds", numberOfRounds)
-                .bind("created_at", startedAt)
-                .executeAndReturnGeneratedKeys()
+                .bind("started_at", startedAt)
+                .executeAndReturnGeneratedKeys("id")
                 .mapTo(Int::class.java)
                 .one()
 
-        // Add all lobby players to game
-        lobby.users.forEach { user ->
-            handle
-                .createUpdate(
-                    """
-                    INSERT INTO dbo.GAME_PLAYER (game_id, user_id, score)
-                    VALUES (:game_id, :user_id, :score)
-                    """,
-                ).bind("game_id", id)
-                .bind("user_id", user.id)
-                .bind("score", 0)
-                .execute()
-        }
-
         return Game(id, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
     }
+
 
     override fun endGame(
         game: Game,
