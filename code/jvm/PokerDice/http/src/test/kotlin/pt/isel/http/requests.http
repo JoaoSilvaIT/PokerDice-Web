@@ -6,8 +6,8 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "teste5",
-  "email": "teste5@gmail.com",
+  "name": "teste3",
+  "email": "teste3@gmail.com",
   "password": "teste5"
 }
 
@@ -27,7 +27,7 @@ Content-Type: application/json
 
 {
   "email": "teste3@gmail.com",
-  "password": "teste3"
+  "password": "teste5"
 }
 
 
@@ -44,16 +44,16 @@ Content-Type: application/json
 
 ### Logout (requires valid token)
 POST http://localhost:8080/api/logout
-Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
+Authorization: Bearer CbdwV8xxWGDplH_NlNomUMN2m_6MrOytyz2_w76v_EA=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
+Authorization: Bearer dfeWpVRubbv7Id7YyoPTG2GF4T6TRydMDmOUQyVyf4k=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer sHhfrHcS4uQflkIoTB79hW6-cePtkkRiu3OTlWnkO0U=
+Authorization: Bearer dfeWpVRubbv7Id7YyoPTG2GF4T6TRydMDmOUQyVyf4k=
 Content-Type: application/json
 
 {
