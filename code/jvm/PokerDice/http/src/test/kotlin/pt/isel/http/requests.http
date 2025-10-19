@@ -94,6 +94,10 @@ Content-Type: application/json
 POST http://localhost:8080/api/games/3/end
 Authorization: Bearer 7t2jt69c_uCfyomNZI0LUaTA7QTAGbnVM1ALl4rZs10=
 
+### Find Game
+GET http://localhost:8080/api/games/1
+Authorization: Bearer KOGPXrKriyoMJSrjTSL7GsNC15s1YBmIAMH7H-4zHf4=
+
 ### ====== NEW GAME FUNCTION TESTS ======
 
 ### Start game (requires valid token and existing game)
@@ -115,7 +119,7 @@ Authorization: Bearer KOGPXrKriyoMJSrjTSL7GsNC15s1YBmIAMH7H-4zHf4=
 Content-Type: application/json
 
 {
-  "ante": 50
+  "ante": 40
 }
 
 ### Move to next player's turn
@@ -123,13 +127,10 @@ POST http://localhost:8080/api/games/1/next-turn
 Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
 
 ### Pay ante (requires round to be started)
-POST http://localhost:8080/api/games/1/pay-ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+POST http://localhost:8080/api/games/1/rounds/pay-ante
+Authorization: Bearer KOGPXrKriyoMJSrjTSL7GsNC15s1YBmIAMH7H-4zHf4=
 Content-Type: application/json
 
-{
-  "ante": 10
-}
 
 ### ====== COMPLETE GAME FLOW TEST ======
 

@@ -94,11 +94,11 @@ class RepositoryGameInMem : RepositoryGame {
         return round.copy(ante = ante)
     }
 
-    override fun payAnte(game: Game, ante: Int): Game {
-        val updatedPlayers = game.players.map { user ->
-            user.copy(currentBalance = user.currentBalance - ante)
+    override fun payAnte(round: Round): Round {
+        val updatedPlayers = round.players.map { user ->
+            user.copy(currentBalance = user.currentBalance - round.ante)
         }
-        return game.copy(players = updatedPlayers)
+        return round.copy(players = updatedPlayers)
     }
 
     override fun nextTurn(round: Round): Round {

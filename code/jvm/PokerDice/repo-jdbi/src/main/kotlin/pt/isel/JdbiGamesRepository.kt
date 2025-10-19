@@ -18,10 +18,8 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
+                SELECT g.*
                 FROM dbo.GAME g
-                JOIN dbo.LOBBY l ON g.lobby_id = l.id
-                JOIN dbo.USERS u ON l.host_id = u.id
                 WHERE g.id = :id
                 """,
             ).bind("id", id)
@@ -33,10 +31,8 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
+                SELECT g.*
                 FROM dbo.GAME g
-                JOIN dbo.LOBBY l ON g.lobby_id = l.id
-                JOIN dbo.USERS u ON l.host_id = u.id
                 """,
             ).map { rs, _ -> mapRowToGame(rs) }
             .list()
@@ -154,14 +150,34 @@ class JdbiGamesRepository(
 
     override fun setAnte(ante: Int, round: Round): Round {
         val updatedRound = round.copy(ante = ante)
-        saveRound(updatedRound.gameId, updatedRound)
         return updatedRound
     }
 
-    override fun payAnte(game: Game, ante: Int): Game {
-        // Update player balances and pot
-        // This is a simplified implementation
-        return game
+    override fun payAnte(round: Round): Round {
+        round.players.forEach { player ->
+            handle
+                .createUpdate(
+                    """
+                    UPDATE dbo.USERS
+                    SET balance = balance - :ante
+                    WHERE id = :user_id
+                    """,
+                ).bind("ante", round.ante)
+                .bind("user_id", player.id)
+                .execute()
+        }
+
+        val updatedPlayers = round.players.map { player ->
+            player.copy(currentBalance = player.currentBalance - round.ante)
+        }
+
+        val newPot = round.pot + (round.ante * round.players.size)
+        val updatedRound = round.copy(
+            players = updatedPlayers,
+            pot = newPot
+        )
+
+        return updatedRound
     }
 
     override fun nextTurn(round: Round): Round {
@@ -187,7 +203,11 @@ class JdbiGamesRepository(
                 INSERT INTO dbo.ROUND (game_id, round_number, first_player_idx, turn_of_player, ante, pot)
                 VALUES (:game_id, :round_number, :first_player_idx, :turn_of_player, :ante, :pot)
                 ON CONFLICT (game_id, round_number)
-                DO UPDATE SET first_player_idx = :first_player_idx, turn_of_player = :turn_of_player, ante = :ante, pot = :pot
+                DO UPDATE SET 
+                    first_player_idx = EXCLUDED.first_player_idx, 
+                    turn_of_player = EXCLUDED.turn_of_player, 
+                    ante = EXCLUDED.ante, 
+                    pot = EXCLUDED.pot
                 """,
             ).bind("game_id", gameId)
             .bind("round_number", round.number)
@@ -220,7 +240,6 @@ class JdbiGamesRepository(
         val gameId = rs.getInt("id")
         val lobbyId = rs.getInt("lobby_id")
 
-        // Fetch lobby players
         val lobbyPlayers =
             handle
                 .createQuery(
@@ -275,16 +294,19 @@ class JdbiGamesRepository(
         val turnUserId = roundData["turn_of_player"] as Int
         val turnPlayer = players.first { it.id == turnUserId }
         val pot = roundData["pot"] as Int
+        val ante = roundData["ante"] as Int
+        val firstPlayerIdx = roundData["first_player_idx"] as Int
 
         val playerHands = emptyMap<PlayerInGame, Hand>()
 
         return Round(
             number = roundNumber,
-            firstPlayerIdx = 0, // Would need to be stored in DB
+            firstPlayerIdx = firstPlayerIdx,
             turn = Turn(turnPlayer, rollsRemaining = 3, currentDice = emptyList()),
             players = players,
             playerHands = playerHands,
             gameId = gameId,
+            ante = ante,
             pot = pot
         )
     }

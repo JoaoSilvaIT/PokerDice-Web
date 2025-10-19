@@ -75,7 +75,7 @@ class GameService(
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
             require(ante > 0 && ante >= MIN_ANTE) { "Cost must be positive and at least $MIN_ANTE" }
-            val newRound = round.copy(ante = ante)
+            val newRound = repoGame.setAnte(ante, round)
             val updatedGame = game.copy(currentRound = newRound)
             repoGame.save(updatedGame)
             success(updatedGame)
@@ -124,19 +124,8 @@ class GameService(
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
 
-            val playersInGame = round.players.mapNotNull { playerInfo ->
-                repoUsers.findById(playerInfo.id)
-            }
-            val updatedUsers = playersInGame.map { user ->
-                require(user.balance >= round.ante) {
-                    "User ${user.name} has insufficient balance (${user.balance}) to pay ante (${round.ante})"
-                }
-                user.copy(balance = user.balance - round.ante)
-            }
-            updatedUsers.forEach { user -> repoUsers.save(user) }
-
-            val roundAfterPay = round.copy(pot = round.pot + round.ante * updatedUsers.count())
-            val newGame = game.copy(currentRound = roundAfterPay)
+            val updatedRound = repoGame.payAnte(round)
+            val newGame = game.copy(currentRound = updatedRound)
             repoGame.save(newGame)
             success(newGame)
         }

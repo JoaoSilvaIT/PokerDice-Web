@@ -27,7 +27,7 @@ interface RepositoryGame : Repository<Game> {
 
     fun setAnte(ante: Int,round: Round): Round
 
-    fun payAnte(game: Game, ante: Int): Game
+    fun payAnte(round: Round): Round
 
     fun nextTurn(round: Round): Round
 }
