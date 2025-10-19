@@ -2,14 +2,17 @@ package pt.isel.mem
 
 import pt.isel.RepositoryLobby
 import pt.isel.domain.lobby.Lobby
+import pt.isel.domain.lobby.LobbyExternalInfo
+import pt.isel.domain.lobby.LobbySettings
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 
 class RepositoryLobbyInMem : RepositoryLobby {
     private val lobbies = mutableListOf<Lobby>()
-    private var lobby = 0
+    private var lobbyIdCounter = 0
 
     override fun deleteLobbyByHost(host: User) {
-        lobbies.removeAll { it.host == host }
+        lobbies.removeAll { it.host.id == host.id }
     }
 
     override fun createLobby(
@@ -19,9 +22,36 @@ class RepositoryLobbyInMem : RepositoryLobby {
         maxPlayers: Int,
         host: User,
     ): Lobby {
-        val lobby = Lobby(lobby++, name, description, minPlayers, maxPlayers, listOf(host), host)
+        val settings = LobbySettings(
+            numberOfRounds = 3, // Default value
+            minPlayers = minPlayers,
+            maxPlayers = maxPlayers
+        )
+        val hostInfo = UserExternalInfo(host.id, host.name)
+        val lobby = Lobby(
+            id = lobbyIdCounter++,
+            name = name,
+            description = description,
+            host = hostInfo,
+            settings = settings,
+            players = setOf(hostInfo)
+        )
         lobbies.add(lobby)
         return lobby
+    }
+
+    override fun getLobbyById(id: Int): LobbyExternalInfo {
+        val lobby = lobbies.firstOrNull { it.id == id }
+        return if (lobby != null) {
+            LobbyExternalInfo(
+                name = lobby.name,
+                description = lobby.description,
+                currentPlayers = lobby.players.size,
+                numberOfRounds = lobby.settings.numberOfRounds
+            )
+        } else {
+            throw NoSuchElementException("Lobby with id $id not found")
+        }
     }
 
     override fun findByName(name: String) = lobbies.firstOrNull { it.name == name }

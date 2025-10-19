@@ -17,7 +17,7 @@ interface RepositoryLobby : Repository<Lobby> {
 
     fun getLobbyById(id: Int): LobbyExternalInfo
 
-    fun findByName(name: String): LobbyExternalInfo?
+    fun findByName(name: String): Lobby?
 
     fun deleteLobbyByHost(host: User)
 

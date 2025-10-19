@@ -17,10 +17,10 @@ data class GameOutputModel(
     companion object {
         fun fromDomain(game: Game): GameOutputModel =
             GameOutputModel(
-                id = game.gid,
+                id = game.id,
                 startedAt = game.startedAt,
                 endedAt = game.endedAt,
-                lobbyId = game.lobby.id,
+                lobbyId = game.lobbyId,
                 numberOfRounds = game.numberOfRounds,
                 state = game.state.name,
                 currentRound =
@@ -28,7 +28,7 @@ data class GameOutputModel(
                         GameRoundOutputModel(
                             number = round.number,
                             ante = round.ante,
-                            turnUserId = round.turn.user.id,
+                            turnUserId = round.turn.player.id,
                         )
                     },
             )

@@ -5,6 +5,7 @@ import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import java.time.Instant
 
 class RepositoryUserInMem : RepositoryUser {
@@ -26,6 +27,16 @@ class RepositoryUserInMem : RepositoryUser {
 
     override fun findByEmail(email: String): User? = users.firstOrNull { it.email == email }
 
+
+    override fun getUserById(id: Int): UserExternalInfo? {
+        return users.firstOrNull { it.id == id }?.let { user ->
+            UserExternalInfo(
+                id = user.id,
+                name = user.name,
+            )
+        }
+    }
+    
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? =
         tokens.firstOrNull { it.tokenValidationInfo == tokenValidationInfo }?.let {
             val user = findById(it.userId)

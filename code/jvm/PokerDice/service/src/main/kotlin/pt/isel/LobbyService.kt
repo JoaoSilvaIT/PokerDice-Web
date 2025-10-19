@@ -3,6 +3,7 @@ package pt.isel
 import org.springframework.stereotype.Component
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import pt.isel.errors.LobbyError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -38,7 +39,7 @@ class LobbyService(
 
     fun listVisibleLobbies(): List<Lobby> =
         trxManager.run {
-            repoLobby.findAll().filter { it.users.size < it.maxPlayers }
+            repoLobby.findAll().filter { it.players.size < it.settings.maxPlayers }
         }
 
     fun findLobbyById(lobbyId: Int): Lobby? =
@@ -52,9 +53,9 @@ class LobbyService(
     ): Either<LobbyError, Lobby> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
-            if (lobby.users.size >= lobby.maxPlayers) return@run failure(LobbyError.LobbyFull)
-            if (lobby.users.any { it.id == user.id }) return@run failure(LobbyError.UserAlreadyInLobby)
-            val updated = lobby.copy(users = lobby.users + user)
+            if (lobby.players.size >= lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
+            if (lobby.players.any { it.id == user.id }) return@run failure(LobbyError.UserAlreadyInLobby)
+            val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name))
             repoLobby.save(updated)
             success(updated)
         }
@@ -66,9 +67,9 @@ class LobbyService(
     ): Either<LobbyError, Lobby> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
-            if (lobby.users.size + users.size > lobby.maxPlayers) return@run failure(LobbyError.LobbyFull)
+            if (lobby.players.size + users.size > lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
 
-            val updated = lobby.copy(users = lobby.users + users)
+            val updated = lobby.copy(players = lobby.players + users.map { UserExternalInfo(it.id, it.name) })
             repoLobby.save(updated)
             success(updated)
         }
@@ -83,7 +84,7 @@ class LobbyService(
                 repoLobby.deleteLobbyByHost(user)
                 return@run success(true)
             }
-            val updated = lobby.copy(users = lobby.users.filter { it.id != user.id })
+            val updated = lobby.copy(players = lobby.players.filter { it.id != user.id }.toSet())
             repoLobby.save(updated)
             success(false)
         }

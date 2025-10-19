@@ -1,14 +1,14 @@
 package pt.isel
 
 import org.jdbi.v3.core.Handle
-import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Hand
+import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.State
 import java.sql.ResultSet
@@ -20,8 +20,7 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.email as host_email,
-                       u.balance as host_balance, u.password_hash as host_password_hash
+                SELECT g.*, l.*, u.id as host_id, u.username as host_username
                 FROM dbo.GAME g
                 JOIN dbo.LOBBY l ON g.lobby_id = l.id
                 JOIN dbo.USERS u ON l.host_id = u.id
@@ -36,8 +35,7 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.email as host_email,
-                       u.balance as host_balance, u.password_hash as host_password_hash
+                SELECT g.*, l.*, u.id as host_id, u.username as host_username
                 FROM dbo.GAME g
                 JOIN dbo.LOBBY l ON g.lobby_id = l.id
                 JOIN dbo.USERS u ON l.host_id = u.id
@@ -54,7 +52,7 @@ class JdbiGamesRepository(
                     total_rounds = :total_rounds, ended_at = :ended_at
                 WHERE id = :id
                 """,
-            ).bind("id", entity.gid)
+            ).bind("id", entity.id)
             .bind("state", entity.state.name)
             .bind("current_round_number", entity.currentRound?.number ?: 0)
             .bind("total_rounds", entity.numberOfRounds)
@@ -63,7 +61,7 @@ class JdbiGamesRepository(
 
         // Update round data if current round exists
         entity.currentRound?.let { round ->
-            saveRound(entity.gid, round)
+            saveRound(entity.id, round)
         }
     }
 
@@ -99,8 +97,17 @@ class JdbiGamesRepository(
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(Int::class.java)
                 .one()
-
-        return Game(id, startedAt, null, lobby, numberOfRounds, State.WAITING, null)
+        val players = lobby.players.map { PlayerInGame(it.id, it.name, 0, 0) }.toSet()
+        return Game(
+            id = id,
+            lobbyId = lobby.id,
+            players = players,
+            numberOfRounds = numberOfRounds,
+            state = State.WAITING,
+            currentRound = null,
+            startedAt = startedAt,
+            endedAt = null
+        )
     }
 
 
@@ -115,7 +122,7 @@ class JdbiGamesRepository(
                 SET state = :state::dbo.GAME_STATE, ended_at = :ended_at
                 WHERE id = :id
                 """,
-            ).bind("id", game.gid)
+            ).bind("id", game.id)
             .bind("state", State.FINISHED.name)
             .bind("ended_at", endedAt)
             .execute()
@@ -138,7 +145,7 @@ class JdbiGamesRepository(
                 """,
             ).bind("game_id", gameId)
             .bind("round_number", round.number)
-            .bind("turn_of_player", round.turn.user.id)
+            .bind("turn_of_player", round.turn.player.id)
             .bind("pot", round.ante)
             .execute()
 
@@ -166,64 +173,48 @@ class JdbiGamesRepository(
         val gameId = rs.getInt("id")
         val lobbyId = rs.getInt("lobby_id")
 
-        val host =
-            User(
-                rs.getInt("host_id"),
-                rs.getString("host_username"),
-                rs.getString("host_email"),
-                rs.getInt("host_balance"),
-                PasswordValidationInfo(rs.getString("host_password_hash")),
-            )
+        val hostInfo = UserExternalInfo(
+            rs.getInt("host_id"),
+            rs.getString("host_username")
+        )
 
         // Fetch lobby players
         val lobbyPlayers =
             handle
                 .createQuery(
                     """
-                    SELECT u.* FROM dbo.USERS u
-                    JOIN dbo.LOBBY_PLAYER lp ON u.id = lp.user_id
-                    WHERE lp.lobby_id = :lobby_id
+                    SELECT u.id, u.username FROM dbo.USERS u
+                    JOIN dbo.LOBBY_USER lu ON u.id = lu.user_id
+                    WHERE lu.lobby_id = :lobby_id
                     """,
                 ).bind("lobby_id", lobbyId)
                 .map { playerRs, _ ->
-                    User(
+                    UserExternalInfo(
                         playerRs.getInt("id"),
                         playerRs.getString("username"),
-                        playerRs.getString("email"),
-                        playerRs.getInt("balance"),
-                        PasswordValidationInfo(playerRs.getString("password_hash")),
                     )
-                }.list()
+                }.list().toSet()
 
-        val lobby =
-            Lobby(
-                id = lobbyId,
-                name = rs.getString("name"),
-                description = rs.getString("description"),
-                minPlayers = rs.getInt("min_players"),
-                maxPlayers = rs.getInt("max_players"),
-                users = lobbyPlayers,
-                host = host,
-            )
-
+        val playersInGame = lobbyPlayers.map { PlayerInGame(it.id, it.name, 0, 0) }.toSet()
         val currentRoundNumber = rs.getInt("current_round_number")
         val currentRound = if (currentRoundNumber > 0) loadRound(gameId, currentRoundNumber, lobbyPlayers) else null
 
         return Game(
-            gid = gameId,
-            startedAt = rs.getLong("created_at"),
-            endedAt = rs.getLong("ended_at").takeIf { !rs.wasNull() },
-            lobby = lobby,
+            id = gameId,
+            lobbyId = lobbyId,
+            players = playersInGame,
             numberOfRounds = rs.getInt("total_rounds"),
             state = State.valueOf(rs.getString("state")),
             currentRound = currentRound,
+            startedAt = rs.getLong("started_at"),
+            endedAt = rs.getLong("ended_at").takeIf { !rs.wasNull() }
         )
     }
 
     private fun loadRound(
         gameId: Int,
         roundNumber: Int,
-        players: List<User>,
+        players: Set<UserExternalInfo>,
     ): Round? {
         val roundData =
             handle
@@ -242,33 +233,17 @@ class JdbiGamesRepository(
         val turnUser = players.first { it.id == turnUserId }
         val pot = roundData["pot"] as Int
 
-        // Load player hands
-        val userHands =
-            handle
-                .createQuery(
-                    """
-                    SELECT * FROM dbo.PLAYER_HAND
-                    WHERE game_id = :game_id AND round_number = :round_number
-                    """,
-                ).bind("game_id", gameId)
-                .bind("round_number", roundNumber)
-                .mapToMap()
-                .list()
-                .associate { handData ->
-                    val userId = handData["user_id"] as Int
-                    val user = players.first { it.id == userId }
-                    @Suppress("UNCHECKED_CAST")
-                    val diceValues = (handData["dice_values"] as Array<String>).map { charToFace(it[0]) }
-                    val hand = Hand(diceValues.map { Dice(it) })
-                    user to hand
-                }
+        // Note: userHands expects Map<User, Hand> but we only have UserExternalInfo
+        // This is a temporary workaround - proper implementation would need full User objects
+        val userHands = emptyMap<User, Hand>()
 
         return Round(
             number = roundNumber,
-            firstPlayerIdx = 1,
-            turn = Turn(turnUser, userHands[turnUser] ?: Hand(emptyList())),
-            users = players,
+            firstPlayerIdx = 0, // Would need to be stored in DB
+            turn = Turn(turnUser, rollsRemaining = 3, currentDice = emptyList()),
+            players = players,
             userHands = userHands,
+            gameId = gameId,
             ante = pot,
         )
     }

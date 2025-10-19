@@ -34,11 +34,11 @@ class LobbyController(
                             id = result.value.id,
                             name = result.value.name,
                             description = result.value.description,
-                            minPlayers = result.value.minPlayers,
-                            maxPlayers = result.value.maxPlayers,
+                            minPlayers = result.value.settings.minPlayers,
+                            maxPlayers = result.value.settings.maxPlayers,
                             players =
-                                result.value.users.map {
-                                    LobbyPlayerOutputModel(it.id, it.name, it.email)
+                                result.value.players.map {
+                                    LobbyPlayerOutputModel(it.id, it.name)
                                 },
                             hostId = result.value.host.id,
                         ),
@@ -67,11 +67,11 @@ class LobbyController(
                     id = lobby.id,
                     name = lobby.name,
                     description = lobby.description,
-                    minPlayers = lobby.minPlayers,
-                    maxPlayers = lobby.maxPlayers,
+                    minPlayers = lobby.settings.minPlayers,
+                    maxPlayers = lobby.settings.maxPlayers,
                     players =
-                        lobby.users.map {
-                            LobbyPlayerOutputModel(it.id, it.name, it.email)
+                        lobby.players.map {
+                            LobbyPlayerOutputModel(it.id, it.name)
                         },
                     hostId = lobby.host.id,
                 )
@@ -93,11 +93,11 @@ class LobbyController(
                         id = result.value.id,
                         name = result.value.name,
                         description = result.value.description,
-                        minPlayers = result.value.minPlayers,
-                        maxPlayers = result.value.maxPlayers,
+                        minPlayers = result.value.settings.minPlayers,
+                        maxPlayers = result.value.settings.maxPlayers,
                         players =
-                            result.value.users.map {
-                                LobbyPlayerOutputModel(it.id, it.name, it.email)
+                            result.value.players.map {
+                                LobbyPlayerOutputModel(it.id, it.name)
                             },
                         hostId = result.value.host.id,
                     ),
