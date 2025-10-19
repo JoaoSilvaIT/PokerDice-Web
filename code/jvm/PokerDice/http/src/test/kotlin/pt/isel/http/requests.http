@@ -128,7 +128,7 @@ Authorization: Bearer PBJ8RzrpY217LOrj4ZXabxnXdIWshPGdtZuWbpnckaU=
 Content-Type: application/json
 
 {
-    "dice": "K"
+    "dice": "A"
 }
 
 ### Move to next player's turn

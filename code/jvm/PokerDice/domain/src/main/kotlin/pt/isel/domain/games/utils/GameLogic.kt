@@ -74,6 +74,15 @@ fun charToFace(char: Char) : Face = when (char) {
         else -> Face.NINE
     }
 
+fun faceToChar(face: Face): Char = when (face) {
+    Face.ACE -> 'A'
+    Face.KING -> 'K'
+    Face.QUEEN -> 'Q'
+    Face.JACK -> 'J'
+    Face.TEN -> 'T'
+    Face.NINE -> '9'
+}
+
 /*
 fun chooseDices(dicesToKeep: List<Dice>, turn: Turn): Turn {
     val newSetOfDices = dicesToKeep.toSet()

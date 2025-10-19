@@ -10,6 +10,7 @@ import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.State
+import pt.isel.domain.games.utils.faceToChar
 import java.sql.ResultSet
 
 class JdbiGamesRepository(
@@ -223,7 +224,7 @@ class JdbiGamesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.PLAYER_HAND (game_id, round_number, user_id, dice_values, rolls_left)
+                    INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
                     VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
                     ON CONFLICT (game_id, round_number, user_id)
                     DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
@@ -238,14 +239,29 @@ class JdbiGamesRepository(
     }
 
     override fun updateTurn(chosenDice: Dice, round: Round): Round {
-        val updatedRound = round.copy(
-            turn = Turn(
-                round.turn.player,
-                round.turn.rollsRemaining,
-                currentDice = round.turn.currentDice + chosenDice
-            )
+
+        val updatedDice = round.turn.currentDice + chosenDice
+        val updatedTurn = round.turn.copy(currentDice = updatedDice)
+        val dicesToChars = updatedDice.map { faceToChar(it.face).toString() }.toTypedArray()
+
+        handle
+            .createUpdate(
+            """
+        INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
+        VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
+        ON CONFLICT (game_id, round_number, user_id)
+        DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
+        """
         )
-        return updatedRound
+            .bind("game_id", round.gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", updatedTurn.player.id)
+            .bind("dice_values",dicesToChars)
+            .bind("rolls_left", updatedTurn.rollsRemaining)
+            .execute()
+
+
+        return round.copy(turn = updatedTurn)
     }
 
 
@@ -323,4 +339,5 @@ class JdbiGamesRepository(
             pot = pot
         )
     }
+
 }
