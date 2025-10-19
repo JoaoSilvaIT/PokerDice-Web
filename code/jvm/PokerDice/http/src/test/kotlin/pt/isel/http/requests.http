@@ -26,8 +26,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "paul@atreides.com",
-  "password": "muadib"
+  "email": "teste2@gmail.com",
+  "password": "teste2"
 }
 
 

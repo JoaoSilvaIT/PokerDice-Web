@@ -38,3 +38,10 @@ fun decideRoundWinner(round: Round): List<User> {
 
     return userHandValues.filter { it.second == winnerValue }.map { it.first }
 }
+
+fun distributeWinnings(winners: List<User>, pot: Int): List<User> {
+    val winningsPerWinner = pot / winners.size
+    return winners.map { winner ->
+        winner.copy(balance = winner.balance + winningsPerWinner)
+    }
+}

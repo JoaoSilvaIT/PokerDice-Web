@@ -12,6 +12,8 @@ data class Round(
     val users: List<User>,
     val userHands: Map<User, Hand>,
     val ante: Int = MIN_ANTE,
+    val pot : Int = 0,
+    val gameId : Int? = null,
 ) {
     fun setAnte(newAnte: Int): Round {
         require(newAnte > 0 && newAnte >= MIN_ANTE) { "Cost must be positive and at least $MIN_ANTE" }
