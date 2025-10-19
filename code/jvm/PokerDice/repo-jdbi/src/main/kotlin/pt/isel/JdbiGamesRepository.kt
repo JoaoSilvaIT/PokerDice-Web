@@ -8,8 +8,8 @@ import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.State
+import pt.isel.domain.games.utils.charToFace
 import pt.isel.domain.games.utils.faceToChar
 import java.sql.ResultSet
 
@@ -239,13 +239,25 @@ class JdbiGamesRepository(
     }
 
     override fun updateTurn(chosenDice: Dice, round: Round): Round {
+        val existingDice = handle.createQuery(
+            """
+        SELECT dice_values FROM dbo.TURN
+        WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
+        """
+        )
+            .bind("game_id", round.gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", round.turn.player.id)
+            .mapTo(String::class.java)  // Muda para String
+            .findOne()
+            .map { it.removeSurrounding("{", "}").split(",").toTypedArray() }  // Parse manual do array
+            .orElse(emptyArray())
 
+        val updatedDiceArray = existingDice + faceToChar(chosenDice.face).toString()
         val updatedDice = round.turn.currentDice + chosenDice
         val updatedTurn = round.turn.copy(currentDice = updatedDice)
-        val dicesToChars = updatedDice.map { faceToChar(it.face).toString() }.toTypedArray()
 
-        handle
-            .createUpdate(
+        handle.createUpdate(
             """
         INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
         VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
@@ -256,10 +268,9 @@ class JdbiGamesRepository(
             .bind("game_id", round.gameId)
             .bind("round_number", round.number)
             .bind("user_id", updatedTurn.player.id)
-            .bind("dice_values",dicesToChars)
+            .bindArray("dice_values", String::class.java, *updatedDiceArray)
             .bind("rolls_left", updatedTurn.rollsRemaining)
             .execute()
-
 
         return round.copy(turn = updatedTurn)
     }
@@ -302,42 +313,54 @@ class JdbiGamesRepository(
         )
     }
 
-    private fun loadRound(
-        gameId: Int,
-        roundNumber: Int,
-        players: List<PlayerInGame>,
-    ): Round? {
-        val roundData =
-            handle
-                .createQuery(
-                    """
-                    SELECT * FROM dbo.ROUND
-                    WHERE game_id = :game_id AND round_number = :round_number
-                    """,
-                ).bind("game_id", gameId)
-                .bind("round_number", roundNumber)
-                .mapToMap()
-                .findOne()
-                .orElse(null) ?: return null
+    private fun loadRound(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Round? {
+        val roundData = handle.createQuery(
+            """
+        SELECT * FROM dbo.ROUND
+        WHERE game_id = :game_id AND round_number = :round_number
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .mapToMap()
+            .findOne()
+            .orElse(null) ?: return null
 
         val turnUserId = roundData["turn_of_player"] as Int
         val turnPlayer = players.first { it.id == turnUserId }
-        val pot = roundData["pot"] as Int
-        val ante = roundData["ante"] as Int
-        val firstPlayerIdx = roundData["first_player_idx"] as Int
 
-        val playerHands = emptyMap<PlayerInGame, Hand>()
+        // Carregar os dados do turno atual
+        val turnData = handle.createQuery(
+            """
+        SELECT dice_values, rolls_left FROM dbo.TURN
+        WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .bind("user_id", turnUserId)
+            .mapToMap()
+            .findOne()
+            .orElse(null)
+
+        val currentDice = turnData?.get("dice_values")?.toString()
+            ?.removeSurrounding("{", "}")
+            ?.split(",")
+            ?.map { Dice(charToFace(it[0])) } ?: emptyList()
+
+        val rollsLeft = turnData?.get("rolls_left") as? Int ?: 3
 
         return Round(
             number = roundNumber,
-            firstPlayerIdx = firstPlayerIdx,
-            turn = Turn(turnPlayer, rollsRemaining = 3, currentDice = emptyList()),
+            firstPlayerIdx = roundData["first_player_idx"] as Int,
+            turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
             players = players,
-            playerHands = playerHands,
+            playerHands = emptyMap(),
             gameId = gameId,
-            ante = ante,
-            pot = pot
+            ante = roundData["ante"] as Int,
+            pot = roundData["pot"] as Int
         )
     }
+
 
 }

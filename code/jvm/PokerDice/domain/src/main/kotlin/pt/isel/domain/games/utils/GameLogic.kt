@@ -55,8 +55,9 @@ fun roll(): Dice {
     return Dice(randomFace)
 }
 
-fun rollDices(numberOfDices: Int): List<Dice> {
-    val dices = List(numberOfDices) { roll() }
+fun rollDicesLogic(numberOfDices: Int): List<Dice> {
+    val dices = mutableListOf<Dice>()
+    repeat(numberOfDices){ dices.add(roll()) }
     return dices
 }
 

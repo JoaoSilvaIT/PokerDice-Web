@@ -14,6 +14,7 @@ import pt.isel.domain.games.Turn
 import pt.isel.utils.failure
 import pt.isel.utils.success
 import pt.isel.domain.games.MIN_ANTE
+import pt.isel.domain.games.utils.rollDicesLogic
 
 @Component
 class GameService(
@@ -147,6 +148,16 @@ class GameService(
             repoGame.save(newGame)
             success(newGame)
         }
+
+    fun rollDices(gameId: Int): Either<GameError, List<Dice>> {
+        return trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+            val dicesRolled = rollDicesLogic(5 - round.turn.currentDice.size)
+            success(dicesRolled)
+        }
+    }
 
 
 

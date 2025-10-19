@@ -133,7 +133,7 @@ class GameController(
         @RequestBody input: DiceUpdateInputModel,
         @PathVariable id: Int
     ): ResponseEntity<*> {
-        return when (val result = gameService.updateTurn(Dice(charToFace(input.dice.toChar())), id)) {
+        return when (val result = gameService.updateTurn(Dice(charToFace(input.dice)), id)) {
             is Either.Success -> ResponseEntity
                 .status(HttpStatus.OK)
                 .body(DiceOutputModel(result.value.currentRound!!.turn.currentDice))
@@ -142,6 +142,23 @@ class GameController(
             }
         }
     }
+
+    @PostMapping("/api/games/{id}/rounds/roll-dices")
+    fun rollDices(
+        user: AuthenticatedUser,
+        @PathVariable id: Int,
+    ): ResponseEntity<*> {
+        return when (val result = gameService.rollDices(id)) {
+            is Either.Success -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(RolledDiceOutputModel(result.value))
+            is Either.Failure -> {
+                result.value.toProblemResponse()
+            }
+        }
+    }
+
+
 
     @PostMapping("/api/games/{id}/end")
     fun end(
