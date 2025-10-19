@@ -60,20 +60,6 @@ class LobbyService(
             success(updated)
         }
 
-    // Overloaded method for bulk adding users - used for testing
-    fun joinLobby(
-        lobbyId: Int,
-        users: List<User>,
-    ): Either<LobbyError, Lobby> =
-        trxManager.run {
-            val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
-            if (lobby.players.size + users.size > lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
-
-            val updated = lobby.copy(players = lobby.players + users.map { UserExternalInfo(it.id, it.name, it.balance) })
-            repoLobby.save(updated)
-            success(updated)
-        }
-
     fun leaveLobby(
         lobbyId: Int,
         user: User,

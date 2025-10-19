@@ -25,7 +25,6 @@ class GameService(
         if (startedAt <= 0) return failure(GameError.InvalidTime)
         return trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
-            // Players are derived from lobby in repository; no need to pass players explicitly
             success(repoGame.createGame(startedAt, lobby, numberOfRounds))
         }
     }
@@ -63,19 +62,7 @@ class GameService(
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
-            val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
-            val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
-            val firstPlayer = game.players[firstPlayerIndex]
-            val newRound = Round(
-                number = nextRoundNumber,
-                firstPlayerIdx = firstPlayerIndex,
-                turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
-                players = game.players,
-                playerHands = emptyMap(),
-                gameId = game.id
-            )
-            val newGame = game.copy(currentRound = newRound)
-            repoGame.save(newGame)
+            val newGame = repoGame.startNewRound(game)
             success(newGame)
         }
 

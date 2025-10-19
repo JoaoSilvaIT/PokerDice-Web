@@ -7,8 +7,6 @@ import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.users.User
-import pt.isel.domain.users.UserExternalInfo
 import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.State
 import java.sql.ResultSet
@@ -186,14 +184,16 @@ class JdbiGamesRepository(
         handle
             .createUpdate(
                 """
-                INSERT INTO dbo.ROUND (game_id, round_number, turn_of_player, pot)
-                VALUES (:game_id, :round_number, :turn_of_player, :pot)
+                INSERT INTO dbo.ROUND (game_id, round_number, first_player_idx, turn_of_player, ante, pot)
+                VALUES (:game_id, :round_number, :first_player_idx, :turn_of_player, :ante, :pot)
                 ON CONFLICT (game_id, round_number)
-                DO UPDATE SET turn_of_player = :turn_of_player, pot = :pot
+                DO UPDATE SET first_player_idx = :first_player_idx, turn_of_player = :turn_of_player, ante = :ante, pot = :pot
                 """,
             ).bind("game_id", gameId)
             .bind("round_number", round.number)
+            .bind("first_player_idx", round.firstPlayerIdx)
             .bind("turn_of_player", round.turn.player.id)
+            .bind("ante", round.ante)
             .bind("pot", round.pot)
             .execute()
 
@@ -210,7 +210,7 @@ class JdbiGamesRepository(
                 ).bind("game_id", gameId)
                 .bind("round_number", round.number)
                 .bind("user_id", player.id)
-                .bind("dice_values", diceValues)
+                .bind("dice_values", hand)
                 .bind("rolls_left", 0)
                 .execute()
         }
