@@ -49,14 +49,14 @@ class JdbiGamesRepository(
         handle
             .createUpdate(
                 """
-                UPDATE dbo.GAME 
-                SET state = :state::dbo.GAME_STATE, current_round = :current_round, 
+                UPDATE dbo.GAME
+                SET state = :state::dbo.GAME_STATE, current_round_number = :current_round_number,
                     total_rounds = :total_rounds, ended_at = :ended_at
                 WHERE id = :id
                 """,
             ).bind("id", entity.gid)
             .bind("state", entity.state.name)
-            .bind("current_round", entity.currentRound?.number ?: 0)
+            .bind("current_round_number", entity.currentRound?.number ?: 0)
             .bind("total_rounds", entity.numberOfRounds)
             .bind("ended_at", entity.endedAt)
             .execute()
@@ -87,12 +87,12 @@ class JdbiGamesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.GAME (lobby_id, state, current_round, total_rounds, created_at) 
-                    VALUES (:lobby_id, :state::dbo.GAME_STATE, :current_round, :total_rounds, :created_at)
+                    INSERT INTO dbo.GAME (lobby_id, state, current_round_number, total_rounds, created_at)
+                    VALUES (:lobby_id, :state::dbo.GAME_STATE, :current_round_number, :total_rounds, :created_at)
                     """,
                 ).bind("lobby_id", lobby.id)
                 .bind("state", State.WAITING.name)
-                .bind("current_round", 0)
+                .bind("current_round_number", 0)
                 .bind("total_rounds", numberOfRounds)
                 .bind("created_at", startedAt)
                 .executeAndReturnGeneratedKeys()
@@ -123,7 +123,7 @@ class JdbiGamesRepository(
         handle
             .createUpdate(
                 """
-                UPDATE dbo.GAME 
+                UPDATE dbo.GAME
                 SET state = :state::dbo.GAME_STATE, ended_at = :ended_at
                 WHERE id = :id
                 """,
@@ -145,7 +145,7 @@ class JdbiGamesRepository(
                 """
                 INSERT INTO dbo.ROUND (game_id, round_number, turn_of_player, pot)
                 VALUES (:game_id, :round_number, :turn_of_player, :pot)
-                ON CONFLICT (game_id, round_number) 
+                ON CONFLICT (game_id, round_number)
                 DO UPDATE SET turn_of_player = :turn_of_player, pot = :pot
                 """,
             ).bind("game_id", gameId)
@@ -218,7 +218,7 @@ class JdbiGamesRepository(
                 host = host,
             )
 
-        val currentRoundNumber = rs.getInt("current_round")
+        val currentRoundNumber = rs.getInt("current_round_number")
         val currentRound = if (currentRoundNumber > 0) loadRound(gameId, currentRoundNumber, lobbyPlayers) else null
 
         return Game(

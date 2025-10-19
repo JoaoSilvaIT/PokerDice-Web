@@ -42,7 +42,7 @@ create table dbo.GAME (
     id serial primary key,
     lobby_id integer unique not null references dbo.LOBBY(id),
     state dbo.GAME_STATE not null,
-    current_round integer not null references dbo.ROUND,
+    current_round_number integer,
     total_rounds integer not null,
     started_at bigint not null,
     ended_at bigint
@@ -58,13 +58,12 @@ create table dbo.ROUND (
     primary key (game_id, round_number)
 );
 
-create table dbo.PLAYER_HAND (
+create table dbo.player_hand (
     game_id integer not null,
     round_number integer not null,
-    user_id integer not null,
-    dice_values char(1)[] not null, -- Array of characters: A, K, Q, J, T, 9
+    user_id integer not null references dbo.users(id) on delete cascade,
+    dice_values text[] not null,
     rolls_left integer not null default 2,
     primary key (game_id, round_number, user_id),
-    foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number),
-    foreign key (user_id) references dbo.USERS(id)
+    foreign key (game_id, round_number) references dbo.round(game_id, round_number) on delete cascade
 );

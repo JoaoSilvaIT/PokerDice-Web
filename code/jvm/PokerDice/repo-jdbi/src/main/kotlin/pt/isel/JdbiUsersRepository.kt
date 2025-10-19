@@ -59,25 +59,54 @@ class JdbiUsersRepository(
         handle.createUpdate("DELETE FROM dbo.USERS").execute()
     }
 
+    override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? {
+        return handle
+            .createQuery(
+                """
+                SELECT u.id AS id,
+                       u.username AS username,
+                       u.password_hash AS password_hash,
+                       t.token AS token,
+                       t.user_id AS user_id,
+                       t.created_at AS created_at,
+                       t.last_used_at AS last_used_at
+                FROM dbo.TOKEN t
+                JOIN dbo.USERS u ON t.user_id = u.id
+                WHERE t.token = :token
+                """,
+            ).bind("token", tokenValidationInfo.validationInfo)
+            .map { rs, _ ->
+                val user = mapRowToUser(rs)
+                val token = Token(
+                    tokenValidationInfo = TokenValidationInfo(rs.getString("token")),
+                    userId = rs.getInt("user_id"),
+                    createdAt = Instant.ofEpochSecond(rs.getLong("created_at")),
+                    lastUsedAt = Instant.ofEpochSecond(rs.getLong("last_used_at")),
+                )
+                Pair(user, token)
+            }
+            .findOne()
+            .orElse(null)
+    }
+
     override fun createUser(
         name: String,
         email: String,
         passwordValidation: PasswordValidationInfo,
     ): User {
-        val id =
-            handle
-                .createUpdate(
-                    """
-                    INSERT INTO dbo.USERS (username, email, password_hash, balance) 
-                    VALUES (:username, :email, :password_hash, :balance)
-                    """,
-                ).bind("username", name)
-                .bind("email", email)
-                .bind("password_hash", passwordValidation.validationInfo)
-                .bind("balance", 100)
-                .executeAndReturnGeneratedKeys()
-                .mapTo(Int::class.java)
-                .one()
+        val id = handle
+            .createUpdate(
+                """
+                INSERT INTO dbo.USERS (username, email, password_hash, balance)
+                VALUES (:username, :email, :password_hash, :balance)
+                """,
+            ).bind("username", name)
+            .bind("email", email)
+            .bind("password_hash", passwordValidation.validationInfo)
+            .bind("balance", 100)
+            .executeAndReturnGeneratedKeys()
+            .mapTo(Int::class.java)
+            .one()
 
         return User(id, name, email, 100, passwordValidation)
     }
@@ -94,53 +123,37 @@ class JdbiUsersRepository(
             .findOne()
             .orElse(null)
 
-    override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? {
-        return handle
-            .createQuery(
-                """
-                SELECT u.*, t.token, t.user_id, t.created_at, t.last_used_at
-                FROM dbo.TOKEN t
-                JOIN dbo.USERS u ON t.user_id = u.id
-                WHERE t.token = :token
-                """,
-            ).bind("token", tokenValidationInfo.validationInfo)
-            .map { rs, _ ->
-                val user = mapRowToUser(rs)
-                val token = Token(
-                    tokenValidationInfo = TokenValidationInfo(rs.getString("token")),
-                    userId = rs.getInt("user_id"),
-                    createdAt = Instant.ofEpochSecond(rs.getLong("created_at")),
-                    lastUsedAt = Instant.ofEpochSecond(rs.getLong("last_used_at")),
-                )
-                Pair(user, token)
-            }.findOne()
-            .orElse(null)
-    }
-
     override fun createToken(
         token: Token,
         maxTokens: Int,
     ) {
-        // Remove oldest tokens if user has reached the maximum
-        handle
-            .createUpdate(
+        // Before inserting the new token, remove old ones if we're at or over the limit
+        val existingTokens: List<String> = handle
+            .createQuery(
                 """
-                DELETE FROM dbo.TOKEN
+                SELECT token FROM dbo.TOKEN
                 WHERE user_id = :user_id
-                AND token IN (
-                    SELECT token FROM dbo.TOKEN
-                    WHERE user_id = :user_id
-                    ORDER BY created_at ASC
-                    LIMIT (
-                        SELECT COUNT(*) - :max_tokens + 1
-                        FROM dbo.TOKEN
-                        WHERE user_id = :user_id
-                    )
-                )
-                """
+                ORDER BY created_at ASC
+                """,
             ).bind("user_id", token.userId)
-            .bind("max_tokens", maxTokens)
-            .execute()
+            .map { rs, _ -> rs.getString("token") }
+            .list()
+
+        // We need to delete tokens if adding one more would exceed maxTokens
+        val toDeleteCount = existingTokens.size - maxTokens + 1
+        if (existingTokens.size >= maxTokens) {
+            // Delete the oldest tokens to make room for the new one
+            val tokensToDelete = existingTokens.take(toDeleteCount)
+            tokensToDelete.forEach { tk ->
+                handle
+                    .createUpdate(
+                        """
+                        DELETE FROM dbo.TOKEN WHERE token = :token
+                        """,
+                    ).bind("token", tk)
+                    .execute()
+            }
+        }
 
         handle
             .createUpdate(
@@ -164,10 +177,11 @@ class JdbiUsersRepository(
                 """
                 UPDATE dbo.TOKEN
                 SET last_used_at = :last_used_at
-                WHERE token = :token
+                WHERE user_id = :user_id AND token = :token
                 """,
-            ).bind("token", token.tokenValidationInfo.validationInfo)
-            .bind("last_used_at", now.epochSecond)
+            ).bind("last_used_at", now.epochSecond)
+            .bind("user_id", token.userId)
+            .bind("token", token.tokenValidationInfo.validationInfo)
             .execute()
     }
 

@@ -13,7 +13,7 @@ class JdbiLobbiesRepository(
         handle
             .createQuery(
                 """
-                SELECT l.*, u.id as host_id, u.username as host_username, u.email as host_email, 
+                SELECT l.*, u.id as host_id, u.username as host_username, u.email as host_email,
                        u.balance as host_balance, u.password_hash as host_password_hash
                 FROM dbo.LOBBY l
                 JOIN dbo.USERS u ON l.host_id = u.id
@@ -40,8 +40,8 @@ class JdbiLobbiesRepository(
         handle
             .createUpdate(
                 """
-                UPDATE dbo.LOBBY 
-                SET name = :name, description = :description, host_id = :host_id, 
+                UPDATE dbo.LOBBY
+                SET name = :name, description = :description, host_id = :host_id,
                     min_players = :min_players, max_players = :max_players
                 WHERE id = :id
                 """,
@@ -76,7 +76,7 @@ class JdbiLobbiesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players) 
+                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players)
                     VALUES (:name, :description, :host_id, :min_players, :max_players)
                     """,
                 ).bind("name", name)
@@ -92,7 +92,7 @@ class JdbiLobbiesRepository(
         handle
             .createUpdate(
                 """
-                INSERT INTO dbo.LOBBY_PLAYER (lobby_id, user_id)
+                INSERT INTO dbo.LOBBY_USER (lobby_id, user_id)
                 VALUES (:lobby_id, :user_id)
                 """,
             ).bind("lobby_id", id)
@@ -145,8 +145,8 @@ class JdbiLobbiesRepository(
                 .createQuery(
                     """
                     SELECT u.* FROM dbo.USERS u
-                    JOIN dbo.LOBBY_PLAYER lp ON u.id = lp.user_id
-                    WHERE lp.lobby_id = :lobby_id
+                    JOIN dbo.LOBBY_USER lu ON u.id = lu.user_id
+                    WHERE lu.lobby_id = :lobby_id
                     """,
                 ).bind("lobby_id", lobbyId)
                 .map { playerRs, _ ->
