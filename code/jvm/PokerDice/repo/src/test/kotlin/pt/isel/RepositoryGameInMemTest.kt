@@ -3,12 +3,12 @@ package pt.isel
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Game
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.mem.RepositoryGameInMem
 import pt.isel.utils.MIN_BALANCE
-import pt.isel.utils.State
+import pt.isel.domain.games.utils.State
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

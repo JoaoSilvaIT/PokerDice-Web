@@ -1,4 +1,4 @@
-package pt.isel.utils
+package pt.isel.domain.games.utils
 
 enum class HandRank(val strength: Int) {
     FIVE_OF_A_KIND(8),

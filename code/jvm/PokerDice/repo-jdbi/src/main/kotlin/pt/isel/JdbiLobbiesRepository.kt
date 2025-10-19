@@ -1,7 +1,7 @@
 package pt.isel
 
 import org.jdbi.v3.core.Handle
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import java.sql.ResultSet

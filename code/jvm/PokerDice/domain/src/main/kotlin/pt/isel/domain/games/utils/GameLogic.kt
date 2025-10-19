@@ -1,7 +1,9 @@
-package pt.isel.utils
+package pt.isel.domain.games.utils
 
+import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.Round
+import pt.isel.domain.games.Turn
 import pt.isel.domain.users.User
 
 fun defineHandRank(hand: Hand): Pair<Hand, HandRank> {
@@ -19,9 +21,9 @@ fun defineHandRank(hand: Hand): Pair<Hand, HandRank> {
     return Pair(hand, rank)
 }
 
-fun calculateFullHandValue(handit: Pair<Hand, HandRank>): Int {
-    val numberOfHand = handit.second.strength
-    val numberOfMajorDice = handit.first.dices.maxOf { it.face.strength }
+fun calculateFullHandValue(handIt: Pair<Hand, HandRank>): Int {
+    val numberOfHand = handIt.second.strength
+    val numberOfMajorDice = handIt.first.dices.maxOf { it.face.strength }
 
     return numberOfHand + numberOfMajorDice
 }
@@ -44,4 +46,26 @@ fun distributeWinnings(winners: List<User>, pot: Int): List<User> {
     return winners.map { winner ->
         winner.copy(balance = winner.balance + winningsPerWinner)
     }
+}
+
+fun roll(): Dice {
+    val faces = Face.entries.toTypedArray()
+    val randomFace = faces.random()
+    return Dice(randomFace)
+}
+
+fun rollDices(numberOfDices: Int): List<Dice> {
+    val dices = List(numberOfDices) { roll() }
+    return dices
+}
+
+fun lockDices(dices: List<Dice>): Hand {
+    require(dices.size == 5) { "Unexpected number of dice, must be 5 dices." }
+    return Hand(dices)
+}
+
+fun chooseDices(dicesToKeep: List<Dice>, turn: Turn): Turn {
+    val newSetOfDices = dicesToKeep.toSet()
+    val newTurn = turn.heldDice + newSetOfDices
+    return turn.copy(heldDice = newTurn)
 }

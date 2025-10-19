@@ -1,7 +1,7 @@
 package pt.isel.mem
 
 import pt.isel.RepositoryLobby
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.User
 
 class RepositoryLobbyInMem : RepositoryLobby {

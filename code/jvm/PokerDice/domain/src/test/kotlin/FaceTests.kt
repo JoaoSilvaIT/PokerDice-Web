@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import pt.isel.utils.Face
+import pt.isel.domain.games.utils.Face
 
 class FaceTests {
     @Test

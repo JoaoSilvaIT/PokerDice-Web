@@ -1,4 +1,4 @@
-package pt.isel.utils
+package pt.isel.domain.games.utils
 
 enum class State {
     RUNNING,

@@ -1,6 +1,7 @@
 package pt.isel.domain.games
 
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 
 const val MIN_ANTE = 10
 
@@ -9,12 +10,14 @@ data class Round(
     val number: Int,
     val firstPlayerIdx: Int,
     val turn: Turn,
-    val users: List<User>,
+    val players: Set<UserExternalInfo>,
     val userHands: Map<User, Hand>,
     val ante: Int = MIN_ANTE,
     val pot : Int = 0,
+    val winner: UserExternalInfo? = null,
     val gameId : Int? = null,
 ) {
+    /*
     fun setAnte(newAnte: Int): Round {
         require(newAnte > 0 && newAnte >= MIN_ANTE) { "Cost must be positive and at least $MIN_ANTE" }
         return this.copy(ante = newAnte)
@@ -52,4 +55,6 @@ data class Round(
             userHands = updatedUserHands,
         )
     }
+
+     */
 }

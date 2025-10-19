@@ -4,13 +4,13 @@ import org.jdbi.v3.core.Handle
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Hand
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
-import pt.isel.utils.Face
-import pt.isel.utils.State
+import pt.isel.domain.games.utils.Face
+import pt.isel.domain.games.utils.State
 import java.sql.ResultSet
 
 class JdbiGamesRepository(

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import pt.isel.domain.games.Game
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.errors.GameError
 import pt.isel.mem.TransactionManagerInMem
 import pt.isel.repo.TransactionManager

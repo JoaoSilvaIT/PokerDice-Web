@@ -1,7 +1,8 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
+import pt.isel.domain.lobby.LobbyExternalInfo
 import pt.isel.domain.users.User
 
 @Component
@@ -14,7 +15,9 @@ interface RepositoryLobby : Repository<Lobby> {
         host: User,
     ): Lobby
 
-    fun findByName(name: String): Lobby?
+    fun getLobbyById(id: Int): LobbyExternalInfo
+
+    fun findByName(name: String): LobbyExternalInfo?
 
     fun deleteLobbyByHost(host: User)
 

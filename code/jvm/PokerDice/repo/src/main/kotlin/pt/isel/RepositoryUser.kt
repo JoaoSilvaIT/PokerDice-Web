@@ -5,6 +5,7 @@ import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import java.time.Instant
 
 /**
@@ -19,6 +20,8 @@ interface RepositoryUser : Repository<User> {
     ): User
 
     fun findByEmail(email: String): User?
+
+    fun getUserById(id: Int): UserExternalInfo
 
     fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>?
 

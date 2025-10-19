@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import pt.isel.utils.HandRank
+import pt.isel.domain.games.utils.HandRank
 
 class HandRankTests {
     @Test

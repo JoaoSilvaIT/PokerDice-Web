@@ -8,7 +8,7 @@ import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
-import pt.isel.utils.Face
+import pt.isel.domain.games.utils.Face
 
 class RoundTests {
     private val passwordValidation = PasswordValidationInfo("hashed_password")

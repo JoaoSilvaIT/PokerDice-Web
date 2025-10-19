@@ -2,7 +2,7 @@ package pt.isel
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import pt.isel.domain.games.Lobby
+import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.mem.RepositoryLobbyInMem

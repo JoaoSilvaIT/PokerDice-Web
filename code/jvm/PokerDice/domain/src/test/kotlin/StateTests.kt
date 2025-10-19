@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import pt.isel.utils.State
+import pt.isel.domain.games.utils.State
 
 class StateTests {
     @Test

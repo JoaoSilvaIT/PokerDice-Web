@@ -2,9 +2,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
-import pt.isel.utils.Face
-import pt.isel.utils.HandRank
-import pt.isel.utils.defineHandRank
+import pt.isel.domain.games.utils.Face
+import pt.isel.domain.games.utils.HandRank
+import pt.isel.domain.games.utils.defineHandRank
 
 class GameLogicTests {
     @Test

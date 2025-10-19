@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
-import pt.isel.utils.Face
+import pt.isel.domain.games.utils.Face
 
 class HandTests {
     @Test

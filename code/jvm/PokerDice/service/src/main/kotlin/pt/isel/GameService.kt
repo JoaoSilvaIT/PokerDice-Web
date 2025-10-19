@@ -5,7 +5,7 @@ import pt.isel.domain.games.Game
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
-import pt.isel.utils.State
+import pt.isel.domain.games.utils.State
 import pt.isel.utils.failure
 import pt.isel.utils.success
 
