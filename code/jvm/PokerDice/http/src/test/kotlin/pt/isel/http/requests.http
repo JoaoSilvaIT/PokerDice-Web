@@ -26,8 +26,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "teste3@gmail.com",
-  "password": "teste3"
+  "email": "teste5@gmail.com",
+  "password": "teste5"
 }
 
 
@@ -53,12 +53,12 @@ Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer sHhfrHcS4uQflkIoTB79hW6-cePtkkRiu3OTlWnkO0U=
+Authorization: Bearer sIj-_wu-CsYb53FXC0pw-6ET974H1SDAf2ycQ7DbNAs=
 Content-Type: application/json
 
 {
-  "name": "Test lobby",
-  "description": "lobby for test",
+  "name": "Teste lobby",
+  "description": "lobby for teste",
   "maxPlayers": 6,
   "minPlayers": 2
 }
@@ -82,7 +82,7 @@ Authorization: Bearer 1mim21MKqELA5niHec6dsvtji8hY3gA8W0uZHuv2ioA=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer g2JnSNug3B-gzzum7GQIY2My25Lfsvt1C0EyaZuJBko=
+Authorization: Bearer cN2alC9jk3HM6OCqJVAA-UxQ6RUBcWZGnFYa-Ez6XUQ=
 Content-Type: application/json
 
 {

@@ -59,21 +59,16 @@ class JdbiUsersRepository(
         handle.createUpdate("DELETE FROM dbo.USERS").execute()
     }
 
+    // kotlin
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? {
         return handle
             .createQuery(
                 """
-                SELECT u.id AS id,
-                       u.username AS username,
-                       u.password_hash AS password_hash,
-                       t.token AS token,
-                       t.user_id AS user_id,
-                       t.created_at AS created_at,
-                       t.last_used_at AS last_used_at
-                FROM dbo.TOKEN t
-                JOIN dbo.USERS u ON t.user_id = u.id
-                WHERE t.token = :token
-                """,
+            SELECT u.*, t.*
+            FROM dbo.TOKEN t
+            JOIN dbo.USERS u ON t.user_id = u.id
+            WHERE t.token = :token
+            """,
             ).bind("token", tokenValidationInfo.validationInfo)
             .map { rs, _ ->
                 val user = mapRowToUser(rs)
@@ -88,6 +83,7 @@ class JdbiUsersRepository(
             .findOne()
             .orElse(null)
     }
+
 
     override fun createUser(
         name: String,
