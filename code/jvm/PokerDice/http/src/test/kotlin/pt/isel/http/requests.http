@@ -44,16 +44,16 @@ Content-Type: application/json
 
 ### Logout (requires valid token) ## Body needed
 POST http://localhost:8080/api/logout
-Authorization: Bearer pqkoVnYLlb7AtLU9MvHbq9VVjpamv7ff8Sjm41bvnYo=
+Authorization: Bearer 8DvJEsC5Ue9ZMII7i_xc7EeYTGaJHjOaafFCGspBJu4=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Authorization: Bearer 8DvJEsC5Ue9ZMII7i_xc7EeYTGaJHjOaafFCGspBJu4=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Authorization: Bearer QEUW8ZAk9X4hihXiM8-PvCSIAH9_DPLxm22HWa9T9wo=
 Content-Type: application/json
 
 {

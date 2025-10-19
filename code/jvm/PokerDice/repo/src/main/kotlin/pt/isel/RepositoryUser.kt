@@ -21,7 +21,7 @@ interface RepositoryUser : Repository<User> {
 
     fun findByEmail(email: String): User?
 
-    fun getUserById(id: Int): UserExternalInfo
+    fun getUserById(id: Int): UserExternalInfo?
 
     fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>?
 

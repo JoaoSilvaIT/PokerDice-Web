@@ -5,6 +5,7 @@ import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import java.sql.ResultSet
 import java.time.Instant
 
@@ -64,14 +65,21 @@ class JdbiUsersRepository(
         return handle
             .createQuery(
                 """
-            SELECT u.*, t.*
-            FROM dbo.TOKEN t
-            JOIN dbo.USERS u ON t.user_id = u.id
-            WHERE t.token = :token
-            """,
+                SELECT u.id, u.username, u.email, u.balance, u.password_hash,
+                       t.token, t.user_id, t.created_at, t.last_used_at
+                FROM dbo.TOKEN t
+                JOIN dbo.USERS u ON t.user_id = u.id
+                WHERE t.token = :token
+                """,
             ).bind("token", tokenValidationInfo.validationInfo)
             .map { rs, _ ->
-                val user = mapRowToUser(rs)
+                val user = User(
+                    id = rs.getInt("id"),
+                    name = rs.getString("username"),
+                    email = rs.getString("email"),
+                    balance = rs.getInt("balance"),
+                    passwordValidation = PasswordValidationInfo(rs.getString("password_hash")),
+                )
                 val token = Token(
                     tokenValidationInfo = TokenValidationInfo(rs.getString("token")),
                     userId = rs.getInt("user_id"),
@@ -118,6 +126,26 @@ class JdbiUsersRepository(
             .map { rs, _ -> mapRowToUser(rs) }
             .findOne()
             .orElse(null)
+
+    override fun getUserById(id: Int): UserExternalInfo? {
+        return handle
+            .createQuery(
+                """
+            SELECT id, username
+            FROM dbo.USERS
+            WHERE id = :id
+            """,
+            ).bind("id", id)
+            .map { rs, _ ->
+                UserExternalInfo(
+                    id = rs.getInt("id"),
+                    name = rs.getString("username"),
+                )
+            }
+            .findOne()
+            .orElse(null)
+    }
+
 
     override fun createToken(
         token: Token,

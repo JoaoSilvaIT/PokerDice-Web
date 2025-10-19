@@ -26,7 +26,7 @@ class GameController(
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .header("Location", "/api/games/${result.value.gid}")
+                    .header("Location", "/api/games/${result.value.id}")
                     .body(GameOutputModel.fromDomain(result.value))
 
             is Either.Failure -> {
