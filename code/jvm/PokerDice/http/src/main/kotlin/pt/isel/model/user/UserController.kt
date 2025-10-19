@@ -28,7 +28,7 @@ class UserController(
             .header(
                 "Location",
                 "/api/users/${user.id}",
-            ).build<Unit>()
+            ).body(UserOutputModel.fromDomain(user))
     }
 
     @PostMapping("/api/users/token")

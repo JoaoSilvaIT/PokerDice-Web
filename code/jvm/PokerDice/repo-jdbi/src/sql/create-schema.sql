@@ -1,5 +1,6 @@
 create schema if not exists dbo;
 
+
 -- Users and Authentication
 create table dbo.USERS (
     id serial primary key,
