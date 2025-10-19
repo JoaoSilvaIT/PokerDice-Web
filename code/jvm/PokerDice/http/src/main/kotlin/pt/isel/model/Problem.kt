@@ -48,4 +48,5 @@ sealed class Problem(
     data object GameAlreadyEnded : Problem(URI("$PROBLEM_URI_PATH/game-already-ended"))
     data object RoundNotStarted : Problem(URI("$PROBLEM_URI_PATH/round-not-started"))
     data object RoundNotFound : Problem(URI("$PROBLEM_URI_PATH/round-not-found"))
+    data object FinalHandNotValid : Problem(URI("$PROBLEM_URI_PATH/final-hand-not-valid"))
 }

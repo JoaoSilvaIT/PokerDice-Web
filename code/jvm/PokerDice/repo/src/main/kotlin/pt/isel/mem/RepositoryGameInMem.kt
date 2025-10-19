@@ -1,6 +1,7 @@
 package pt.isel.mem
 
 import pt.isel.RepositoryGame
+import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.MAX_ROLLS
 import pt.isel.domain.games.PlayerInGame
@@ -8,8 +9,7 @@ import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.utils.State
-import kotlin.math.round
-import kotlin.require
+
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
@@ -120,9 +120,18 @@ class RepositoryGameInMem : RepositoryGame {
         }
     }
 
+    override fun updateTurn(
+        chosenDice: Dice,
+        round: Round
+    ): Round {
+        TODO("Not yet implemented")
+    }
+
     override fun updateGameRound(round: Round, game: Game): Game {
         val newGame = game.copy(currentRound = round)
         save(newGame)
         return newGame
     }
 }
+
+

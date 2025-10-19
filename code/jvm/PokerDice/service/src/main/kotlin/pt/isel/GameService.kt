@@ -1,7 +1,10 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
+import pt.isel.domain.games.Dice
+import pt.isel.domain.games.FINAL_HAND_SIZE
 import pt.isel.domain.games.Game
+import pt.isel.domain.games.Hand
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -129,4 +132,22 @@ class GameService(
             repoGame.save(newGame)
             success(newGame)
         }
+
+    fun updateTurn(
+        chosenDice : Dice,
+        gameId: Int,
+    ): Either<GameError, Game> =
+        trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+
+            val updatedRound = repoGame.updateTurn(chosenDice, round)
+            val newGame = game.copy(currentRound = updatedRound)
+            repoGame.save(newGame)
+            success(newGame)
+        }
+
+
+
 }

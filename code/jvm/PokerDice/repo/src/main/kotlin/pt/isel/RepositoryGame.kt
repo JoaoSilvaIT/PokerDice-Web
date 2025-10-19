@@ -1,7 +1,10 @@
 package pt.isel
 
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
+import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
+import pt.isel.domain.games.Hand
 import pt.isel.domain.games.Round
 import pt.isel.domain.lobby.Lobby
 
@@ -30,4 +33,6 @@ interface RepositoryGame : Repository<Game> {
     fun payAnte(round: Round): Round
 
     fun nextTurn(round: Round): Round
+
+    fun updateTurn(chosenDice: Dice, round: Round): Round
 }

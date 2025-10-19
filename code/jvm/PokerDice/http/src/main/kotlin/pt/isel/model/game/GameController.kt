@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.GameService
+import pt.isel.domain.games.Dice
+import pt.isel.domain.games.utils.Face
+import pt.isel.domain.games.utils.charToFace
 import pt.isel.domain.users.AuthenticatedUser
 import pt.isel.errors.GameError
 import pt.isel.model.Problem
@@ -30,17 +33,7 @@ class GameController(
                     .body(GameOutputModel.fromDomain(result.value))
 
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }
@@ -68,17 +61,7 @@ class GameController(
                 .status(HttpStatus.OK)
                 .body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }
@@ -93,17 +76,7 @@ class GameController(
                 .status(HttpStatus.CREATED)
                 .body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }
@@ -119,17 +92,7 @@ class GameController(
                 .status(HttpStatus.OK)
                 .body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }
@@ -144,17 +107,7 @@ class GameController(
                 .status(HttpStatus.OK)
                 .body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }
@@ -169,17 +122,23 @@ class GameController(
                 .status(HttpStatus.OK)
                 .body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
+            }
+        }
+    }
+
+    @PostMapping("/api/games/{id}/rounds/update-turn")
+    fun updateTurn(
+        user: AuthenticatedUser,
+        @RequestBody input: DiceUpdateInputModel,
+        @PathVariable id: Int
+    ): ResponseEntity<*> {
+        return when (val result = gameService.updateTurn(Dice(charToFace(input.dice.toChar())), id)) {
+            is Either.Success -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(DiceOutputModel(result.value.currentRound!!.turn.currentDice))
+            is Either.Failure -> {
+                result.value.toProblemResponse()
             }
         }
     }
@@ -192,17 +151,7 @@ class GameController(
         return when (val result = gameService.endGame(id, System.currentTimeMillis())) {
             is Either.Success -> ResponseEntity.status(HttpStatus.OK).body(GameOutputModel.fromDomain(result.value))
             is Either.Failure -> {
-                when (result.value) {
-                    GameError.InvalidNumberOfRounds -> Problem.InvalidNumberOfRounds.response(HttpStatus.BAD_REQUEST)
-                    GameError.InvalidLobby -> Problem.InvalidLobby.response(HttpStatus.BAD_REQUEST)
-                    GameError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.InvalidTime -> Problem.InvalidTime.response(HttpStatus.BAD_REQUEST)
-                    GameError.GameNotFound -> Problem.GameNotFound.response(HttpStatus.NOT_FOUND)
-                    GameError.GameNotStarted -> Problem.GameNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.GameAlreadyEnded -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotStarted -> Problem.RoundNotStarted.response(HttpStatus.CONFLICT)
-                    GameError.RoundNotFounded -> Problem.RoundNotFound.response(HttpStatus.NOT_FOUND)
-                }
+                result.value.toProblemResponse()
             }
         }
     }

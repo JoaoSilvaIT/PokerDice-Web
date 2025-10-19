@@ -1,6 +1,7 @@
 package pt.isel
 
 import org.jdbi.v3.core.Handle
+import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.PlayerInGame
@@ -236,6 +237,18 @@ class JdbiGamesRepository(
         }
     }
 
+    override fun updateTurn(chosenDice: Dice, round: Round): Round {
+        val updatedRound = round.copy(
+            turn = Turn(
+                round.turn.player,
+                round.turn.rollsRemaining,
+                currentDice = round.turn.currentDice + chosenDice
+            )
+        )
+        return updatedRound
+    }
+
+
     private fun mapRowToGame(rs: ResultSet): Game {
         val gameId = rs.getInt("id")
         val lobbyId = rs.getInt("lobby_id")
@@ -310,14 +323,4 @@ class JdbiGamesRepository(
             pot = pot
         )
     }
-
-    private fun faceToChar(face: Face): Char =
-        when (face) {
-            Face.ACE -> 'A'
-            Face.KING -> 'K'
-            Face.QUEEN -> 'Q'
-            Face.JACK -> 'J'
-            Face.TEN -> 'T'
-            Face.NINE -> '9'
-        }
 }

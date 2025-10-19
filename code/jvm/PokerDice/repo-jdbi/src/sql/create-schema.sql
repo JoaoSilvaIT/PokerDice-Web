@@ -59,12 +59,12 @@ create table dbo.ROUND (
     primary key (game_id, round_number)
 );
 
-create table dbo.player_hand (
+create table dbo.TURN (
     game_id integer not null,
     round_number integer not null,
-    user_id integer not null references dbo.users(id) on delete cascade,
+    user_id integer not null references dbo.USERS(id) on delete cascade,
     dice_values text[] not null,
-    rolls_left integer not null default 2,
+    rolls_left integer not null default 3,
     primary key (game_id, round_number, user_id),
-    foreign key (game_id, round_number) references dbo.round(game_id, round_number) on delete cascade
+    foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number) on delete cascade
 );

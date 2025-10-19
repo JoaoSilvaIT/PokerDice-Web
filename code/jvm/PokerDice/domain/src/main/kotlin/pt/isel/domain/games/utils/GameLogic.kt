@@ -65,8 +65,20 @@ fun lockDices(dices: List<Dice>): Hand {
     return Hand(dices)
 }
 
+fun charToFace(char: Char) : Face = when (char) {
+        'A' -> Face.ACE
+        'K' -> Face.KING
+        'Q' -> Face.QUEEN
+        'J' -> Face.JACK
+        'T' -> Face.TEN
+        else -> Face.NINE
+    }
+
+/*
 fun chooseDices(dicesToKeep: List<Dice>, turn: Turn): Turn {
     val newSetOfDices = dicesToKeep.toSet()
     val newTurn = turn.heldDice + newSetOfDices
     return turn.copy(heldDice = newTurn)
 }
+
+ */
