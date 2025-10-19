@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 import pt.isel.UserAuthService
 import pt.isel.domain.users.AuthenticatedUser
 import pt.isel.errors.AuthTokenError
+import pt.isel.model.Problem
 import pt.isel.utils.Either
 
 @RestController
@@ -19,16 +20,26 @@ class UserController(
     fun createUser(
         @RequestBody userInput: UserInput,
     ): ResponseEntity<*> {
-        val user =
-            userService
-                .createUser(userInput.name, userInput.email, userInput.password)
+        return when (val result = userService.createUser(userInput.name, userInput.email, userInput.password)) {
+            is Either.Success ->
+                ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .header(
+                        "Location",
+                        "/api/users/${result.value.id}",
+                    ).body(UserOutputModel.fromDomain(result.value))
 
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .header(
-                "Location",
-                "/api/users/${user.id}",
-            ).body(UserOutputModel.fromDomain(user))
+            is Either.Failure -> {
+                when (result.value) {
+                    is AuthTokenError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.EmailAlreadyInUse -> Problem.EmailAlreadyInUse.response(HttpStatus.CONFLICT)
+                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
+                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
+                }
+            }
+        }
     }
 
     @PostMapping("/api/users/token")
@@ -42,14 +53,15 @@ class UserController(
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
 
             is Either.Failure -> {
-                val status =
-                    when (result.value) {
-                        is AuthTokenError.BlankEmail, is AuthTokenError.BlankPassword -> HttpStatus.BAD_REQUEST
-                        is AuthTokenError.UserNotFoundOrInvalidCredentials -> HttpStatus.UNAUTHORIZED
-                    }
-                ResponseEntity
-                    .status(status)
-                    .body(mapOf("error" to (result.value::class.simpleName ?: "AuthError")))
+                when (result.value) {
+                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
+                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
+                    is AuthTokenError.BlankName,
+                    is AuthTokenError.EmailAlreadyInUse ->
+                        Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                }
             }
         }
     }

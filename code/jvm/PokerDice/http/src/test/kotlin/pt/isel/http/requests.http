@@ -6,9 +6,9 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "teste2",
-  "email": "teste2@gmail.com",
-  "password": "teste2"
+  "name": "teste5",
+  "email": "teste5@gmail.com",
+  "password": "teste5"
 }
 
 ### Create a Second User
@@ -26,8 +26,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "teste2@gmail.com",
-  "password": "teste2"
+  "email": "teste5@gmail.com",
+  "password": "teste5"
 }
 
 
@@ -53,12 +53,12 @@ Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
+Authorization: Bearer sIj-_wu-CsYb53FXC0pw-6ET974H1SDAf2ycQ7DbNAs=
 Content-Type: application/json
 
 {
-  "name": "Dune Champions",
-  "description": "Desert warriors",
+  "name": "Teste lobby",
+  "description": "lobby for teste",
   "maxPlayers": 6,
   "minPlayers": 2
 }
@@ -69,8 +69,8 @@ GET http://localhost:8080/api/lobbies
 
 
 ### Join lobby (requires valid token)
-POST http://localhost:8080/api/lobbies/0/join
-Authorization: Bearer Xbn-boARybQ4QjzhNfjgJ5jqUVuCKvjS4HBbIjL15rE= // Trying to join a lobby I'm already in is giving a 200
+POST http://localhost:8080/api/lobbies/3/join
+Authorization: Bearer dJ4MTs_d8FU_gXEl6uKelx6Vce3UYRPk7g4gJl4QZpc= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/0/leave
@@ -82,12 +82,12 @@ Authorization: Bearer 1mim21MKqELA5niHec6dsvtji8hY3gA8W0uZHuv2ioA=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
+Authorization: Bearer cN2alC9jk3HM6OCqJVAA-UxQ6RUBcWZGnFYa-Ez6XUQ=
 Content-Type: application/json
 
 {
-  "lobbyId": 1,
-  "numberOfRounds": 5
+  "lobbyId": 3,
+  "numberOfRounds": 4
 }
 
 ### Create game with invalid lobby ID

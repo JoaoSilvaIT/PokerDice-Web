@@ -32,17 +32,19 @@ class UserAuthService(
         name: String,
         email: String,
         password: String,
-    ): User {
-        require(name.isNotBlank()) { "Name cannot be blank" }
-        require(email.isNotBlank()) { "Email cannot be blank" }
-        require(password.isNotBlank()) { "Password cannot be blank" }
+    ): Either<AuthTokenError, User> {
+        if (name.isBlank()) return failure(AuthTokenError.BlankName)
+        if (email.isBlank()) return failure(AuthTokenError.BlankEmail)
+        if (password.isBlank()) return failure(AuthTokenError.BlankPassword)
 
         val emailTrimmed = email.trim()
 
         return trxManager.run {
-            require(repoUsers.findByEmail(emailTrimmed) == null) { "Email already in use" }
+            if (repoUsers.findByEmail(emailTrimmed) != null) {
+                return@run failure(AuthTokenError.EmailAlreadyInUse)
+            }
             val passwordValidationInfo = createPasswordValidationInformation(password)
-            repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
+            success(repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo))
         }
     }
 
