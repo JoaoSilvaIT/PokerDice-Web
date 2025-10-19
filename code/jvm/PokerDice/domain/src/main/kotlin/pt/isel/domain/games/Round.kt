@@ -7,6 +7,7 @@ const val MIN_ANTE = 10
 data class Round(
     // round number in the game
     val number: Int,
+    val firstPlayerIdx: Int,
     val turn: Turn,
     val users: List<User>,
     val userHands: Map<User, Hand>,
@@ -28,10 +29,23 @@ data class Round(
         return this.copy(users = updatedUsers)
     }
 
+    fun startNewRound(users : List<User>, round: Round?): Round {
+        val nextRoundNr = (round?.number ?: 0) + 1
+        val firstPlayerIndex = (nextRoundNr - 1) % users.size
+        return Round(
+            number = nextRoundNr,
+            firstPlayerIdx = firstPlayerIndex,
+            turn = Turn(users[firstPlayerIndex], Hand(emptyList())),
+            users = users,
+            userHands = emptyMap())
+    }
+
     fun nextTurn(round: Round): Round {
         val currentIndex = round.users.indexOf(round.turn.user)
         val updatedUserHands = round.userHands + (round.turn.user to round.turn.hand)
-        return this.copy(
+        return if (((currentIndex + 1) % round.users.size) == round.firstPlayerIdx) {
+            startNewRound(round.users, round)
+        } else this.copy(
             turn = Turn(round.users[(currentIndex + 1) % round.users.size]),
             userHands = updatedUserHands,
         )

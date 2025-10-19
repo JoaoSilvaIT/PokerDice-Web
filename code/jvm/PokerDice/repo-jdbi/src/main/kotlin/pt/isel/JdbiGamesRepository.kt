@@ -277,6 +277,7 @@ class JdbiGamesRepository(
 
         return Round(
             number = roundNumber,
+            firstPlayerIdx = 1,
             turn = Turn(turnUser, userHands[turnUser] ?: Hand(emptyList())),
             users = players,
             userHands = userHands,

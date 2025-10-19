@@ -1,9 +1,11 @@
 package pt.isel.repo
 
 import org.jdbi.v3.core.Jdbi
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("jdbi")
 class JdbiTransactionManager(
     private val jdbi: Jdbi,
 ) : TransactionManager {

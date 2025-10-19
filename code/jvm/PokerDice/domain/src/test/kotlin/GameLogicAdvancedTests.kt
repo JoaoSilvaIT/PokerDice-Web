@@ -2,7 +2,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
-import pt.isel.domain.games.GameLogic
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
@@ -10,16 +9,18 @@ import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.utils.Face
 import pt.isel.utils.HandRank
+import pt.isel.utils.calculateFullHandValue
+import pt.isel.utils.decideRoundWinner
+import pt.isel.utils.defineHandRank
 
 class GameLogicAdvancedTests {
-    private val gameLogic = GameLogic()
     private val passwordValidation = PasswordValidationInfo("hashed_password")
 
     @Test
     fun `test calculateFullHandValue with five of a kind`() {
         val hand = Hand(List(5) { Dice(Face.ACE) })
-        val handRank = gameLogic.defineHandRank(hand)
-        val value = gameLogic.calculateFullHandValue(handRank)
+        val handRank = defineHandRank(hand)
+        val value = calculateFullHandValue(handRank)
 
         // FIVE_OF_A_KIND (8) + ACE (6) = 14
         assertEquals(14, value)
@@ -38,8 +39,8 @@ class GameLogicAdvancedTests {
                     Dice(Face.KING),
                 ),
             )
-        val fourAcesRank = gameLogic.defineHandRank(fourAces)
-        val fourAcesValue = gameLogic.calculateFullHandValue(fourAcesRank)
+        val fourAcesRank = defineHandRank(fourAces)
+        val fourAcesValue = calculateFullHandValue(fourAcesRank)
         assertEquals(13, fourAcesValue) // 7 + 6
 
         // Full house with KING as highest
@@ -53,8 +54,8 @@ class GameLogicAdvancedTests {
                     Dice(Face.QUEEN),
                 ),
             )
-        val fullHouseRank = gameLogic.defineHandRank(fullHouse)
-        val fullHouseValue = gameLogic.calculateFullHandValue(fullHouseRank)
+        val fullHouseRank = defineHandRank(fullHouse)
+        val fullHouseValue = calculateFullHandValue(fullHouseRank)
         assertEquals(11, fullHouseValue) // 6 + 5
     }
 
@@ -78,12 +79,13 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
+                firstPlayerIdx = 1,
                 turn = Turn(user1),
                 users = listOf(user1, user2),
                 userHands = mapOf(user1 to hand1, user2 to hand2),
             )
 
-        val winners = gameLogic.decideRoundWinner(round)
+        val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
         assertEquals(user1, winners[0])
@@ -100,12 +102,13 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
+                firstPlayerIdx = 1,
                 turn = Turn(user1),
                 users = listOf(user1, user2),
                 userHands = mapOf(user1 to hand1, user2 to hand2),
             )
 
-        val winners = gameLogic.decideRoundWinner(round)
+        val winners = decideRoundWinner(round)
 
         assertEquals(2, winners.size)
         assertTrue(winners.contains(user1))
@@ -134,12 +137,13 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
+                firstPlayerIdx = 1,
                 turn = Turn(user1),
                 users = listOf(user1, user2, user3),
                 userHands = mapOf(user1 to hand1, user2 to hand2, user3 to hand3),
             )
 
-        val winners = gameLogic.decideRoundWinner(round)
+        val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
         assertEquals(user2, winners[0])
@@ -156,12 +160,13 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
+                firstPlayerIdx = 1,
                 turn = Turn(user1),
                 users = listOf(user1, user2),
                 userHands = mapOf(user1 to hand1, user2 to hand2),
             )
 
-        val winners = gameLogic.decideRoundWinner(round)
+        val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
         assertEquals(user2, winners[0])
@@ -179,7 +184,7 @@ class GameLogicAdvancedTests {
                     Dice(Face.TEN),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.STRAIGHT, rank)
     }
 
@@ -195,7 +200,7 @@ class GameLogicAdvancedTests {
                     Dice(Face.TEN),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.HIGH_DICE, rank)
     }
 
@@ -211,9 +216,9 @@ class GameLogicAdvancedTests {
                     Dice(Face.JACK),
                 ),
             )
-        val handRank = gameLogic.defineHandRank(hand)
-        val value1 = gameLogic.calculateFullHandValue(handRank)
-        val value2 = gameLogic.calculateFullHandValue(handRank)
+        val handRank = defineHandRank(hand)
+        val value1 = calculateFullHandValue(handRank)
+        val value2 = calculateFullHandValue(handRank)
 
         assertEquals(value1, value2)
     }

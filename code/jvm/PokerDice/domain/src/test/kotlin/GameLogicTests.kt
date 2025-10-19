@@ -1,18 +1,16 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
-import pt.isel.domain.games.GameLogic
 import pt.isel.domain.games.Hand
 import pt.isel.utils.Face
 import pt.isel.utils.HandRank
+import pt.isel.utils.defineHandRank
 
 class GameLogicTests {
-    val gameLogic = GameLogic()
-
     @Test
     fun `test five of a kind`() {
         val hand = Hand(List(5) { Dice(Face.ACE) })
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.FIVE_OF_A_KIND, rank)
     }
 
@@ -28,7 +26,7 @@ class GameLogicTests {
                     Dice(Face.KING),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.FOUR_OF_A_KIND, rank)
     }
 
@@ -44,7 +42,7 @@ class GameLogicTests {
                     Dice(Face.KING),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.FULL_HOUSE, rank)
     }
 
@@ -60,7 +58,7 @@ class GameLogicTests {
                     Dice(Face.QUEEN),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.THREE_OF_A_KIND, rank)
     }
 
@@ -76,7 +74,7 @@ class GameLogicTests {
                     Dice(Face.QUEEN),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.TWO_PAIR, rank)
     }
 
@@ -92,7 +90,7 @@ class GameLogicTests {
                     Dice(Face.JACK),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.ONE_PAIR, rank)
     }
 
@@ -108,7 +106,7 @@ class GameLogicTests {
                     Dice(Face.TEN),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.HIGH_DICE, rank)
     }
 
@@ -124,7 +122,7 @@ class GameLogicTests {
                     Dice(Face.ACE),
                 ),
             )
-        val (_, rank) = gameLogic.defineHandRank(hand)
+        val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.STRAIGHT, rank)
     }
 }

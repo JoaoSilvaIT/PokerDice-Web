@@ -27,6 +27,7 @@ data class Game(
         val newRound =
             Round(
                 number = nextRoundNr,
+                firstPlayerIdx = firstPlayerIndex,
                 turn = Turn(users[firstPlayerIndex], Hand(emptyList())),
                 users = users,
                 userHands = emptyMap(),

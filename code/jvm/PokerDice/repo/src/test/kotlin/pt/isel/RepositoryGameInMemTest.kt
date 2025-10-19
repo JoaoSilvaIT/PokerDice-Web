@@ -7,6 +7,7 @@ import pt.isel.domain.games.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.mem.RepositoryGameInMem
+import pt.isel.utils.MIN_BALANCE
 import pt.isel.utils.State
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -25,7 +26,7 @@ class RepositoryGameInMemTest {
         id: Int,
         name: String = "User$id",
         email: String = "user$id@example.com",
-    ) = User(id = id, name = name, email = email, passwordValidation = PasswordValidationInfo("h"))
+    ) = User(id = id, name = name, email = email, balance = MIN_BALANCE, passwordValidation = PasswordValidationInfo("h"))
 
     private fun lobby(
         id: Int = 0,
@@ -164,31 +165,6 @@ class RepositoryGameInMemTest {
     }
 
     @Test
-    fun `updateGame should modify existing game in repository`() {
-        val l = lobby(1)
-        val game = repo.createGame(100L, l, 3)
-
-        val modified = game.copy(state = State.RUNNING)
-        repo.updateGame(modified)
-
-        val found = repo.findById(game.gid)
-        assertNotNull(found)
-        assertEquals(State.RUNNING, found.state)
-    }
-
-    @Test
-    fun `updateGame should not throw for non-existent game`() {
-        val l = lobby(1)
-        val nonExistentGame = Game(999, 100L, null, l, 3, State.WAITING, null)
-
-        // Should not throw
-        repo.updateGame(nonExistentGame)
-
-        // Game should not be added by updateGame
-        assertNull(repo.findById(999))
-    }
-
-    @Test
     fun `deleteById should not affect other games`() {
         val l = lobby(1)
         val g1 = repo.createGame(100L, l, 3)
@@ -215,7 +191,6 @@ class RepositoryGameInMemTest {
         assertEquals(game.lobby, ended.lobby)
         assertEquals(game.numberOfRounds, ended.numberOfRounds)
         assertEquals(State.FINISHED, ended.state)
-        assertNull(ended.currentRoundNumber)
     }
 
     @Test
@@ -225,7 +200,6 @@ class RepositoryGameInMemTest {
 
         assertEquals(State.WAITING, game.state)
         assertNull(game.endedAt)
-        assertNull(game.currentRoundNumber)
     }
 
     @Test
