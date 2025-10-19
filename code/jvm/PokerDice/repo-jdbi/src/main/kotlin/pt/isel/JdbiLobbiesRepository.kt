@@ -43,7 +43,7 @@ class JdbiLobbiesRepository(
                 UPDATE dbo.LOBBY
                 SET name = :name, description = :description, host_id = :host_id,
                     min_players = :min_players, max_players = :max_players,
-                    number_of_rounds = :number_of_rounds, ante = :ante
+                    number_of_rounds = :number_of_rounds
                 WHERE id = :id
                 """,
             ).bind("id", entity.id)
@@ -53,7 +53,6 @@ class JdbiLobbiesRepository(
             .bind("min_players", entity.settings.minPlayers)
             .bind("max_players", entity.settings.maxPlayers)
             .bind("number_of_rounds", entity.settings.numberOfRounds)
-            .bind("ante", entity.settings.ante)
             .execute()
 
         // Update players in lobby
@@ -97,8 +96,8 @@ class JdbiLobbiesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players, number_of_rounds, ante)
-                    VALUES (:name, :description, :host_id, :min_players, :max_players, :number_of_rounds, :ante)
+                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players, number_of_rounds)
+                    VALUES (:name, :description, :host_id, :min_players, :max_players, :number_of_rounds)
                     """,
                 ).bind("name", name)
                 .bind("description", description)
@@ -106,7 +105,6 @@ class JdbiLobbiesRepository(
                 .bind("min_players", minPlayers)
                 .bind("max_players", maxPlayers)
                 .bind("number_of_rounds", 3) // Default value
-                .bind("ante", 10) // Default value
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(Int::class.java)
                 .one()
@@ -125,8 +123,7 @@ class JdbiLobbiesRepository(
         val settings = LobbySettings(
             numberOfRounds = 3,
             minPlayers = minPlayers,
-            maxPlayers = maxPlayers,
-            ante = 10
+            maxPlayers = maxPlayers
         )
         val hostInfo = UserExternalInfo(host.id, host.name)
         return Lobby(id, name, description, hostInfo, settings, setOf(hostInfo))
@@ -194,8 +191,7 @@ class JdbiLobbiesRepository(
         val settings = LobbySettings(
             numberOfRounds = rs.getInt("number_of_rounds"),
             minPlayers = rs.getInt("min_players"),
-            maxPlayers = rs.getInt("max_players"),
-            ante = rs.getInt("ante")
+            maxPlayers = rs.getInt("max_players")
         )
 
         return Lobby(

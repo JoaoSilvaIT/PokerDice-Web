@@ -6,9 +6,9 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "teste5",
-  "email": "teste5@gmail.com",
-  "password": "teste5"
+  "name": "teste2",
+  "email": "teste2@gmail.com",
+  "password": "teste2"
 }
 
 ### Create a Second User
@@ -21,13 +21,13 @@ Content-Type: application/json
   "password": "swordmaster"
 }
 
-### Get token       8qvJdMP48JXyjTjx0Me4nPo7CWBYgX6iNd9JymFDoSM=            AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
+### Get token
 POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "teste5@gmail.com",
-  "password": "teste5"
+  "email": "teste1@gmail.com",
+  "password": "teste1"
 }
 
 
@@ -44,16 +44,16 @@ Content-Type: application/json
 
 ### Logout (requires valid token) ## Body needed
 POST http://localhost:8080/api/logout
-Authorization: Bearer 8DvJEsC5Ue9ZMII7i_xc7EeYTGaJHjOaafFCGspBJu4=
+Authorization: Bearer imFDg9WxAiWFqePC73zhL3IXOAVbaB2xFcdrO7iUoS4=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer 8DvJEsC5Ue9ZMII7i_xc7EeYTGaJHjOaafFCGspBJu4=
+Authorization: Bearer Ouw1E7uS4w_MvGak3wQq3SNDjlk76Cb1T1kVOXeVnyE=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer QEUW8ZAk9X4hihXiM8-PvCSIAH9_DPLxm22HWa9T9wo=
+Authorization: Bearer ujPh37q90-k-jcUdo_dyGYiXmyYvHZ3DBKDAgU8bStU=
 Content-Type: application/json
 
 {
@@ -69,12 +69,12 @@ GET http://localhost:8080/api/lobbies
 
 
 ### Join lobby (requires valid token)
-POST http://localhost:8080/api/lobbies/2/join
-Authorization: Bearer kEdtG-CptYoEdb5IqCTAbci1i_wAPpILTk1MTIQifrs= // Trying to join a lobby I'm already in is giving a 200
+POST http://localhost:8080/api/lobbies/1/join
+Authorization: Bearer Ouw1E7uS4w_MvGak3wQq3SNDjlk76Cb1T1kVOXeVnyE= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/1/leave
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw= // Leaving the loby as an host reutunrs "closed = true", and closes the lobby
+Authorization: Bearer Ouw1E7uS4w_MvGak3wQq3SNDjlk76Cb1T1kVOXeVnyE= // Leaving the loby as an host reutunrs "closed = true", and closes the lobby
 
 ### Close lobby (requires valid token)
 DELETE http://localhost:8080/api/lobbies/1
@@ -82,65 +82,17 @@ Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw= // Creating game with non-host token
+Authorization: Bearer JukMAO_1XC-8Y3aC-VNBF3vBSusiuqZTVu7wfBd9P-o= // Creating game with non-host token
 Content-Type: application/json
 
 {
-  "lobbyId": 2,
+  "lobbyId": 1,
   "numberOfRounds": 4
 }
-
-### Create game with invalid lobby ID
-POST http://localhost:8080/api/games
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
-Content-Type: application/json
-
-{
-  "lobbyId": 999,
-  "numberOfRounds": 3
-}
-
-### Create game with invalid number of rounds (too low)
-POST http://localhost:8080/api/games
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
-Content-Type: application/json
-
-{
-  "lobbyId": 0,
-  "numberOfRounds": 0
-}
-
-### Create game with invalid number of rounds (too high)
-POST http://localhost:8080/api/games
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
-Content-Type: application/json
-
-{
-  "lobbyId": 0,
-  "numberOfRounds": 100
-}
-
-### Get non-existent game
-GET http://localhost:8080/api/games/999
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8=
-
-### Get game without authentication
-GET http://localhost:8080/api/games/0
 
 ### End game (requires valid token)
 POST http://localhost:8080/api/games/1/end
 Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
-
-### End non-existent game
-POST http://localhost:8080/api/games/999/end
-Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
-
-### End game without authentication
-POST http://localhost:8080/api/games/0/end
-
-### End already ended game
-POST http://localhost:8080/api/games/0/end
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8  ## It's possible to end a game multiple times, returning 200 each time
 
 ### ====== NEW GAME FUNCTION TESTS ======
 
@@ -154,39 +106,9 @@ Content-Type: application/json
   "numberOfRounds": 5
 }
 
-### Start game - non-existent game
-POST http://localhost:8080/api/games/999/start
-Authorization: Bearer yG5LCuwGJDDGPalLSleORQ5JGX4f83pDKiT9nt61wGI=
-Content-Type: application/json
-
-{
-  "lobbyId": 1,
-  "numberOfRounds": 5
-}
-
-### Start game - without authentication
-POST http://localhost:8080/api/games/1/start
-Content-Type: application/json
-
-{
-  "lobbyId": 1,
-  "numberOfRounds": 5
-}
-
 ### Start a new round (requires game to be in RUNNING state)
 POST http://localhost:8080/api/games/1/rounds
 Authorization: Bearer token-user-1-valid
-
-### Start a new round - game not started
-POST http://localhost:8080/api/games/1/rounds
-Authorization: Bearer token-user-2-valid
-
-### Start a new round - non-existent game
-POST http://localhost:8080/api/games/999/rounds
-Authorization: Bearer token-user-1-valid
-
-### Start a new round - without authentication
-POST http://localhost:8080/api/games/1/rounds
 
 ### Set ante for current round (requires round to be started)
 POST http://localhost:8080/api/games/1/ante
@@ -197,112 +119,13 @@ Content-Type: application/json
   "ante": 10
 }
 
-### Set ante - with zero ante
-POST http://localhost:8080/api/games/1/ante
-Authorization: Bearer token-user-1-valid
-Content-Type: application/json
-
-{
-  "ante": 0
-}
-
-### Set ante - with negative ante
-POST http://localhost:8080/api/games/1/ante
-Authorization: Bearer token-user-2-valid
-Content-Type: application/json
-
-{
-  "ante": -5
-}
-
-### Set ante - game not found
-POST http://localhost:8080/api/games/999/ante
-Authorization: Bearer token-user-1-valid
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Set ante - round not started
-POST http://localhost:8080/api/games/1/ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Set ante - without authentication
-POST http://localhost:8080/api/games/1/ante
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
 ### Move to next player's turn
 POST http://localhost:8080/api/games/1/next-turn
 Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
 
-### Move to next turn - game not found
-POST http://localhost:8080/api/games/999/next-turn
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-
-### Move to next turn - round not started
-POST http://localhost:8080/api/games/1/next-turn
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-
-### Move to next turn - without authentication
-POST http://localhost:8080/api/games/1/next-turn
-
 ### Pay ante (requires round to be started)
 POST http://localhost:8080/api/games/1/pay-ante
 Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Pay ante - with zero ante
-POST http://localhost:8080/api/games/1/pay-ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 0
-}
-
-### Pay ante - game not found
-POST http://localhost:8080/api/games/999/pay-ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Pay ante - game not started
-POST http://localhost:8080/api/games/1/pay-ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Pay ante - round not started
-POST http://localhost:8080/api/games/1/pay-ante
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
-Content-Type: application/json
-
-{
-  "ante": 10
-}
-
-### Pay ante - without authentication
-POST http://localhost:8080/api/games/1/pay-ante
 Content-Type: application/json
 
 {

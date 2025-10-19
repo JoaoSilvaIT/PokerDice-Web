@@ -24,7 +24,8 @@ create table dbo.LOBBY (
     description varchar(255),
     host_id integer not null references dbo.USERS(id),
     min_players integer not null check (min_players >= 2),
-    max_players integer not null check (max_players >= min_players)
+    max_players integer not null check (max_players >= min_players),
+    number_of_rounds integer not null default 3 check (number_of_rounds >= 1)
 );
 
 create table dbo.LOBBY_USER (

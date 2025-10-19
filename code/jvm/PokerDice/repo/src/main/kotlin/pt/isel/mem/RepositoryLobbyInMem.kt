@@ -25,8 +25,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
         val settings = LobbySettings(
             numberOfRounds = 3, // Default value
             minPlayers = minPlayers,
-            maxPlayers = maxPlayers,
-            ante = 10 // Default value
+            maxPlayers = maxPlayers
         )
         val hostInfo = UserExternalInfo(host.id, host.name)
         val lobby = Lobby(
