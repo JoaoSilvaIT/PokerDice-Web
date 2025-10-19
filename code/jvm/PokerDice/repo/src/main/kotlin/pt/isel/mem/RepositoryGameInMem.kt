@@ -2,8 +2,7 @@ package pt.isel.mem
 
 import pt.isel.RepositoryGame
 import pt.isel.domain.games.*
-import pt.isel.domain.lobby.Lobby
-import pt.isel.domain.games.utils.State
+import pt.isel.utils.State
 import kotlin.collections.plus
 
 class RepositoryGameInMem : RepositoryGame {

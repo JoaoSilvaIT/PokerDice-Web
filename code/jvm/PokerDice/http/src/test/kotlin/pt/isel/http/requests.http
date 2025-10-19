@@ -42,18 +42,18 @@ Content-Type: application/json
 }
 
 
-### Logout (requires valid token)
+### Logout (requires valid token) ## Body needed
 POST http://localhost:8080/api/logout
-Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
+Authorization: Bearer pqkoVnYLlb7AtLU9MvHbq9VVjpamv7ff8Sjm41bvnYo=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer BK7dhosD6pYPIlew82e3EfLxRmueR5qHWw6mjI168ZA=
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer sIj-_wu-CsYb53FXC0pw-6ET974H1SDAf2ycQ7DbNAs=
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
 Content-Type: application/json
 
 {
@@ -69,30 +69,30 @@ GET http://localhost:8080/api/lobbies
 
 
 ### Join lobby (requires valid token)
-POST http://localhost:8080/api/lobbies/3/join
-Authorization: Bearer dJ4MTs_d8FU_gXEl6uKelx6Vce3UYRPk7g4gJl4QZpc= // Trying to join a lobby I'm already in is giving a 200
+POST http://localhost:8080/api/lobbies/2/join
+Authorization: Bearer kEdtG-CptYoEdb5IqCTAbci1i_wAPpILTk1MTIQifrs= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
-POST http://localhost:8080/api/lobbies/0/leave
-Authorization: Bearer Xbn-boARybQ4QjzhNfjgJ5jqUVuCKvjS4HBbIjL15rE=// Leaving the loby as an host reutunrs "closed = true", and closes the lobby
+POST http://localhost:8080/api/lobbies/1/leave
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw= // Leaving the loby as an host reutunrs "closed = true", and closes the lobby
 
 ### Close lobby (requires valid token)
 DELETE http://localhost:8080/api/lobbies/1
-Authorization: Bearer 1mim21MKqELA5niHec6dsvtji8hY3gA8W0uZHuv2ioA=  // Returns 204
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=  // Returns 204
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer cN2alC9jk3HM6OCqJVAA-UxQ6RUBcWZGnFYa-Ez6XUQ=
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw= // Creating game with non-host token
 Content-Type: application/json
 
 {
-  "lobbyId": 3,
+  "lobbyId": 2,
   "numberOfRounds": 4
 }
 
 ### Create game with invalid lobby ID
 POST http://localhost:8080/api/games
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
 Content-Type: application/json
 
 {
@@ -102,7 +102,7 @@ Content-Type: application/json
 
 ### Create game with invalid number of rounds (too low)
 POST http://localhost:8080/api/games
-Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
 Content-Type: application/json
 
 {
@@ -112,7 +112,7 @@ Content-Type: application/json
 
 ### Create game with invalid number of rounds (too high)
 POST http://localhost:8080/api/games
-Authorization: Bearer AzPD70EbqusxZKDORmxx6l4esuYJFIvH7F_NOUKOblM=
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
 Content-Type: application/json
 
 {
@@ -122,14 +122,14 @@ Content-Type: application/json
 
 ### Get non-existent game
 GET http://localhost:8080/api/games/999
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8=
 
 ### Get game without authentication
 GET http://localhost:8080/api/games/0
 
 ### End game (requires valid token)
 POST http://localhost:8080/api/games/1/end
-Authorization: Bearer _kTfDUwNFNDcHxAI658q630hZ2J6QHJRcQMmBHMJKn4=
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
 
 ### End non-existent game
 POST http://localhost:8080/api/games/999/end
@@ -140,4 +140,235 @@ POST http://localhost:8080/api/games/0/end
 
 ### End already ended game
 POST http://localhost:8080/api/games/0/end
-Authorization: Bearer wHy1Jo4ekuX7BNxJzBcJ2zGBQF_DZGK5W5kRzSxJr_w=          ## It's possible to end a game multiple times, returning 200 each time
+Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8  ## It's possible to end a game multiple times, returning 200 each time
+
+### ====== NEW GAME FUNCTION TESTS ======
+
+### Start game (requires valid token and existing game)
+POST http://localhost:8080/api/games/2/start
+Authorization: Bearer yG5LCuwGJDDGPalLSleORQ5JGX4f83pDKiT9nt61wGI=
+Content-Type: application/json
+
+{
+  "lobbyId": 2,
+  "numberOfRounds": 5
+}
+
+### Start game - non-existent game
+POST http://localhost:8080/api/games/999/start
+Authorization: Bearer yG5LCuwGJDDGPalLSleORQ5JGX4f83pDKiT9nt61wGI=
+Content-Type: application/json
+
+{
+  "lobbyId": 1,
+  "numberOfRounds": 5
+}
+
+### Start game - without authentication
+POST http://localhost:8080/api/games/1/start
+Content-Type: application/json
+
+{
+  "lobbyId": 1,
+  "numberOfRounds": 5
+}
+
+### Start a new round (requires game to be in RUNNING state)
+POST http://localhost:8080/api/games/1/rounds
+Authorization: Bearer token-user-1-valid
+
+### Start a new round - game not started
+POST http://localhost:8080/api/games/1/rounds
+Authorization: Bearer token-user-2-valid
+
+### Start a new round - non-existent game
+POST http://localhost:8080/api/games/999/rounds
+Authorization: Bearer token-user-1-valid
+
+### Start a new round - without authentication
+POST http://localhost:8080/api/games/1/rounds
+
+### Set ante for current round (requires round to be started)
+POST http://localhost:8080/api/games/1/ante
+Authorization: Bearer token-user-1-valid
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Set ante - with zero ante
+POST http://localhost:8080/api/games/1/ante
+Authorization: Bearer token-user-1-valid
+Content-Type: application/json
+
+{
+  "ante": 0
+}
+
+### Set ante - with negative ante
+POST http://localhost:8080/api/games/1/ante
+Authorization: Bearer token-user-2-valid
+Content-Type: application/json
+
+{
+  "ante": -5
+}
+
+### Set ante - game not found
+POST http://localhost:8080/api/games/999/ante
+Authorization: Bearer token-user-1-valid
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Set ante - round not started
+POST http://localhost:8080/api/games/1/ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Set ante - without authentication
+POST http://localhost:8080/api/games/1/ante
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Move to next player's turn
+POST http://localhost:8080/api/games/1/next-turn
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### Move to next turn - game not found
+POST http://localhost:8080/api/games/999/next-turn
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### Move to next turn - round not started
+POST http://localhost:8080/api/games/1/next-turn
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### Move to next turn - without authentication
+POST http://localhost:8080/api/games/1/next-turn
+
+### Pay ante (requires round to be started)
+POST http://localhost:8080/api/games/1/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Pay ante - with zero ante
+POST http://localhost:8080/api/games/1/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 0
+}
+
+### Pay ante - game not found
+POST http://localhost:8080/api/games/999/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Pay ante - game not started
+POST http://localhost:8080/api/games/1/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Pay ante - round not started
+POST http://localhost:8080/api/games/1/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### Pay ante - without authentication
+POST http://localhost:8080/api/games/1/pay-ante
+Content-Type: application/json
+
+{
+  "ante": 10
+}
+
+### ====== COMPLETE GAME FLOW TEST ======
+
+### 1. Create a game
+POST http://localhost:8080/api/games
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "lobbyId": 1,
+  "numberOfRounds": 3
+}
+
+### 2. Get the created game (use ID from step 1)
+GET http://localhost:8080/api/games/1
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### 3. Start the game
+POST http://localhost:8080/api/games/1/start
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "lobbyId": 1,
+  "numberOfRounds": 3
+}
+
+### 4. Start first round
+POST http://localhost:8080/api/games/1/rounds
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### 5. Set ante for the round
+POST http://localhost:8080/api/games/1/ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 20
+}
+
+### 6. Players pay ante
+POST http://localhost:8080/api/games/1/pay-ante
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Content-Type: application/json
+
+{
+  "ante": 20
+}
+
+### 7. Move to next turn
+POST http://localhost:8080/api/games/1/next-turn
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### 8. Check game state after turn
+GET http://localhost:8080/api/games/1
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### 9. Start second round
+POST http://localhost:8080/api/games/1/rounds
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+
+### 10. End the game
+POST http://localhost:8080/api/games/1/end
+Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
