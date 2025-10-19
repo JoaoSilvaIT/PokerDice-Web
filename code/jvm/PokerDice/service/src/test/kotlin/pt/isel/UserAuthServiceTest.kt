@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import pt.isel.domain.users.TokenExternalInfo
+import pt.isel.domain.users.User
 import pt.isel.errors.AuthTokenError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -32,28 +33,31 @@ class UserAuthServiceTest {
         val email = "alice@example.com"
         val password = "securePassword123"
 
-        val user = serviceUser.createUser(name, email, password)
+        val result = serviceUser.createUser(name, email, password)
 
+        assertIs<Either.Success<User>>(result)
+        val user = result.value
         assertNotNull(user)
         assertEquals(name, user.name)
         assertEquals(email, user.email)
     }
 
     @Test
-    fun `createUser with already used email should throw exception`() {
+    fun `createUser with already used email should return failure`() {
         serviceUser.createUser("Alice", "alice@example.com", "password123")
 
-        val exception =
-            kotlin.test.assertFailsWith<IllegalArgumentException> {
-                serviceUser.createUser("Bob", "alice@example.com", "password456")
-            }
-        assertEquals("Email already in use", exception.message)
+        val result = serviceUser.createUser("Bob", "alice@example.com", "password456")
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.EmailAlreadyInUse, result.value)
     }
 
     @Test
     fun `createUser should trim name and email`() {
-        val user = serviceUser.createUser(" John ", " john@doe.com ", "secret")
+        val result = serviceUser.createUser(" John ", " john@doe.com ", "secret")
 
+        assertIs<Either.Success<User>>(result)
+        val user = result.value
         assertEquals("John", user.name)
         assertEquals("john@doe.com", user.email)
     }
@@ -104,7 +108,9 @@ class UserAuthServiceTest {
 
     @Test
     fun `getUserByToken returns user when token is valid`() {
-        val user = serviceUser.createUser("John", "john@doe.com", "password")
+        val userResult = serviceUser.createUser("John", "john@doe.com", "password")
+        assertIs<Either.Success<User>>(userResult)
+        val user = userResult.value
         val tokenResult = serviceUser.createToken("john@doe.com", "password")
         assertIs<Either.Success<TokenExternalInfo>>(tokenResult)
         val token = tokenResult.value.tokenValue

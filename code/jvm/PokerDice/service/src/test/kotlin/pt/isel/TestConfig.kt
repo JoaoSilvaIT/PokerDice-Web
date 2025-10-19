@@ -42,5 +42,6 @@ class TestConfig {
             tokenTtl = Duration.ofHours(24),
             tokenRollingTtl = Duration.ofHours(1),
             maxTokensPerUser = 3,
+            minPasswordLength = 2,
         )
 }

@@ -7,8 +7,8 @@ import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.mem.RepositoryGameInMem
-import pt.isel.utils.MIN_BALANCE
 import pt.isel.domain.games.utils.State
+import pt.isel.domain.users.MIN_BALANCE
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

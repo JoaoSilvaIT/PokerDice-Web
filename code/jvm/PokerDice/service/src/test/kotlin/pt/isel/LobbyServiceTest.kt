@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import pt.isel.domain.lobby.Lobby
+import pt.isel.domain.users.User
 import pt.isel.errors.LobbyError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -34,21 +35,25 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby should create and return a lobby`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, "Poker Room", "Fun game", 2, 4)
 
         assertIs<Either.Success<Lobby>>(result)
         assertEquals("Poker Room", result.value.name)
         assertEquals("Fun game", result.value.description)
-        assertEquals(2, result.value.minPlayers)
-        assertEquals(4, result.value.maxPlayers)
+        assertEquals(2, result.value.settings.minPlayers)
+        assertEquals(4, result.value.settings.maxPlayers)
         assertEquals(host.id, result.value.host.id)
     }
 
     @Test
     fun `createLobby fails on blank name`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, " ", "desc", 2, 10)
 
@@ -58,7 +63,9 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby fails when minPlayers too low`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, "Lobby", "desc", 1, 10)
 
@@ -68,7 +75,9 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby fails when maxPlayers too high`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, "Lobby", "desc", 2, 11)
 
@@ -78,7 +87,9 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby fails when minPlayers greater than maxPlayers`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, "Lobby", "desc", 5, 3)
 
@@ -88,7 +99,9 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby fails when name already used`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
         serviceLobby.createLobby(host, "Poker Room", "desc", 2, 2)
 
         val result = serviceLobby.createLobby(host, "Poker Room", "desc 2", 2, 2)
@@ -99,7 +112,9 @@ class LobbyServiceTest {
 
     @Test
     fun `createLobby trims name and description`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val result = serviceLobby.createLobby(host, " Poker Room ", " Fun game ", 2, 4)
 
@@ -110,8 +125,12 @@ class LobbyServiceTest {
 
     @Test
     fun `listVisibleLobbies returns only lobbies with available slots`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player = serviceUser.createUser("Player", "player@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123")
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Full Lobby", "desc", 2, 2)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -127,8 +146,12 @@ class LobbyServiceTest {
 
     @Test
     fun `joinLobby should add user to lobby`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player = serviceUser.createUser("Player", "player@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123")
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -136,14 +159,20 @@ class LobbyServiceTest {
         val result = serviceLobby.joinLobby(lobbyResult.value.id, player)
 
         assertIs<Either.Success<Lobby>>(result)
-        assertTrue(result.value.users.any { it.id == player.id })
+        assertTrue(result.value.players.any { it.id == player.id })
     }
 
     @Test
     fun `joinLobby fails when lobby is full`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player1 = serviceUser.createUser("Player1", "player1@example.com", "password123")
-        val player2 = serviceUser.createUser("Player2", "player2@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val player1Result = serviceUser.createUser("Player1", "player1@example.com", "password123")
+        assertIs<Either.Success<User>>(player1Result)
+        val player1 = player1Result.value
+        val player2Result = serviceUser.createUser("Player2", "player2@example.com", "password123")
+        assertIs<Either.Success<User>>(player2Result)
+        val player2 = player2Result.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 2)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -157,8 +186,12 @@ class LobbyServiceTest {
 
     @Test
     fun `joinLobby fails when user already in lobby`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player = serviceUser.createUser("Player", "player@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123")
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -172,8 +205,12 @@ class LobbyServiceTest {
 
     @Test
     fun `leaveLobby should remove user from lobby`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player = serviceUser.createUser("Player", "player@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123")
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -186,12 +223,14 @@ class LobbyServiceTest {
 
         val lobby = serviceLobby.findLobbyById(lobbyResult.value.id)
         assertNotNull(lobby)
-        assertTrue(lobby.users.none { it.id == player.id })
+        assertTrue(lobby.players.none { it.id == player.id })
     }
 
     @Test
     fun `leaveLobby deletes lobby when host leaves`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -207,7 +246,9 @@ class LobbyServiceTest {
 
     @Test
     fun `closeLobby should delete lobby when called by host`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
@@ -222,8 +263,12 @@ class LobbyServiceTest {
 
     @Test
     fun `closeLobby fails when user is not the host`() {
-        val host = serviceUser.createUser("Host", "host@example.com", "password123")
-        val player = serviceUser.createUser("Player", "player@example.com", "password123")
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123")
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
 
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
