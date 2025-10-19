@@ -20,7 +20,7 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username
+                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
                 FROM dbo.GAME g
                 JOIN dbo.LOBBY l ON g.lobby_id = l.id
                 JOIN dbo.USERS u ON l.host_id = u.id
@@ -35,7 +35,7 @@ class JdbiGamesRepository(
         handle
             .createQuery(
                 """
-                SELECT g.*, l.*, u.id as host_id, u.username as host_username
+                SELECT g.*, l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
                 FROM dbo.GAME g
                 JOIN dbo.LOBBY l ON g.lobby_id = l.id
                 JOIN dbo.USERS u ON l.host_id = u.id
@@ -76,7 +76,6 @@ class JdbiGamesRepository(
         handle.createUpdate("DELETE FROM dbo.GAME").execute()
     }
 
-
     override fun createGame(
         startedAt: Long,
         lobby: Lobby,
@@ -97,7 +96,7 @@ class JdbiGamesRepository(
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(Int::class.java)
                 .one()
-        val players = lobby.players.map { PlayerInGame(it.id, it.name, 0, 0) }.toSet()
+        val players = lobby.players.map { PlayerInGame(it.id, it.name, 0, 0) }.toList()
         return Game(
             id = id,
             lobbyId = lobby.id,
@@ -109,7 +108,6 @@ class JdbiGamesRepository(
             endedAt = null
         )
     }
-
 
     override fun endGame(
         game: Game,
@@ -130,6 +128,56 @@ class JdbiGamesRepository(
         return game.copy(state = State.FINISHED, endedAt = endedAt)
     }
 
+    override fun updateGameRound(round: Round, game: Game): Game {
+        saveRound(game.id, round)
+        val updatedGame = game.copy(currentRound = round)
+        save(updatedGame)
+        return updatedGame
+    }
+
+    override fun startNewRound(game: Game): Game {
+        val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
+        val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
+        val firstPlayer = game.players[firstPlayerIndex]
+
+        val newRound = Round(
+            number = nextRoundNumber,
+            firstPlayerIdx = firstPlayerIndex,
+            turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
+            players = game.players,
+            playerHands = emptyMap(),
+            gameId = game.id
+        )
+
+        val updatedGame = game.copy(currentRound = newRound)
+        save(updatedGame)
+        return updatedGame
+    }
+
+    override fun setAnte(ante: Int, round: Round): Round {
+        val updatedRound = round.copy(ante = ante)
+        saveRound(updatedRound.gameId, updatedRound)
+        return updatedRound
+    }
+
+    override fun payAnte(game: Game, ante: Int): Game {
+        // Update player balances and pot
+        // This is a simplified implementation
+        return game
+    }
+
+    override fun nextTurn(round: Round): Round {
+        val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
+        val nextPlayerIndex = (currentPlayerIndex + 1) % round.players.size
+        val nextPlayer = round.players[nextPlayerIndex]
+
+        val updatedRound = round.copy(
+            turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList())
+        )
+        saveRound(updatedRound.gameId, updatedRound)
+        return updatedRound
+    }
+
     private fun saveRound(
         gameId: Int,
         round: Round,
@@ -146,12 +194,11 @@ class JdbiGamesRepository(
             ).bind("game_id", gameId)
             .bind("round_number", round.number)
             .bind("turn_of_player", round.turn.player.id)
-            .bind("pot", round.ante)
+            .bind("pot", round.pot)
             .execute()
 
         // Save player hands
-        round.userHands.forEach { (user, hand) ->
-            val diceValues = hand.dices.map { faceToChar(it.face) }.toTypedArray()
+        round.playerHands.forEach { (player, hand) ->
             handle
                 .createUpdate(
                     """
@@ -162,7 +209,7 @@ class JdbiGamesRepository(
                     """,
                 ).bind("game_id", gameId)
                 .bind("round_number", round.number)
-                .bind("user_id", user.id)
+                .bind("user_id", player.id)
                 .bind("dice_values", diceValues)
                 .bind("rolls_left", 0)
                 .execute()
@@ -173,36 +220,32 @@ class JdbiGamesRepository(
         val gameId = rs.getInt("id")
         val lobbyId = rs.getInt("lobby_id")
 
-        val hostInfo = UserExternalInfo(
-            rs.getInt("host_id"),
-            rs.getString("host_username")
-        )
-
         // Fetch lobby players
         val lobbyPlayers =
             handle
                 .createQuery(
                     """
-                    SELECT u.id, u.username FROM dbo.USERS u
+                    SELECT u.id, u.username, u.balance FROM dbo.USERS u
                     JOIN dbo.LOBBY_USER lu ON u.id = lu.user_id
                     WHERE lu.lobby_id = :lobby_id
                     """,
                 ).bind("lobby_id", lobbyId)
                 .map { playerRs, _ ->
-                    UserExternalInfo(
+                    PlayerInGame(
                         playerRs.getInt("id"),
                         playerRs.getString("username"),
+                        playerRs.getInt("balance"),
+                        0 // wins count
                     )
-                }.list().toSet()
+                }.list()
 
-        val playersInGame = lobbyPlayers.map { PlayerInGame(it.id, it.name, 0, 0) }.toSet()
         val currentRoundNumber = rs.getInt("current_round_number")
         val currentRound = if (currentRoundNumber > 0) loadRound(gameId, currentRoundNumber, lobbyPlayers) else null
 
         return Game(
             id = gameId,
             lobbyId = lobbyId,
-            players = playersInGame,
+            players = lobbyPlayers,
             numberOfRounds = rs.getInt("total_rounds"),
             state = State.valueOf(rs.getString("state")),
             currentRound = currentRound,
@@ -214,7 +257,7 @@ class JdbiGamesRepository(
     private fun loadRound(
         gameId: Int,
         roundNumber: Int,
-        players: Set<UserExternalInfo>,
+        players: List<PlayerInGame>,
     ): Round? {
         val roundData =
             handle
@@ -230,21 +273,19 @@ class JdbiGamesRepository(
                 .orElse(null) ?: return null
 
         val turnUserId = roundData["turn_of_player"] as Int
-        val turnUser = players.first { it.id == turnUserId }
+        val turnPlayer = players.first { it.id == turnUserId }
         val pot = roundData["pot"] as Int
 
-        // Note: userHands expects Map<User, Hand> but we only have UserExternalInfo
-        // This is a temporary workaround - proper implementation would need full User objects
-        val userHands = emptyMap<User, Hand>()
+        val playerHands = emptyMap<PlayerInGame, Hand>()
 
         return Round(
             number = roundNumber,
             firstPlayerIdx = 0, // Would need to be stored in DB
-            turn = Turn(turnUser, rollsRemaining = 3, currentDice = emptyList()),
+            turn = Turn(turnPlayer, rollsRemaining = 3, currentDice = emptyList()),
             players = players,
-            userHands = userHands,
+            playerHands = playerHands,
             gameId = gameId,
-            ante = pot,
+            pot = pot
         )
     }
 
@@ -256,16 +297,5 @@ class JdbiGamesRepository(
             Face.JACK -> 'J'
             Face.TEN -> 'T'
             Face.NINE -> '9'
-        }
-
-    private fun charToFace(char: Char): Face =
-        when (char) {
-            'A' -> Face.ACE
-            'K' -> Face.KING
-            'Q' -> Face.QUEEN
-            'J' -> Face.JACK
-            'T' -> Face.TEN
-            '9' -> Face.NINE
-            else -> throw IllegalArgumentException("Invalid dice face: $char")
         }
 }

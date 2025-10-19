@@ -8,7 +8,6 @@ import pt.isel.utils.Either
 import pt.isel.domain.games.utils.State
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.users.UserExternalInfo
 import pt.isel.utils.failure
 import pt.isel.utils.success
 import pt.isel.domain.games.MIN_ANTE
@@ -38,7 +37,6 @@ class GameService(
 
     fun startGame(
         gameId: Int,
-        numberOfRounds: Int,
     ): Either<GameError, Game> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
@@ -67,13 +65,13 @@ class GameService(
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
             val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
-            val firstPlayer = game.players.elementAt(firstPlayerIndex)
+            val firstPlayer = game.players[firstPlayerIndex]
             val newRound = Round(
                 number = nextRoundNumber,
                 firstPlayerIdx = firstPlayerIndex,
-                turn = Turn(UserExternalInfo(firstPlayer.id, firstPlayer.name), rollsRemaining = 3, currentDice = emptyList()),
-                players = game.players.map { UserExternalInfo(it.id, it.name) }.toSet(),
-                userHands = emptyMap(),
+                turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
+                players = game.players,
+                playerHands = emptyMap(),
                 gameId = game.id
             )
             val newGame = game.copy(currentRound = newRound)
@@ -101,28 +99,28 @@ class GameService(
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
 
-            val playersList = round.players.toList()
+            val playersList = round.players
             val currentIndex = playersList.indexOfFirst { it.id == round.turn.player.id }
-            val updatedUserHands = round.userHands // Final hands should be recorded elsewhere when finalized
+            val updatedPlayerHands = round.playerHands // Final hands should be recorded elsewhere when finalized
 
             val newRound = if (((currentIndex + 1) % playersList.size) == round.firstPlayerIdx) {
                 // End of round, for now just create a new round. Logic should be improved for scoring.
                 val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
                 val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
-                val firstPlayer = game.players.elementAt(firstPlayerIndex)
+                val firstPlayer = game.players[firstPlayerIndex]
                 Round(
                     number = nextRoundNumber,
                     firstPlayerIdx = firstPlayerIndex,
-                    turn = Turn(UserExternalInfo(firstPlayer.id, firstPlayer.name), rollsRemaining = 3, currentDice = emptyList()),
-                    players = game.players.map { UserExternalInfo(it.id, it.name) }.toSet(),
-                    userHands = emptyMap(),
+                    turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
+                    players = game.players,
+                    playerHands = emptyMap(),
                     gameId = game.id
                 )
             } else {
                 val nextPlayer = playersList[(currentIndex + 1) % playersList.size]
                 round.copy(
                     turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList()),
-                    userHands = updatedUserHands
+                    playerHands = updatedPlayerHands
                 )
             }
 

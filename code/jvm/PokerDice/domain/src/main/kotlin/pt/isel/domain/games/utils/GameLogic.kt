@@ -2,6 +2,7 @@ package pt.isel.domain.games.utils
 
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
+import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.users.User
@@ -28,9 +29,9 @@ fun calculateFullHandValue(handIt: Pair<Hand, HandRank>): Int {
     return numberOfHand + numberOfMajorDice
 }
 
-fun decideRoundWinner(round: Round): List<User> {
-    val userHandValues: List<Pair<User, Int>> =
-        round.userHands.map { (user, hand) ->
+fun decideRoundWinner(round: Round): List<PlayerInGame> {
+    val userHandValues: List<Pair<PlayerInGame, Int>> =
+        round.playerHands.map { (user, hand) ->
             val handRank = defineHandRank(hand)
             val handValue = calculateFullHandValue(handRank)
             Pair(user, handValue)

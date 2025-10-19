@@ -55,7 +55,7 @@ class LobbyService(
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
             if (lobby.players.size >= lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
             if (lobby.players.any { it.id == user.id }) return@run failure(LobbyError.UserAlreadyInLobby)
-            val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name))
+            val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name, user.balance))
             repoLobby.save(updated)
             success(updated)
         }
@@ -69,7 +69,7 @@ class LobbyService(
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
             if (lobby.players.size + users.size > lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
 
-            val updated = lobby.copy(players = lobby.players + users.map { UserExternalInfo(it.id, it.name) })
+            val updated = lobby.copy(players = lobby.players + users.map { UserExternalInfo(it.id, it.name, it.balance) })
             repoLobby.save(updated)
             success(updated)
         }

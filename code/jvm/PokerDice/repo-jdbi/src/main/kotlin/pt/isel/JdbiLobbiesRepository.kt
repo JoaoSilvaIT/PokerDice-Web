@@ -15,7 +15,7 @@ class JdbiLobbiesRepository(
         handle
             .createQuery(
                 """
-                SELECT l.*, u.id as host_id, u.username as host_username
+                SELECT l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
                 FROM dbo.LOBBY l
                 JOIN dbo.USERS u ON l.host_id = u.id
                 WHERE l.id = :id
@@ -29,7 +29,7 @@ class JdbiLobbiesRepository(
         handle
             .createQuery(
                 """
-                SELECT l.*, u.id as host_id, u.username as host_username
+                SELECT l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
                 FROM dbo.LOBBY l
                 JOIN dbo.USERS u ON l.host_id = u.id
                 """,
@@ -42,8 +42,7 @@ class JdbiLobbiesRepository(
                 """
                 UPDATE dbo.LOBBY
                 SET name = :name, description = :description, host_id = :host_id,
-                    min_players = :min_players, max_players = :max_players,
-                    number_of_rounds = :number_of_rounds
+                    min_players = :min_players, max_players = :max_players
                 WHERE id = :id
                 """,
             ).bind("id", entity.id)
@@ -52,7 +51,6 @@ class JdbiLobbiesRepository(
             .bind("host_id", entity.host.id)
             .bind("min_players", entity.settings.minPlayers)
             .bind("max_players", entity.settings.maxPlayers)
-            .bind("number_of_rounds", entity.settings.numberOfRounds)
             .execute()
 
         // Update players in lobby
@@ -96,15 +94,14 @@ class JdbiLobbiesRepository(
             handle
                 .createUpdate(
                     """
-                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players, number_of_rounds)
-                    VALUES (:name, :description, :host_id, :min_players, :max_players, :number_of_rounds)
+                    INSERT INTO dbo.LOBBY (name, description, host_id, min_players, max_players)
+                    VALUES (:name, :description, :host_id, :min_players, :max_players)
                     """,
                 ).bind("name", name)
                 .bind("description", description)
                 .bind("host_id", host.id)
                 .bind("min_players", minPlayers)
                 .bind("max_players", maxPlayers)
-                .bind("number_of_rounds", 3) // Default value
                 .executeAndReturnGeneratedKeys("id")
                 .mapTo(Int::class.java)
                 .one()
@@ -121,11 +118,11 @@ class JdbiLobbiesRepository(
             .execute()
 
         val settings = LobbySettings(
-            numberOfRounds = 3,
+            numberOfRounds = 3, // Default value, will be set when game is created
             minPlayers = minPlayers,
             maxPlayers = maxPlayers
         )
-        val hostInfo = UserExternalInfo(host.id, host.name)
+        val hostInfo = UserExternalInfo(host.id, host.name, host.balance)
         return Lobby(id, name, description, hostInfo, settings, setOf(hostInfo))
     }
 
@@ -133,7 +130,7 @@ class JdbiLobbiesRepository(
         handle
             .createQuery(
                 """
-                SELECT l.*, u.id as host_id, u.username as host_username
+                SELECT l.*, u.id as host_id, u.username as host_username, u.balance as host_balance
                 FROM dbo.LOBBY l
                 JOIN dbo.USERS u ON l.host_id = u.id
                 WHERE l.name = :name
@@ -168,7 +165,8 @@ class JdbiLobbiesRepository(
         val lobbyId = rs.getInt("id")
         val hostInfo = UserExternalInfo(
             rs.getInt("host_id"),
-            rs.getString("host_username")
+            rs.getString("host_username"),
+            rs.getInt("host_balance")
         )
 
         // Fetch all players in this lobby
@@ -176,7 +174,7 @@ class JdbiLobbiesRepository(
             handle
                 .createQuery(
                     """
-                    SELECT u.id, u.username FROM dbo.USERS u
+                    SELECT u.id, u.username, u.balance FROM dbo.USERS u
                     JOIN dbo.LOBBY_USER lu ON u.id = lu.user_id
                     WHERE lu.lobby_id = :lobby_id
                     """,
@@ -184,12 +182,13 @@ class JdbiLobbiesRepository(
                 .map { playerRs, _ ->
                     UserExternalInfo(
                         playerRs.getInt("id"),
-                        playerRs.getString("username")
+                        playerRs.getString("username"),
+                        playerRs.getInt("balance")
                     )
                 }.list().toSet()
 
         val settings = LobbySettings(
-            numberOfRounds = rs.getInt("number_of_rounds"),
+            numberOfRounds = 3, // Default value, actual rounds set when game is created
             minPlayers = rs.getInt("min_players"),
             maxPlayers = rs.getInt("max_players")
         )

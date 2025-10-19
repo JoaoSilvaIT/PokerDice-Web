@@ -33,6 +33,7 @@ class RepositoryUserInMem : RepositoryUser {
             UserExternalInfo(
                 id = user.id,
                 name = user.name,
+                balance = user.balance,
             )
         }
     }

@@ -140,6 +140,7 @@ class JdbiUsersRepository(
                 UserExternalInfo(
                     id = rs.getInt("id"),
                     name = rs.getString("username"),
+                    balance = rs.getInt("balance")
                 )
             }
             .findOne()

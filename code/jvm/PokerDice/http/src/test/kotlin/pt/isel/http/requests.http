@@ -26,8 +26,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "teste1@gmail.com",
-  "password": "teste1"
+  "email": "teste2@gmail.com",
+  "password": "teste2"
 }
 
 
@@ -48,12 +48,12 @@ Authorization: Bearer imFDg9WxAiWFqePC73zhL3IXOAVbaB2xFcdrO7iUoS4=
 
 ### Get user info (requires valid token)
 GET http://localhost:8080/api/me
-Authorization: Bearer Ouw1E7uS4w_MvGak3wQq3SNDjlk76Cb1T1kVOXeVnyE=
+Authorization: Bearer 7t2jt69c_uCfyomNZI0LUaTA7QTAGbnVM1ALl4rZs10=
 
 
 ### Create lobby (requires valid token)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer ujPh37q90-k-jcUdo_dyGYiXmyYvHZ3DBKDAgU8bStU=
+Authorization: Bearer PKT3TQzVWi8_qyIx0HPJ-f1bOBsZzXWbyHftJt3g4Gc=
 Content-Type: application/json
 
 {
@@ -70,7 +70,7 @@ GET http://localhost:8080/api/lobbies
 
 ### Join lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/1/join
-Authorization: Bearer Ouw1E7uS4w_MvGak3wQq3SNDjlk76Cb1T1kVOXeVnyE= // Trying to join a lobby I'm already in is giving a 200
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
 POST http://localhost:8080/api/lobbies/1/leave
@@ -82,7 +82,7 @@ Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer JukMAO_1XC-8Y3aC-VNBF3vBSusiuqZTVu7wfBd9P-o= // Creating game with non-host token
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg= // Creating game with non-host token
 Content-Type: application/json
 
 {
@@ -91,19 +91,19 @@ Content-Type: application/json
 }
 
 ### End game (requires valid token)
-POST http://localhost:8080/api/games/1/end
-Authorization: Bearer _fgr0LRC1JnmbQ7PDnmdZcBIZb4hHrsqK4mAekkD5k8
+POST http://localhost:8080/api/games/3/end
+Authorization: Bearer 7t2jt69c_uCfyomNZI0LUaTA7QTAGbnVM1ALl4rZs10=
 
 ### ====== NEW GAME FUNCTION TESTS ======
 
 ### Start game (requires valid token and existing game)
-POST http://localhost:8080/api/games/2/start
-Authorization: Bearer yG5LCuwGJDDGPalLSleORQ5JGX4f83pDKiT9nt61wGI=
+POST http://localhost:8080/api/games/1/start
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg=
 Content-Type: application/json
 
 {
-  "lobbyId": 2,
-  "numberOfRounds": 5
+  "lobbyId": 1,
+  "numberOfRounds": 4
 }
 
 ### Start a new round (requires game to be in RUNNING state)
@@ -146,21 +146,20 @@ Content-Type: application/json
 
 ### 2. Get the created game (use ID from step 1)
 GET http://localhost:8080/api/games/1
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg=
 
 ### 3. Start the game
 POST http://localhost:8080/api/games/1/start
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg=
 Content-Type: application/json
 
 {
-  "lobbyId": 1,
-  "numberOfRounds": 3
+  "lobbyId": 1
 }
 
 ### 4. Start first round
-POST http://localhost:8080/api/games/1/rounds
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+POST http://localhost:8080/api/games/1/rounds/start
+Authorization: Bearer PovWy80W1pKp-dybZxcIFAYigtYmwklTbzYk2s72OTg=
 
 ### 5. Set ante for the round
 POST http://localhost:8080/api/games/1/ante

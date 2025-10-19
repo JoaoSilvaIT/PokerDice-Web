@@ -14,8 +14,4 @@ data class Game(
     val endedAt: Long?,
     // List to register the gains of each user in each round to decide the final winner
     val gameGains: List<Pair<User, Int>> = emptyList(),
-    ) {
-    init {
-        require(state == State.RUNNING && currentRound != null) {"If state is RUNNING, current round is not null"}
-    }
-}
+)

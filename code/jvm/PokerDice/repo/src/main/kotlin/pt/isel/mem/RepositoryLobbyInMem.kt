@@ -27,7 +27,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
             minPlayers = minPlayers,
             maxPlayers = maxPlayers
         )
-        val hostInfo = UserExternalInfo(host.id, host.name)
+        val hostInfo = UserExternalInfo(host.id, host.name, host.balance)
         val lobby = Lobby(
             id = lobbyIdCounter++,
             name = name,
