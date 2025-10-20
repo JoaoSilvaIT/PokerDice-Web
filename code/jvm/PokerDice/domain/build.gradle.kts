@@ -12,6 +12,10 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
+    // To get password encode
+    api("org.springframework.security:spring-security-core:6.3.0")
     implementation(kotlin("reflect"))
 }
 

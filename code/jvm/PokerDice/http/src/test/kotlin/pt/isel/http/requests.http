@@ -1,6 +1,10 @@
 ### Create user
 POST http://localhost:8080/api/users
 
+###Create Invite
+POST http://localhost:8080/api/users/invite
+Authorization: Bearer n712CAlbiWoW2_b-NKNXO4cuPNVXJI-QBulBdv507A0=
+
 ### Create user
 POST http://localhost:8080/api/users
 Content-Type: application/json
@@ -26,8 +30,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "teste2@gmail.com",
-  "password": "teste2"
+  "email": "teste1@gmail.com",
+  "password": "teste1"
 }
 
 

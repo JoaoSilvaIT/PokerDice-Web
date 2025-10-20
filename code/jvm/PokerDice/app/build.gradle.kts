@@ -17,6 +17,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
     implementation("org.postgresql:postgresql")
     implementation("org.jdbi:jdbi3-core:3.37.1")
     implementation("org.jdbi:jdbi3-kotlin:3.37.1")

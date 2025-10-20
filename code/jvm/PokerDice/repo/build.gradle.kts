@@ -14,6 +14,8 @@ repositories {
 dependencies {
     api(project(":domain"))
     implementation("org.springframework.boot:spring-boot-starter-web:3.5.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
     testImplementation(kotlin("test"))
 }
 

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.UserAuthService
 import pt.isel.domain.users.AuthenticatedUser
+import pt.isel.domain.users.Invite
 import pt.isel.errors.AuthTokenError
 import pt.isel.model.Problem
 import pt.isel.utils.Either
@@ -19,6 +20,7 @@ class UserController(
     @PostMapping("/api/users")
     fun createUser(
         @RequestBody userInput: UserInput,
+        admin: AuthenticatedUser
     ): ResponseEntity<*> {
         return when (val result = userService.createUser(userInput.name, userInput.email, userInput.password)) {
             is Either.Success ->
@@ -51,6 +53,30 @@ class UserController(
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
+
+            is Either.Failure -> {
+                when (result.value) {
+                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
+                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
+                    is AuthTokenError.BlankName,
+                    is AuthTokenError.EmailAlreadyInUse ->
+                        Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                }
+            }
+        }
+    }
+
+    @PostMapping("/api/users/invite")
+    fun createInvite(
+        users: AuthenticatedUser,
+    ): ResponseEntity<*> {
+        return when (val result = userService.createAppInvite(users.user.id)) {
+            is Either.Success ->
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(InviteOutputModel(result.value))
 
             is Either.Failure -> {
                 when (result.value) {

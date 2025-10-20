@@ -19,6 +19,7 @@ dependencies {
 
     // Spring context for @Component annotation
     implementation("org.springframework:spring-context:6.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
     // Missing critical dependencies
     implementation(project(":domain"))

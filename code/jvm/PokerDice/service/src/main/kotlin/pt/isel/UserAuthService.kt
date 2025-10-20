@@ -2,12 +2,7 @@ package pt.isel
 
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import pt.isel.domain.users.PasswordValidationInfo
-import pt.isel.domain.users.Token
-import pt.isel.domain.users.TokenEncoder
-import pt.isel.domain.users.TokenExternalInfo
-import pt.isel.domain.users.User
-import pt.isel.domain.users.UsersDomainConfig
+import pt.isel.domain.users.*
 import pt.isel.errors.AuthTokenError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -25,6 +20,7 @@ class UserAuthService(
     private val passwordEncoder: PasswordEncoder,
     private val tokenEncoder: TokenEncoder,
     private val config: UsersDomainConfig,
+    private val inviteDomain: InviteDomain,
     private val trxManager: TransactionManager,
     private val clock: Clock,
 ) {
@@ -102,6 +98,18 @@ class UserAuthService(
             } else {
                 null
             }
+        }
+    }
+
+    fun createAppInvite(userId: Int): Either<AuthTokenError, String> {
+        return trxManager.run {
+            val newInvite = inviteDomain.generateInviteValue()
+            val inviteValidationInfo = inviteDomain.createInviteValidationInformation(newInvite)
+            val state = inviteDomain.validState
+            val now = clock.instant()
+            repoInvite.createAppInvite(userId, inviteValidationInfo, state, now)
+                ?: return@run failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+            success(newInvite)
         }
     }
 
