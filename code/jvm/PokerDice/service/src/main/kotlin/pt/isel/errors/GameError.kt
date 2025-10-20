@@ -24,4 +24,6 @@ sealed class GameError {
     data object RoundNotFounded : GameError()
 
     data object FinalHandNotValid : GameError()
+
+    data object GameNotFinished : GameError()
 }

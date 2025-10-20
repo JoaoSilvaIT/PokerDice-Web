@@ -96,7 +96,7 @@ Authorization: Bearer 7t2jt69c_uCfyomNZI0LUaTA7QTAGbnVM1ALl4rZs10=
 
 ### Find Game
 GET http://localhost:8080/api/games/1
-Authorization: Bearer CHRWhsG01dj7IvlBWiFYC2ERUVh5ogBru_hm5n1UBiY=
+Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### ====== NEW GAME FUNCTION TESTS ======
 
@@ -124,32 +124,37 @@ Content-Type: application/json
 
 ### Update CurrentDices in Turn
 POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+Authorization: Bearer KmhgViN0toDJBU4C_pZH9FtD3oJMwDwpY4vUFqMNgxo=
 Content-Type: application/json
 
 {
-    "dice": "9"
+    "dice": "A"
 }
 
 ### Move to next player's turn
-POST http://localhost:8080/api/games/1/next-turn
-Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=
+POST http://localhost:8080/api/games/1/rounds/next-turn
+Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### Pay ante (requires round to be started)
 POST http://localhost:8080/api/games/1/rounds/pay-ante
 Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 Content-Type: application/json
 
-
 ### Roll dices
 POST http://localhost:8080/api/games/1/rounds/roll-dices
 Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### Check Winner of the round
+POST http://localhost:8080/api/games/1/rounds/check-winner
+Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### Check winner of the game
+POST http://localhost:8080/api/games/1/check-winner
+Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### Distribute Winnings
+POST http://localhost:8080/api/games/1/rounds/distribute-winnings
+Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 
 ### ====== COMPLETE GAME FLOW TEST ======

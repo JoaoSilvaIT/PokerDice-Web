@@ -42,12 +42,26 @@ fun decideRoundWinner(round: Round): List<PlayerInGame> {
     return userHandValues.filter { it.second == winnerValue }.map { it.first }
 }
 
-fun distributeWinnings(winners: List<User>, pot: Int): List<User> {
+fun distributeWinnings(winners: List<PlayerInGame>, pot: Int, allPlayers: List<PlayerInGame>): List<PlayerInGame> {
     val winningsPerWinner = pot / winners.size
-    return winners.map { winner ->
-        winner.copy(balance = winner.balance + winningsPerWinner)
+
+    return allPlayers.map { player ->
+        if (winners.any { it.id == player.id }) {
+            player.copy(
+                currentBalance = player.currentBalance + winningsPerWinner,
+                moneyWon = player.moneyWon + winningsPerWinner
+            )
+        } else {
+            player
+        }
     }
 }
+
+fun decideGameWinner(players: List<PlayerInGame>): List<PlayerInGame> {
+    val maxWinnings = players.maxOf { it.moneyWon }
+    return players.filter { it.moneyWon == maxWinnings }
+}
+
 
 fun roll(): Dice {
     val faces = Face.entries.toTypedArray()

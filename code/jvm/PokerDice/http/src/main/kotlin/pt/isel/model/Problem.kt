@@ -6,7 +6,7 @@ import java.net.URI
 
 private const val MEDIA_TYPE = "application/problem+json"
 private const val PROBLEM_URI_PATH =
-    "https://github.com/isel-leic-daw/2024-daw-leic51d-g06-1/tree/main/docs/problems/"
+    "https://github.com/isel-leic-daw/2025-daw-leic51d-06/tree/main/docs/problems/"
 
 sealed class Problem(
     typeUri: URI,

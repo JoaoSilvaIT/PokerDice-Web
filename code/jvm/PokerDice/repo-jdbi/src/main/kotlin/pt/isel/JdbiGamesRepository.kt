@@ -190,9 +190,37 @@ class JdbiGamesRepository(
         val updatedRound = round.copy(
             turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList())
         )
-        saveRound(updatedRound.gameId, updatedRound)
         return updatedRound
     }
+
+    override fun distributeWinnings(round: Round, winners: List<PlayerInGame>): Round {
+        val winningsPerWinner = round.pot / winners.size
+
+        val updatedPlayers = round.players.map { player ->
+            if (winners.any { it.id == player.id }) {
+                handle
+                    .createUpdate(
+                        """
+                    UPDATE dbo.USERS
+                    SET balance = balance + :winnings
+                    WHERE id = :user_id
+                    """
+                    ).bind("winnings", winningsPerWinner)
+                    .bind("user_id", player.id)
+                    .execute()
+
+                player.copy(
+                    currentBalance = player.currentBalance + winningsPerWinner,
+                    moneyWon = player.moneyWon + winningsPerWinner
+                )
+            } else {
+                player
+            }
+        }
+
+        return round.copy(players = updatedPlayers, pot = 0)
+    }
+
 
     private fun saveRound(
         gameId: Int,
@@ -329,7 +357,6 @@ class JdbiGamesRepository(
         val turnUserId = roundData["turn_of_player"] as Int
         val turnPlayer = players.first { it.id == turnUserId }
 
-        // Carregar os dados do turno atual
         val turnData = handle.createQuery(
             """
         SELECT dice_values, rolls_left FROM dbo.TURN
@@ -346,20 +373,66 @@ class JdbiGamesRepository(
         val currentDice = turnData?.get("dice_values")?.toString()
             ?.removeSurrounding("{", "}")
             ?.split(",")
+            ?.filter { it.isNotEmpty() }
             ?.map { Dice(charToFace(it[0])) } ?: emptyList()
 
         val rollsLeft = turnData?.get("rolls_left") as? Int ?: 3
+
+        // Load all finalized player hands (where hand_finalized = true)
+        val playerHands = handle.createQuery(
+            """
+        SELECT user_id, dice_values FROM dbo.TURN
+        WHERE game_id = :game_id AND round_number = :round_number AND hand_finalized = true
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .mapToMap()
+            .list()
+            .mapNotNull { row ->
+                val userId = row["user_id"] as Int
+                val diceStr = row["dice_values"]?.toString()
+                    ?.removeSurrounding("{", "}")
+                    ?.split(",")
+                    ?.filter { it.isNotEmpty() } ?: emptyList()
+
+                if (diceStr.size == 5) {
+                    val player = players.first { it.id == userId }
+                    val dices = diceStr.map { Dice(charToFace(it[0])) }
+                    player to Hand(dices)
+                } else null
+            }.toMap()
 
         return Round(
             number = roundNumber,
             firstPlayerIdx = roundData["first_player_idx"] as Int,
             turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
             players = players,
-            playerHands = emptyMap(),
+            playerHands = playerHands,
             gameId = gameId,
             ante = roundData["ante"] as Int,
             pot = roundData["pot"] as Int
         )
+    }
+
+    override fun finalizePlayerHand(round: Round, player: PlayerInGame, hand: Hand): Round {
+        require(hand.dices.size == 5) { "Hand must have exactly 5 dice" }
+
+        // Mark the hand as finalized in the database
+        handle.createUpdate(
+            """
+            UPDATE dbo.TURN
+            SET hand_finalized = true
+            WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
+            """
+        )
+            .bind("game_id", round.gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", player.id)
+            .execute()
+
+        val updatedPlayerHands = round.playerHands + (player to hand)
+        return round.copy(playerHands = updatedPlayerHands)
     }
 
 

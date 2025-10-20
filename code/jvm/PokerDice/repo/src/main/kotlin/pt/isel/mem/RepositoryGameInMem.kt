@@ -127,6 +127,9 @@ class RepositoryGameInMem : RepositoryGame {
         TODO("Not yet implemented")
     }
 
+    override fun distributeWinnings(round: Round, winners: List<PlayerInGame>): Round {
+        TODO("Not yet implemented")
+    }
     override fun updateGameRound(round: Round, game: Game): Game {
         val newGame = game.copy(currentRound = round)
         save(newGame)

@@ -1,20 +1,18 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.Dice
-import pt.isel.domain.games.FINAL_HAND_SIZE
-import pt.isel.domain.games.Game
-import pt.isel.domain.games.Hand
+import pt.isel.domain.games.*
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
 import pt.isel.domain.games.utils.State
-import pt.isel.domain.games.Round
-import pt.isel.domain.games.Turn
+import pt.isel.domain.games.utils.decideRoundWinner
+import pt.isel.domain.games.utils.distributeWinnings
+import pt.isel.domain.games.utils.decideGameWinner
 import pt.isel.utils.failure
 import pt.isel.utils.success
-import pt.isel.domain.games.MIN_ANTE
 import pt.isel.domain.games.utils.rollDicesLogic
+
 
 @Component
 class GameService(
@@ -89,32 +87,7 @@ class GameService(
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
-
-            val playersList = round.players
-            val currentIndex = playersList.indexOfFirst { it.id == round.turn.player.id }
-            val updatedPlayerHands = round.playerHands // Final hands should be recorded elsewhere when finalized
-
-            val newRound = if (((currentIndex + 1) % playersList.size) == round.firstPlayerIdx) {
-                // End of round, for now just create a new round. Logic should be improved for scoring.
-                val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
-                val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
-                val firstPlayer = game.players[firstPlayerIndex]
-                Round(
-                    number = nextRoundNumber,
-                    firstPlayerIdx = firstPlayerIndex,
-                    turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
-                    players = game.players,
-                    playerHands = emptyMap(),
-                    gameId = game.id
-                )
-            } else {
-                val nextPlayer = playersList[(currentIndex + 1) % playersList.size]
-                round.copy(
-                    turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList()),
-                    playerHands = updatedPlayerHands
-                )
-            }
-
+            val newRound = repoGame.nextTurn(round)
             val updatedGame = game.copy(currentRound = newRound)
             repoGame.save(updatedGame)
             success(updatedGame)
@@ -143,7 +116,14 @@ class GameService(
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
 
-            val updatedRound = repoGame.updateTurn(chosenDice, round)
+            var updatedRound = repoGame.updateTurn(chosenDice, round)
+
+            // If player now has 5 dice, finalize their hand
+            if (updatedRound.turn.currentDice.size == 5) {
+                val hand = Hand(updatedRound.turn.currentDice)
+                updatedRound = repoGame.finalizePlayerHand(updatedRound, updatedRound.turn.player, hand)
+            }
+
             val newGame = game.copy(currentRound = updatedRound)
             repoGame.save(newGame)
             success(newGame)
@@ -159,6 +139,37 @@ class GameService(
         }
     }
 
+    fun decideRoundWinner(gameId: Int): Either<GameError, List<PlayerInGame>>{
+        return trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
 
+            val winners = decideRoundWinner(round)
+            success(winners)
+        }
+    }
+
+    fun distributeWinnings(gameId: Int): Either<GameError, List<PlayerInGame>>{
+        return trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
+            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
+
+            val winners = decideRoundWinner(round)
+            val updatedRound = repoGame.distributeWinnings(round, winners)
+            repoGame.save(game.copy(currentRound = updatedRound))
+            success(updatedRound.players)
+        }
+    }
+
+    fun decideGameWinner(gameId: Int): Either<GameError, List<PlayerInGame>>{
+        return trxManager.run {
+            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+            //if (game.state != State.FINISHED) return@run failure(GameError.GameNotFinished)
+            val winners = decideGameWinner(game.players)
+            success(winners)
+        }
+    }
 
 }

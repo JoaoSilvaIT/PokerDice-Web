@@ -158,7 +158,50 @@ class GameController(
         }
     }
 
+    @PostMapping("/api/games/{id}/rounds/distribute-winnings")
+    fun distributeWinnings(
+        user: AuthenticatedUser,
+        @PathVariable id: Int
+    ): ResponseEntity<*> {
+        return when (val result = gameService.distributeWinnings(id)) {
+            is Either.Success -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result.value)
+            is Either.Failure -> {
+                result.value.toProblemResponse()
+            }
+        }
+    }
 
+    @PostMapping("/api/games/{id}/rounds/check-winner")
+    fun checkRoundWinner(
+        user: AuthenticatedUser,
+        @PathVariable id: Int
+    ): ResponseEntity<*> {
+        return when (val result = gameService.decideRoundWinner(id)) {
+            is Either.Success -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result.value.map { WinnersOutputModel(it.name, it.moneyWon) })
+            is Either.Failure -> {
+                result.value.toProblemResponse()
+            }
+        }
+    }
+
+    @PostMapping("/api/games/{id}/check-winner")
+    fun checkGameWinner(
+        user: AuthenticatedUser,
+        @PathVariable id: Int
+    ): ResponseEntity<*> {
+        return when (val result = gameService.decideGameWinner(id)) {
+            is Either.Success -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result.value.map { WinnersOutputModel(it.name, it.moneyWon) })
+            is Either.Failure -> {
+                result.value.toProblemResponse()
+            }
+        }
+    }
 
     @PostMapping("/api/games/{id}/end")
     fun end(

@@ -5,5 +5,5 @@ data class PlayerInGame(
     val name: String,
     val currentBalance: Int,
     //val isActive: Boolean, // false se não conseguir pagar ante
-    val roundsWon: Int
+    val moneyWon: Int
 )
