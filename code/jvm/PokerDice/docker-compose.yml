@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  pokerdice-postgres:
+    image: pokerdice-postgres:latest
+    container_name: pokerdice-postgres
+    environment:
+      POSTGRES_DB: pokerdice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - pokerdice-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pokerdice-jvm:
+    image: pokerdice-jvm:latest
+    container_name: pokerdice-jvm
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pokerdice-postgres:5432/pokerdice
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - pokerdice-network
+    depends_on:
+      pokerdice-postgres:
+        condition: service_healthy
+
+  ubuntu:
+    image: pokerdice-ubuntu:latest
+    container_name: ubuntu
+    networks:
+      - pokerdice-network
+    stdin_open: true
+    tty: true
+
+networks:
+  pokerdice-network:
+    driver: bridge
+# Build stage
+FROM gradle:8.5-jdk21 AS build
+WORKDIR /app
+COPY . .
+RUN gradle :app:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/app/build/libs/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
