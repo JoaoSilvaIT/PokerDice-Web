@@ -14,6 +14,6 @@ data class Round(
     val playerHands: Map<PlayerInGame, Hand>,
     val ante: Int = MIN_ANTE,
     val pot : Int = 0,
-    val winner: UserExternalInfo? = null,
+    val winners: List<PlayerInGame> = emptyList(),
     val gameId : Int,
 )

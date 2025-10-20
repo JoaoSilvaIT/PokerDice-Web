@@ -1,12 +1,7 @@
 package pt.isel.mem
 
 import pt.isel.RepositoryGame
-import pt.isel.domain.games.Dice
-import pt.isel.domain.games.Game
-import pt.isel.domain.games.MAX_ROLLS
-import pt.isel.domain.games.PlayerInGame
-import pt.isel.domain.games.Round
-import pt.isel.domain.games.Turn
+import pt.isel.domain.games.*
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.utils.State
 
@@ -127,13 +122,22 @@ class RepositoryGameInMem : RepositoryGame {
         TODO("Not yet implemented")
     }
 
-    override fun distributeWinnings(round: Round, winners: List<PlayerInGame>): Round {
+    override fun distributeWinnings(round: Round): Round {
         TODO("Not yet implemented")
     }
+
+    override fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand> {
+        TODO("Not yet implemented")
+    }
+
     override fun updateGameRound(round: Round, game: Game): Game {
         val newGame = game.copy(currentRound = round)
         save(newGame)
         return newGame
+    }
+
+    override fun findActiveGamesByLobbyId(lobbyId: Int): List<Game> {
+        TODO("Not yet implemented")
     }
 }
 

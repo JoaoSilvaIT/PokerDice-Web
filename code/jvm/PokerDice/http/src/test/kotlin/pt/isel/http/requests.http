@@ -6,9 +6,9 @@ POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "teste2",
-  "email": "teste2@gmail.com",
-  "password": "teste2"
+  "name": "teste1",
+  "email": "teste1@gmail.com",
+  "password": "teste1"
 }
 
 ### Create a Second User
@@ -82,17 +82,17 @@ Authorization: Bearer rUNoVw3004M7mZPlzfO-oPDPCC79RxB41Ojm0Qp00cw=  // Returns 2
 
 ### Create game (requires valid token and existing lobby)
 POST http://localhost:8080/api/games
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM= // Creating game with non-host token
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo= // Creating game with non-host token
 Content-Type: application/json
 
 {
   "lobbyId": 1,
-  "numberOfRounds": 4
+  "numberOfRounds": 2
 }
 
 ### End game (requires valid token)
-POST http://localhost:8080/api/games/3/end
-Authorization: Bearer 7t2jt69c_uCfyomNZI0LUaTA7QTAGbnVM1ALl4rZs10=
+POST http://localhost:8080/api/games/5/end
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 
 ### Find Game
 GET http://localhost:8080/api/games/1
@@ -101,8 +101,8 @@ Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 ### ====== NEW GAME FUNCTION TESTS ======
 
 ### Start game (requires valid token and existing game)
-POST http://localhost:8080/api/games/1/start
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/start
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 Content-Type: application/json
 
 {
@@ -110,21 +110,21 @@ Content-Type: application/json
 }
 
 ### Start a new round (requires game to be in RUNNING state)
-POST http://localhost:8080/api/games/1/rounds/start
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/rounds/start
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 
 ### Set ante for current round (requires round to be started)
-POST http://localhost:8080/api/games/1/rounds/ante
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/rounds/ante
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 Content-Type: application/json
 
 {
-  "ante": 50
+  "ante": 10
 }
 
 ### Update CurrentDices in Turn
-POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer KmhgViN0toDJBU4C_pZH9FtD3oJMwDwpY4vUFqMNgxo=
+POST http://localhost:8080/api/games/5/rounds/update-turn
+Authorization: Bearer 0LUBhXaxGJ3iq92khXXulBnCN1vI6swu4VQXdCn9LjE=
 Content-Type: application/json
 
 {
@@ -132,12 +132,12 @@ Content-Type: application/json
 }
 
 ### Move to next player's turn
-POST http://localhost:8080/api/games/1/rounds/next-turn
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/rounds/next-turn
+Authorization: Bearer 0LUBhXaxGJ3iq92khXXulBnCN1vI6swu4VQXdCn9LjE=
 
 ### Pay ante (requires round to be started)
-POST http://localhost:8080/api/games/1/rounds/pay-ante
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/4/rounds/pay-ante
+Authorization: Bearer 0LUBhXaxGJ3iq92khXXulBnCN1vI6swu4VQXdCn9LjE=
 Content-Type: application/json
 
 ### Roll dices
@@ -145,16 +145,16 @@ POST http://localhost:8080/api/games/1/rounds/roll-dices
 Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
 
 ### Check Winner of the round
-POST http://localhost:8080/api/games/1/rounds/check-winner
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/rounds/check-winner
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 
 ### Check winner of the game
-POST http://localhost:8080/api/games/1/check-winner
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/5/check-winner
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 
 ### Distribute Winnings
-POST http://localhost:8080/api/games/1/rounds/distribute-winnings
-Authorization: Bearer dmXbIK_WCynsh13UJ7lsfEysh5PjEQyOIbbH4IWbyKM=
+POST http://localhost:8080/api/games/4/rounds/distribute-winnings
+Authorization: Bearer JQJyX_3db-Q6iEj-ci3zQ9nCUmT2oYyUgoRLpPskefo=
 
 
 ### ====== COMPLETE GAME FLOW TEST ======

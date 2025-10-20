@@ -29,11 +29,15 @@ interface RepositoryGame : Repository<Game> {
 
     fun payAnte(round: Round): Round
 
-    fun distributeWinnings(round: Round, winners: List<PlayerInGame>): Round
+    fun distributeWinnings(round: Round): Round
 
     fun nextTurn(round: Round): Round
 
     fun updateTurn(chosenDice: Dice, round: Round): Round
+
+    fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand>
+
+    fun findActiveGamesByLobbyId(lobbyId: Int): List<Game>
 }
 
 

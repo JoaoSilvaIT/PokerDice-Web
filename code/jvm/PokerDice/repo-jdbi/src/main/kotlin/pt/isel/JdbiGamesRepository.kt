@@ -193,11 +193,11 @@ class JdbiGamesRepository(
         return updatedRound
     }
 
-    override fun distributeWinnings(round: Round, winners: List<PlayerInGame>): Round {
-        val winningsPerWinner = round.pot / winners.size
+    override fun distributeWinnings(round: Round): Round {
+        val winningsPerWinner = round.pot / round.winners.size
 
         val updatedPlayers = round.players.map { player ->
-            if (winners.any { it.id == player.id }) {
+            if (round.winners.any { it.id == player.id }) {
                 handle
                     .createUpdate(
                         """
@@ -222,24 +222,35 @@ class JdbiGamesRepository(
     }
 
 
-    private fun saveRound(
-        gameId: Int,
-        round: Round,
-    ) {
-        // Upsert round
-        handle
-            .createUpdate(
-                """
-                INSERT INTO dbo.ROUND (game_id, round_number, first_player_idx, turn_of_player, ante, pot)
-                VALUES (:game_id, :round_number, :first_player_idx, :turn_of_player, :ante, :pot)
-                ON CONFLICT (game_id, round_number)
-                DO UPDATE SET 
-                    first_player_idx = EXCLUDED.first_player_idx, 
-                    turn_of_player = EXCLUDED.turn_of_player, 
-                    ante = EXCLUDED.ante, 
-                    pot = EXCLUDED.pot
-                """,
-            ).bind("game_id", gameId)
+    private fun saveRound(gameId: Int, round: Round) {
+        // 1. Limpar turnos de jogadores anteriores
+        handle.createUpdate(
+            """
+        DELETE FROM dbo.TURN
+        WHERE game_id = :game_id
+          AND round_number = :round_number
+          AND user_id != :current_user_id
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", round.number)
+            .bind("current_user_id", round.turn.player.id)
+            .execute()
+
+        // 2. Upsert ROUND
+        handle.createUpdate(
+            """
+        INSERT INTO dbo.ROUND (game_id, round_number, first_player_idx, turn_of_player, ante, pot)
+        VALUES (:game_id, :round_number, :first_player_idx, :turn_of_player, :ante, :pot)
+        ON CONFLICT (game_id, round_number)
+        DO UPDATE SET
+            first_player_idx = EXCLUDED.first_player_idx,
+            turn_of_player = EXCLUDED.turn_of_player,
+            ante = EXCLUDED.ante,
+            pot = EXCLUDED.pot
+        """
+        )
+            .bind("game_id", gameId)
             .bind("round_number", round.number)
             .bind("first_player_idx", round.firstPlayerIdx)
             .bind("turn_of_player", round.turn.player.id)
@@ -247,24 +258,52 @@ class JdbiGamesRepository(
             .bind("pot", round.pot)
             .execute()
 
-        // Save player hands
-        round.playerHands.forEach { (player, hand) ->
-            handle
-                .createUpdate(
-                    """
-                    INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
-                    VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
-                    ON CONFLICT (game_id, round_number, user_id)
-                    DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
-                    """,
-                ).bind("game_id", gameId)
+        // 3. Criar/atualizar entrada na TURN para o jogador atual
+        val diceArray = round.turn.currentDice.map { faceToChar(it.face).toString() }.toTypedArray()
+
+        handle.createUpdate(
+            """
+        INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
+        VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
+        ON CONFLICT (game_id, round_number, user_id)
+        DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", round.turn.player.id)
+            .bindArray("dice_values", String::class.java, *diceArray)
+            .bind("rolls_left", round.turn.rollsRemaining)
+            .execute()
+
+        // 4. Guardar winners (código existente)
+        if (round.winners.isNotEmpty()) {
+            handle.createUpdate(
+                """
+            DELETE FROM dbo.ROUND_WINNER
+            WHERE game_id = :game_id AND round_number = :round_number
+            """
+            )
+                .bind("game_id", gameId)
                 .bind("round_number", round.number)
-                .bind("user_id", player.id)
-                .bind("dice_values", hand)
-                .bind("rolls_left", 0)
                 .execute()
+
+            round.winners.forEach { winner ->
+                handle.createUpdate(
+                    """
+                INSERT INTO dbo.ROUND_WINNER (game_id, round_number, user_id)
+                VALUES (:game_id, :round_number, :user_id)
+                """
+                )
+                    .bind("game_id", gameId)
+                    .bind("round_number", round.number)
+                    .bind("user_id", winner.id)
+                    .execute()
+            }
         }
     }
+
+
 
     override fun updateTurn(chosenDice: Dice, round: Round): Round {
         val existingDice = handle.createQuery(
@@ -276,7 +315,7 @@ class JdbiGamesRepository(
             .bind("game_id", round.gameId)
             .bind("round_number", round.number)
             .bind("user_id", round.turn.player.id)
-            .mapTo(String::class.java)  // Muda para String
+            .mapTo(String::class.java)
             .findOne()
             .map { it.removeSurrounding("{", "}").split(",").toTypedArray() }  // Parse manual do array
             .orElse(emptyArray())
@@ -303,6 +342,28 @@ class JdbiGamesRepository(
         return round.copy(turn = updatedTurn)
     }
 
+   override fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand> {
+        return handle.createQuery(
+            """
+        SELECT user_id, dice_values FROM dbo.TURN
+        WHERE game_id = :game_id AND round_number = :round_number
+        """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .mapToMap()
+            .list()
+            .mapNotNull { row ->
+                val userId = row["user_id"] as Int
+                val player = players.firstOrNull { it.id == userId } ?: return@mapNotNull null
+
+                val diceArray = (row["dice_values"] as java.sql.Array).array as Array<*>
+                val dices = diceArray.mapNotNull { it?.toString()?.firstOrNull() }
+                    .map { Dice(charToFace(it)) }
+                player to Hand(dices)
+            }
+            .toMap()
+    }
 
     private fun mapRowToGame(rs: ResultSet): Game {
         val gameId = rs.getInt("id")
@@ -373,67 +434,50 @@ class JdbiGamesRepository(
         val currentDice = turnData?.get("dice_values")?.toString()
             ?.removeSurrounding("{", "}")
             ?.split(",")
-            ?.filter { it.isNotEmpty() }
+            ?.filter { it.isNotBlank() }
             ?.map { Dice(charToFace(it[0])) } ?: emptyList()
 
         val rollsLeft = turnData?.get("rolls_left") as? Int ?: 3
 
-        // Load all finalized player hands (where hand_finalized = true)
-        val playerHands = handle.createQuery(
+        // Carregar winners
+        val winnerIds = handle.createQuery(
             """
-        SELECT user_id, dice_values FROM dbo.TURN
-        WHERE game_id = :game_id AND round_number = :round_number AND hand_finalized = true
+        SELECT user_id FROM dbo.ROUND_WINNER
+        WHERE game_id = :game_id AND round_number = :round_number
         """
         )
             .bind("game_id", gameId)
             .bind("round_number", roundNumber)
-            .mapToMap()
+            .mapTo(Int::class.java)
             .list()
-            .mapNotNull { row ->
-                val userId = row["user_id"] as Int
-                val diceStr = row["dice_values"]?.toString()
-                    ?.removeSurrounding("{", "}")
-                    ?.split(",")
-                    ?.filter { it.isNotEmpty() } ?: emptyList()
 
-                if (diceStr.size == 5) {
-                    val player = players.first { it.id == userId }
-                    val dices = diceStr.map { Dice(charToFace(it[0])) }
-                    player to Hand(dices)
-                } else null
-            }.toMap()
+        val winners = players.filter { it.id in winnerIds }
 
         return Round(
             number = roundNumber,
             firstPlayerIdx = roundData["first_player_idx"] as Int,
             turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
             players = players,
-            playerHands = playerHands,
+            playerHands = emptyMap(),
             gameId = gameId,
             ante = roundData["ante"] as Int,
-            pot = roundData["pot"] as Int
+            pot = roundData["pot"] as Int,
+            winners = winners
         )
     }
 
-    override fun finalizePlayerHand(round: Round, player: PlayerInGame, hand: Hand): Round {
-        require(hand.dices.size == 5) { "Hand must have exactly 5 dice" }
 
-        // Mark the hand as finalized in the database
-        handle.createUpdate(
+    override fun findActiveGamesByLobbyId(lobbyId: Int): List<Game> =
+        handle.createQuery(
             """
-            UPDATE dbo.TURN
-            SET hand_finalized = true
-            WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
-            """
+        SELECT g.*
+        FROM dbo.GAME g
+        WHERE g.lobby_id = :lobby_id 
+          AND g.state IN ('WAITING', 'RUNNING')
+        """
         )
-            .bind("game_id", round.gameId)
-            .bind("round_number", round.number)
-            .bind("user_id", player.id)
-            .execute()
-
-        val updatedPlayerHands = round.playerHands + (player to hand)
-        return round.copy(playerHands = updatedPlayerHands)
-    }
-
-
+            .bind("lobby_id", lobbyId)
+            .map { rs, _ -> mapRowToGame(rs) }
+            .list()
 }
+

@@ -26,4 +26,8 @@ sealed class GameError {
     data object FinalHandNotValid : GameError()
 
     data object GameNotFinished : GameError()
+
+    data object LobbyHasActiveGame : GameError()
+
+    data object HandAlreadyFull : GameError()
 }

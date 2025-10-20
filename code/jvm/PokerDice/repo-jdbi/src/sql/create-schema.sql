@@ -41,7 +41,7 @@ create type dbo.GAME_STATE as enum ('WAITING', 'RUNNING', 'TERMINATED', 'FINISHE
 
 create table dbo.GAME (
     id serial primary key,
-    lobby_id integer unique not null references dbo.LOBBY(id),
+    lobby_id integer not null references dbo.LOBBY(id),
     state dbo.GAME_STATE not null,
     current_round_number integer,
     total_rounds integer not null,
@@ -65,6 +65,14 @@ create table dbo.TURN (
     user_id integer not null references dbo.USERS(id) on delete cascade,
     dice_values text[] not null,
     rolls_left integer not null default 3,
+    primary key (game_id, round_number, user_id),
+    foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number) on delete cascade
+);
+
+create table dbo.ROUND_WINNER (
+    game_id integer not null,
+    round_number integer not null,
+    user_id integer not null references dbo.USERS(id) on delete cascade,
     primary key (game_id, round_number, user_id),
     foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number) on delete cascade
 );
