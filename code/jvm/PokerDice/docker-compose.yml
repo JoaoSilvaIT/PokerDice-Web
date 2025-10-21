@@ -1,36 +1,25 @@
 services:
-
   # Just a machine running ubuntu, with 'dig' installed so that we can observe the docker compose environment.
   ubuntu:
     container_name: ubuntu
-    build:
-      context: ./docker
-      dockerfile: Dockerfile-ubuntu
     image: pokerdice-ubuntu
     tty: true
 
   pokerdice-postgres:
     container_name: pokerdice-postgres
-    build:
-      context: ./docker
-      dockerfile: Dockerfile-postgres
     image: pokerdice-postgres
     environment:
-      - POSTGRES_USER=dbuser
-      - POSTGRES_PASSWORD=changeit
+      - POSTGRES_USER=pokerdice
+      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db
     ports:
       - 5432:5432
-
   pokerdice-jvm:
     container_name: pokerdice-jvm
     hostname: pokerdice-jvm
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile-jvm
     image: pokerdice-jvm
     environment:
       PORT: 8080
-      DB_URL: "jdbc:postgresql://pokerdice-postgres:5432/db?user=dbuser&password=changeit"
+      DB_URL: "jdbc:postgresql://pokerdice-postgres:5432/db?user=pokerdice&password=password"
     ports:
       - 8080:8080

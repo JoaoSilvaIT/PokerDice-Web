@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserExternalInfo
 import pt.isel.mem.RepositoryLobbyInMem
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,11 +35,13 @@ class RepositoryLobbyInMemTest {
         assertEquals(0, lobby.id)
         assertEquals("Poker Room", lobby.name)
         assertEquals("fun", lobby.description)
-        assertEquals(2, lobby.minPlayers)
-        assertEquals(2, lobby.maxPlayers)
-        assertEquals(1, lobby.users.size)
-        assertEquals(host, lobby.host)
-        assertEquals(host, lobby.users.first())
+        assertEquals(2, lobby.settings.minPlayers)
+        assertEquals(2, lobby.settings.maxPlayers)
+        assertEquals(1, lobby.players.size)
+        // host in lobby is a UserExternalInfo created from the User passed to createLobby
+        assertEquals(host.id, lobby.host.id)
+        assertEquals(host.name, lobby.host.name)
+        assertEquals(host.id, lobby.players.first().id)
 
         // find by id
         val byId = repo.findById(lobby.id)
@@ -61,13 +64,14 @@ class RepositoryLobbyInMemTest {
         val host = user(10)
         val lobby = repo.createLobby("L1", "d", 2, 2, host)
         val bob = user(11)
+        val bobExt = UserExternalInfo(bob.id, bob.name, bob.balance)
 
-        val updated: Lobby = lobby.copy(users = lobby.users + bob)
+        val updated: Lobby = lobby.copy(players = lobby.players + bobExt)
         repo.save(updated)
 
         val found = repo.findById(lobby.id)
         assertNotNull(found)
-        assertEquals(2, found.users.size)
+        assertEquals(2, found.players.size)
         // ensure not duplicated entries
         val all = repo.findAll()
         assertEquals(1, all.size)
@@ -169,17 +173,18 @@ class RepositoryLobbyInMemTest {
         val lobby = repo.createLobby("Original", "desc", 2, 4, host)
 
         val player2 = user(2)
+        val player2Ext = UserExternalInfo(player2.id, player2.name, player2.balance)
         val updated =
             lobby.copy(
                 name = "Updated Name",
-                users = lobby.users + player2,
+                players = lobby.players + player2Ext,
             )
         repo.save(updated)
 
         val found = repo.findById(lobby.id)
         assertNotNull(found)
         assertEquals("Updated Name", found.name)
-        assertEquals(2, found.users.size)
+        assertEquals(2, found.players.size)
     }
 
     @Test
@@ -233,10 +238,10 @@ class RepositoryLobbyInMemTest {
 
         assertEquals("Test Lobby", lobby.name)
         assertEquals("A test lobby", lobby.description)
-        assertEquals(3, lobby.minPlayers)
-        assertEquals(6, lobby.maxPlayers)
-        assertEquals(host, lobby.host)
-        assertEquals(1, lobby.users.size)
-        assertTrue(lobby.users.contains(host))
+        assertEquals(3, lobby.settings.minPlayers)
+        assertEquals(6, lobby.settings.maxPlayers)
+        assertEquals(host.id, lobby.host.id)
+        assertEquals(1, lobby.players.size)
+        assertTrue(lobby.players.any { it.id == host.id })
     }
 }

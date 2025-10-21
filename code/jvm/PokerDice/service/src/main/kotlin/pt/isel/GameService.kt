@@ -1,7 +1,10 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.*
+import pt.isel.domain.games.Dice
+import pt.isel.domain.games.Game
+import pt.isel.domain.games.MIN_ANTE
+import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.utils.State
 import pt.isel.domain.games.utils.decideGameWinner
 import pt.isel.domain.games.utils.decideRoundWinner
@@ -133,7 +136,7 @@ class GameService(
         }
     }
 
-    fun decideRoundWinner(gameId: Int): Either<GameError, List<PlayerInGame>>  {
+    fun decideRoundWinner(gameId: Int): Either<GameError, List<PlayerInGame>> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
@@ -147,7 +150,7 @@ class GameService(
         }
     }
 
-    fun distributeWinnings(gameId: Int): Either<GameError, List<PlayerInGame>>  {
+    fun distributeWinnings(gameId: Int): Either<GameError, List<PlayerInGame>> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
@@ -159,7 +162,7 @@ class GameService(
         }
     }
 
-    fun decideGameWinner(gameId: Int): Either<GameError, List<PlayerInGame>>  {
+    fun decideGameWinner(gameId: Int): Either<GameError, List<PlayerInGame>> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.FINISHED) return@run failure(GameError.GameNotFinished)

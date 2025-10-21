@@ -93,11 +93,11 @@ tasks.register<Exec>("buildImagePostgres") {
     commandLine(
         dockerExe,
         "build",
-        "-t", // Flag to assign a tag to the image
-        dockerImagePostgres, // Name:tag of the image to be built
-        "-f", // Flag to specify a custom Dockerfile
-        "../docker/Dockerfile-postgres", // Path to the Dockerfile used to build the image
-        "../docker", // Build context directory containing files referenced by the Dockerfile
+        "-t",
+        dockerImagePostgres,
+        "-f",
+        "../docker/Dockerfile-postgres",
+        "..",
     )
 }
 

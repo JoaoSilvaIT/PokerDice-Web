@@ -1,15 +1,15 @@
-FROM eclipse-temurin:21-jre-jammy
+FROM openjdk:21
+ARG DEPENDENCY=build/dependency
+# first layer with the external libs (i.e. the files that change the least).
+COPY ${DEPENDENCY}/BOOT-INF/lib /app/lib
 
-WORKDIR /app
+# second layer with the 'META-INF' contents.
+COPY ${DEPENDENCY}/META-INF /app/META-INF
 
-# Copy the unpacked JAR dependencies
-COPY app/build/dependency/BOOT-INF/lib /app/lib
-COPY app/build/dependency/META-INF /app/META-INF
-COPY app/build/dependency/BOOT-INF/classes /app
+# last layer with the application JARs (i.e. the files that change the most).
+COPY ${DEPENDENCY}/BOOT-INF/classes /app
 
-# Expose the application port
-EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-cp", "/app:/app/lib/*", "org.example.AppKt"]
+ENTRYPOINT ["java", "-cp", "/app:/app/lib/*", "pt.isel.WebAppKt"]
 

@@ -3,12 +3,14 @@
 -- Truncate existing data (order respects FKs) and insert deterministic IDs so tests can reference them easily.
 
 -- Clear existing data
-TRUNCATE TABLE dbo.PLAYER_HAND CASCADE;
+TRUNCATE TABLE dbo.ROUND_WINNER CASCADE;
+TRUNCATE TABLE dbo.TURN CASCADE;
 TRUNCATE TABLE dbo.ROUND CASCADE;
 TRUNCATE TABLE dbo.GAME CASCADE;
 TRUNCATE TABLE dbo.LOBBY_USER CASCADE;
 TRUNCATE TABLE dbo.LOBBY CASCADE;
 TRUNCATE TABLE dbo.TOKEN CASCADE;
+TRUNCATE TABLE dbo.INVITE CASCADE;
 TRUNCATE TABLE dbo.USERS RESTART IDENTITY CASCADE;
 
 -- Insert users (explicit ids for predictable tests)
@@ -43,8 +45,8 @@ VALUES (1, 1, 'RUNNING', 1, 5, extract(epoch from now())::bigint - 300, NULL);
 INSERT INTO dbo.ROUND (round_number, game_id, first_player_idx, turn_of_player, ante, pot)
 VALUES (1, 1, 0, 1, 10, 20);
 
--- Insert player hands for round 1 (dice values use textual faces for easy inspection)
-INSERT INTO dbo.PLAYER_HAND (game_id, round_number, user_id, dice_values, rolls_left)
+-- Insert player turns for round 1 (dice values use textual faces for easy inspection)
+INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
 VALUES (1, 1, 1, ARRAY ['ONE','TWO','THREE','FOUR','FIVE'], 2),
        (1, 1, 2, ARRAY ['SIX','SIX','TWO','TWO','THREE'], 2);
 

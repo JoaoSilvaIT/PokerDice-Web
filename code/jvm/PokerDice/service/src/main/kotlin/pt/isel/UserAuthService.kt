@@ -2,7 +2,13 @@ package pt.isel
 
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import pt.isel.domain.users.*
+import pt.isel.domain.users.InviteDomain
+import pt.isel.domain.users.PasswordValidationInfo
+import pt.isel.domain.users.Token
+import pt.isel.domain.users.TokenEncoder
+import pt.isel.domain.users.TokenExternalInfo
+import pt.isel.domain.users.User
+import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.errors.AuthTokenError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -44,10 +50,9 @@ class UserAuthService(
             val passwordValidationInfo = createPasswordValidationInformation(password)
             val inviteValidationInfo = inviteDomain.createInviteValidationInformation(invite)
             val invite = repoInvite.getAppInviteByValidationInfo(inviteValidationInfo)
-            if (invite == null || !inviteDomain.isInviteCodeValid(invite.state))
-                {
-                    return@run failure(AuthTokenError.InvalidInvite)
-                }
+            if (invite == null || !inviteDomain.isInviteCodeValid(invite.state)) {
+                return@run failure(AuthTokenError.InvalidInvite)
+            }
             val newUser = repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
             repoInvite.changeInviteState(invite.id, inviteDomain.usedState)
             success(newUser)

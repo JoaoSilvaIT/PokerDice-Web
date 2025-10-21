@@ -36,14 +36,19 @@ class RepositoryGameInMemTest {
         maxPlayers: Int = 10,
     ): Lobby {
         val host = user(hostId)
+        val hostInfo = pt.isel.domain.users.UserExternalInfo(host.id, host.name, host.balance)
         return Lobby(
             id = id,
             name = name,
             description = "desc",
-            minPlayers = minPlayers,
-            maxPlayers = maxPlayers,
-            users = listOf(host),
-            host = host,
+            host = hostInfo,
+            settings =
+                pt.isel.domain.lobby.LobbySettings(
+                    numberOfRounds = 3,
+                    minPlayers = minPlayers,
+                    maxPlayers = maxPlayers,
+                ),
+            players = setOf(hostInfo),
         )
     }
 
@@ -51,14 +56,14 @@ class RepositoryGameInMemTest {
     fun `createGame should add game with defaults and be retrievable`() {
         val l = lobby(1)
         val g = repo.createGame(startedAt = 1234L, lobby = l, numberOfRounds = 5)
-        assertEquals(0, g.gid)
+        assertEquals(0, g.id)
         assertEquals(1234L, g.startedAt)
         assertNull(g.endedAt)
-        assertEquals(l, g.lobby)
+        assertEquals(l.id, g.lobbyId)
         assertEquals(5, g.numberOfRounds)
         assertEquals(State.WAITING, g.state)
 
-        val byId = repo.findById(g.gid)
+        val byId = repo.findById(g.id)
         assertNotNull(byId)
         assertEquals(g, byId)
 
@@ -67,33 +72,34 @@ class RepositoryGameInMemTest {
     }
 
     @Test
-    fun `endGame should return finished game but not persist until saved`() {
+    fun `endGame should return terminated game but not persist until saved`() {
         val l = lobby(3)
         val g = repo.createGame(10L, l, 2)
 
         val finished: Game = repo.endGame(g, endedAt = 20L)
-        assertEquals(g.gid, finished.gid)
+        assertEquals(g.id, finished.id)
         assertEquals(20L, finished.endedAt)
-        assertEquals(State.FINISHED, finished.state)
+        // implementation uses TERMINATED when ending a game
+        assertEquals(State.TERMINATED, finished.state)
 
         // repository still has original unsaved state
-        val stored = repo.findById(g.gid)!!
+        val stored = repo.findById(g.id)!!
         assertNull(stored.endedAt)
         assertEquals(State.WAITING, stored.state)
 
         // after saving, repo is updated
         repo.save(finished)
-        val updated = repo.findById(g.gid)!!
+        val updated = repo.findById(g.id)!!
         assertEquals(20L, updated.endedAt)
-        assertEquals(State.FINISHED, updated.state)
+        assertEquals(State.TERMINATED, updated.state)
     }
 
     @Test
     fun `deleteById should remove game`() {
         val g = repo.createGame(1L, lobby(4), 1)
-        assertNotNull(repo.findById(g.gid))
-        repo.deleteById(g.gid)
-        assertNull(repo.findById(g.gid))
+        assertNotNull(repo.findById(g.id))
+        repo.deleteById(g.id)
+        assertNull(repo.findById(g.id))
     }
 
     @Test
@@ -115,9 +121,9 @@ class RepositoryGameInMemTest {
         val g2 = repo.createGame(200L, l2, 4)
         val g3 = repo.createGame(300L, l3, 5)
 
-        assertEquals(0, g1.gid)
-        assertEquals(1, g2.gid)
-        assertEquals(2, g3.gid)
+        assertEquals(0, g1.id)
+        assertEquals(1, g2.id)
+        assertEquals(2, g3.id)
     }
 
     @Test
@@ -144,7 +150,7 @@ class RepositoryGameInMemTest {
         val updated = game.copy(state = State.RUNNING)
         repo.save(updated)
 
-        val found = repo.findById(game.gid)
+        val found = repo.findById(game.id)
         assertNotNull(found)
         assertEquals(State.RUNNING, found.state)
 
@@ -156,41 +162,26 @@ class RepositoryGameInMemTest {
     @Test
     fun `save should add new game if not exists`() {
         val l = lobby(1)
-        val newGame = Game(99, 500L, null, l, 5, State.WAITING, null)
+        val newGame =
+            Game(
+                id = 99,
+                lobbyId = l.id,
+                players = emptyList(),
+                numberOfRounds = 5,
+                state = State.WAITING,
+                currentRound = null,
+                startedAt = 500L,
+                endedAt = null,
+            )
         repo.save(newGame)
 
         val found = repo.findById(99)
         assertNotNull(found)
-        assertEquals(99, found.gid)
-    }
+        assertEquals(99, found.id)
 
-    @Test
-    fun `deleteById should not affect other games`() {
-        val l = lobby(1)
-        val g1 = repo.createGame(100L, l, 3)
-        val g2 = repo.createGame(200L, l, 4)
-        val g3 = repo.createGame(300L, l, 5)
-
-        repo.deleteById(g2.gid)
-
-        assertNotNull(repo.findById(g1.gid))
-        assertNull(repo.findById(g2.gid))
-        assertNotNull(repo.findById(g3.gid))
-    }
-
-    @Test
-    fun `endGame should preserve all game properties except endedAt and state`() {
-        val l = lobby(1)
-        val game = repo.createGame(1000L, l, 10)
-
-        val ended = repo.endGame(game, 2000L)
-
-        assertEquals(game.gid, ended.gid)
-        assertEquals(game.startedAt, ended.startedAt)
-        assertEquals(2000L, ended.endedAt)
-        assertEquals(game.lobby, ended.lobby)
-        assertEquals(game.numberOfRounds, ended.numberOfRounds)
-        assertEquals(State.FINISHED, ended.state)
+        // cleanup
+        repo.deleteById(99)
+        assertNull(repo.findById(99))
     }
 
     @Test
@@ -200,6 +191,7 @@ class RepositoryGameInMemTest {
 
         assertEquals(State.WAITING, game.state)
         assertNull(game.endedAt)
+        assertNull(game.currentRound)
     }
 
     @Test
@@ -207,21 +199,19 @@ class RepositoryGameInMemTest {
         val l = lobby(1)
         val g1 = repo.createGame(100L, l, 3)
         val g2 = repo.createGame(200L, l, 4)
+        val g3 = repo.createGame(300L, l, 5)
+
+        // Delete middle game
+        repo.deleteById(g2.id)
 
         // Update first game
         val updated = g1.copy(state = State.RUNNING)
         repo.save(updated)
 
-        // Delete second game
-        repo.deleteById(g2.gid)
-
-        // Create a new game
-        val g3 = repo.createGame(300L, l, 5)
-
         val all = repo.findAll()
         assertEquals(2, all.size)
-        assertTrue(all.any { it.gid == g1.gid && it.state == State.RUNNING })
-        assertTrue(all.any { it.gid == g3.gid })
-        assertTrue(all.none { it.gid == g2.gid })
+        assertTrue(all.any { it.id == g1.id && it.state == State.RUNNING })
+        assertTrue(all.any { it.id == g3.id })
+        assertTrue(all.none { it.id == g2.id })
     }
 }

@@ -11,7 +11,7 @@ COPY repo-jdbi/src/sql/create-schema.sql /docker-entrypoint-initdb.d/1_create.sq
 COPY repo-jdbi/src/sql/insert-test-data.sql /docker-entrypoint-initdb.d/2_insert-test-data.sql
 
 # Copy the wait-for-postgres script and ensure it's executable
-COPY --chown=postgres:postgres repo-jdbi/docker/scripts/wait-for-postgres.sh ./bin/wait-for-postgres.sh
+COPY --chown=postgres:postgres docker/scripts/wait-for-postgres.sh ./bin/wait-for-postgres.sh
 RUN chmod +x ./bin/wait-for-postgres.sh
 
 # Expose PostgreSQL port

@@ -7,14 +7,11 @@ import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
 import pt.isel.domain.games.utils.Face
-import pt.isel.domain.games.utils.HandRank
 import pt.isel.domain.games.utils.calculateFullHandValue
 import pt.isel.domain.games.utils.decideRoundWinner
 import pt.isel.domain.games.utils.defineHandRank
-import pt.isel.domain.games.utils.defineHandRank
 
 class GameLogicAdvancedTests {
-
     @Test
     fun `test calculateFullHandValue with five of a kind`() {
         val hand = Hand(List(5) { Dice(Face.ACE) })
@@ -175,4 +172,3 @@ class GameLogicAdvancedTests {
         assertEquals(player2, winners[0])
     }
 }
-

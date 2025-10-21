@@ -1,7 +1,11 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.*
+import pt.isel.domain.games.Dice
+import pt.isel.domain.games.Game
+import pt.isel.domain.games.Hand
+import pt.isel.domain.games.PlayerInGame
+import pt.isel.domain.games.Round
 import pt.isel.domain.lobby.Lobby
 
 /**

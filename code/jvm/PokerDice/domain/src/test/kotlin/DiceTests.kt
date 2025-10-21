@@ -19,7 +19,6 @@ class DiceTests {
         }
     }
 
-
     @Test
     fun `test Dice equality`() {
         val dice1 = Dice(Face.KING)

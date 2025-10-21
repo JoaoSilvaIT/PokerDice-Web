@@ -21,7 +21,6 @@ class HandTests {
         assertEquals(dices, hand.dices)
     }
 
-
     @Test
     fun `test Hand equality`() {
         val dices1 = List(5) { Dice(Face.ACE) }

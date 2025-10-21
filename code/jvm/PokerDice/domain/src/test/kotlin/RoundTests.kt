@@ -124,4 +124,3 @@ class RoundTests {
         assertEquals(round1, round2)
     }
 }
-
