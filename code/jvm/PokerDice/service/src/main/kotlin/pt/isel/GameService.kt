@@ -2,16 +2,15 @@ package pt.isel
 
 import org.springframework.stereotype.Component
 import pt.isel.domain.games.*
+import pt.isel.domain.games.utils.State
+import pt.isel.domain.games.utils.decideGameWinner
+import pt.isel.domain.games.utils.decideRoundWinner
+import pt.isel.domain.games.utils.rollDicesLogic
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
-import pt.isel.domain.games.utils.State
-import pt.isel.domain.games.utils.decideRoundWinner
-import pt.isel.domain.games.utils.decideGameWinner
 import pt.isel.utils.failure
 import pt.isel.utils.success
-import pt.isel.domain.games.utils.rollDicesLogic
-
 
 @Component
 class GameService(
@@ -35,9 +34,7 @@ class GameService(
             repoGame.findById(gameId)
         }
 
-    fun startGame(
-        gameId: Int,
-    ): Either<GameError, Game> {
+    fun startGame(gameId: Int): Either<GameError, Game> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
 
@@ -98,9 +95,7 @@ class GameService(
             success(updatedGame)
         }
 
-    fun payAnte(
-        gameId: Int
-    ): Either<GameError, Game> =
+    fun payAnte(gameId: Int): Either<GameError, Game> =
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
@@ -113,14 +108,14 @@ class GameService(
         }
 
     fun updateTurn(
-        chosenDice : Dice,
+        chosenDice: Dice,
         gameId: Int,
     ): Either<GameError, Game> =
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
-            if(round.turn.currentDice.size >= 5) return@run failure(GameError.HandAlreadyFull)
+            if (round.turn.currentDice.size >= 5) return@run failure(GameError.HandAlreadyFull)
 
             val updatedRound = repoGame.updateTurn(chosenDice, round)
             val newGame = game.copy(currentRound = updatedRound)
@@ -138,12 +133,12 @@ class GameService(
         }
     }
 
-    fun decideRoundWinner(gameId: Int): Either<GameError, List<PlayerInGame>>{
+    fun decideRoundWinner(gameId: Int): Either<GameError, List<PlayerInGame>>  {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
-            if(round.turn.currentDice.size != 5) return@run failure(GameError.FinalHandNotValid)
+            if (round.turn.currentDice.size != 5) return@run failure(GameError.FinalHandNotValid)
             val hands = repoGame.loadPlayerHands(game.id, round.number, round.players)
             val winners = decideRoundWinner(round.copy(playerHands = hands))
             val newRound = round.copy(winners = winners)
@@ -152,7 +147,7 @@ class GameService(
         }
     }
 
-    fun distributeWinnings(gameId: Int): Either<GameError, List<PlayerInGame>>{
+    fun distributeWinnings(gameId: Int): Either<GameError, List<PlayerInGame>>  {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
@@ -164,7 +159,7 @@ class GameService(
         }
     }
 
-    fun decideGameWinner(gameId: Int): Either<GameError, List<PlayerInGame>>{
+    fun decideGameWinner(gameId: Int): Either<GameError, List<PlayerInGame>>  {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.FINISHED) return@run failure(GameError.GameNotFinished)
@@ -172,5 +167,4 @@ class GameService(
             success(winners)
         }
     }
-
 }

@@ -19,20 +19,6 @@ class DiceTests {
         }
     }
 
-    @Test
-    fun `test Dice roll returns valid face`() {
-        val dice = Dice.roll()
-        assertTrue(Face.entries.contains(dice.face))
-    }
-
-    @Test
-    fun `test Dice roll randomness`() {
-        val rolls = List(100) { Dice.roll() }
-        val uniqueFaces = rolls.map { it.face }.toSet()
-
-        // With 100 rolls, we should get more than 1 unique face (statistically very likely)
-        assertTrue(uniqueFaces.size > 1, "Expected multiple unique faces in 100 rolls")
-    }
 
     @Test
     fun `test Dice equality`() {

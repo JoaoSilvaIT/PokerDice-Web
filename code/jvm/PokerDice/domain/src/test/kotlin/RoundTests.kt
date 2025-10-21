@@ -1,20 +1,15 @@
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.MIN_ANTE
+import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.users.PasswordValidationInfo
-import pt.isel.domain.users.User
-import pt.isel.domain.games.utils.Face
 
 class RoundTests {
-    private val passwordValidation = PasswordValidationInfo("hashed_password")
-    private val user1 = User(1, "Alice", "alice@example.com", 100, passwordValidation)
-    private val user2 = User(2, "Bob", "bob@example.com", 100, passwordValidation)
-    private val users = listOf(user1, user2)
+    private val player1 = PlayerInGame(1, "Alice", 100, 0)
+    private val player2 = PlayerInGame(2, "Bob", 100, 0)
+    private val players = listOf(player1, player2)
 
     @Test
     fun `test Round creation with default ante`() {
@@ -22,14 +17,15 @@ class RoundTests {
             Round(
                 number = 1,
                 firstPlayerIdx = 0,
-                turn = Turn(user1),
-                users = users,
-                userHands = emptyMap(),
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
+                gameId = 1,
             )
 
         assertEquals(1, round.number)
-        assertEquals(user1, round.turn.user)
-        assertEquals(2, round.users.size)
+        assertEquals(player1, round.turn.player)
+        assertEquals(2, round.players.size)
         assertEquals(MIN_ANTE, round.ante)
     }
 
@@ -39,140 +35,93 @@ class RoundTests {
             Round(
                 number = 1,
                 firstPlayerIdx = 0,
-                turn = Turn(user1),
-                users = users,
-                userHands = emptyMap(),
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
                 ante = 20,
+                gameId = 1,
             )
 
         assertEquals(20, round.ante)
     }
 
     @Test
-    fun `test setAnte updates ante correctly`() {
-        val round = Round(number = 1, firstPlayerIdx = 0, turn = Turn(user1), users = users, userHands = emptyMap())
-        val updatedRound = round.setAnte(50)
+    fun `test Round with player hands`() {
+        val hand1 = Hand(emptyList())
+        val hand2 = Hand(emptyList())
+        val playerHands = mapOf(player1 to hand1, player2 to hand2)
 
-        assertEquals(50, updatedRound.ante)
-    }
-
-    @Test
-    fun `test setAnte with minimum ante`() {
-        val round = Round(number = 1, firstPlayerIdx = 0, turn = Turn(user1), users = users, userHands = emptyMap())
-        val updatedRound = round.setAnte(MIN_ANTE)
-
-        assertEquals(MIN_ANTE, updatedRound.ante)
-    }
-
-    @Test
-    fun `test setAnte throws exception for ante below minimum`() {
-        val round = Round(number = 1, firstPlayerIdx = 0, turn = Turn(user1), users = users, userHands = emptyMap())
-
-        assertThrows(IllegalArgumentException::class.java) {
-            round.setAnte(MIN_ANTE - 1)
-        }
-    }
-
-    @Test
-    fun `test setAnte throws exception for zero ante`() {
-        val round = Round(number = 1, firstPlayerIdx = 0, turn = Turn(user1), users = users, userHands = emptyMap())
-
-        assertThrows(IllegalArgumentException::class.java) {
-            round.setAnte(0)
-        }
-    }
-
-    @Test
-    fun `test setAnte throws exception for negative ante`() {
-        val round = Round(number = 1, firstPlayerIdx = 1, turn = Turn(user1), users = users, userHands = emptyMap())
-
-        assertThrows(IllegalArgumentException::class.java) {
-            round.setAnte(-10)
-        }
-    }
-
-    @Test
-    fun `test payAnte deducts ante from all users`() {
-        val round = Round(number = 1, firstPlayerIdx = 1, turn = Turn(user1), users = users, userHands = emptyMap(), ante = 20)
-        val updatedRound = round.payAnte()
-
-        assertEquals(80, updatedRound.users[0].balance)
-        assertEquals(80, updatedRound.users[1].balance)
-    }
-
-    @Test
-    fun `test payAnte with default ante`() {
-        val round = Round(number = 1, firstPlayerIdx = 1, turn = Turn(user1), users = users, userHands = emptyMap())
-        val updatedRound = round.payAnte()
-
-        assertEquals(90, updatedRound.users[0].balance)
-        assertEquals(90, updatedRound.users[1].balance)
-    }
-
-    @Test
-    fun `test payAnte throws exception when user has insufficient balance`() {
-        val poorUser = User(3, "Poor", "poor@example.com", 5, passwordValidation)
-        val round = Round(number =1, firstPlayerIdx = 1, turn = Turn(poorUser), users = listOf(poorUser), userHands = emptyMap(), ante = 20)
-
-        assertThrows(IllegalArgumentException::class.java) {
-            round.payAnte()
-        }
-    }
-
-    @Test
-    fun `test payAnte with exact balance`() {
-        val exactUser = User(3, "Exact", "exact@example.com", MIN_ANTE, passwordValidation)
-        val round = Round(number = 1, firstPlayerIdx = 1, turn = Turn(exactUser), users = listOf(exactUser), userHands = emptyMap())
-        val updatedRound = round.payAnte()
-
-        assertEquals(0, updatedRound.users[0].balance)
-    }
-
-    @Test
-    fun `test nextTurn updates turn to next player`() {
-        val hand = Hand(List(5) { Dice(Face.ACE) })
         val round =
             Round(
                 number = 1,
                 firstPlayerIdx = 0,
-                turn = Turn(user1, hand),
-                users = users,
-                userHands = emptyMap(),
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = playerHands,
+                gameId = 1,
             )
 
-        val nextRound = round.nextTurn(round)
-
-        assertEquals(1, nextRound.number)
-        assertEquals(user2, nextRound.turn.user)
-        assertEquals(1, nextRound.userHands.size)
-        assertEquals(hand, nextRound.userHands[user1])
+        assertEquals(2, round.playerHands.size)
+        assertEquals(hand1, round.playerHands[player1])
+        assertEquals(hand2, round.playerHands[player2])
     }
 
     @Test
-    fun `test nextTurn cycles back to first player`() {
-        val hand = Hand(List(5) { Dice(Face.KING) })
+    fun `test Round with pot`() {
         val round =
             Round(
-                number = 2,
+                number = 1,
                 firstPlayerIdx = 0,
-                turn = Turn(user2, hand),
-                users = users,
-                userHands = mapOf(user1 to Hand(List(5) { Dice(Face.ACE) })),
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
+                pot = 100,
+                gameId = 1,
             )
 
-        val nextRound = round.nextTurn(round)
+        assertEquals(100, round.pot)
+    }
 
-        assertEquals(3, nextRound.number)
-        assertEquals(user1, nextRound.turn.user)
+    @Test
+    fun `test Round with winners`() {
+        val round =
+            Round(
+                number = 1,
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
+                winners = listOf(player1),
+                gameId = 1,
+            )
+
+        assertEquals(1, round.winners.size)
+        assertEquals(player1, round.winners[0])
     }
 
     @Test
     fun `test Round equality`() {
-        val round1 = Round(number = 1, firstPlayerIdx = 1, turn = Turn(user1), users = users, userHands = emptyMap())
-        val round2 = Round(number = 1,  firstPlayerIdx = 1, turn = Turn(user1), users = users, userHands = emptyMap())
-        val round3 = Round(number = 2, firstPlayerIdx = 1, turn = Turn(user2), users = users, userHands = emptyMap())
+        val round1 =
+            Round(
+                number = 1,
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
+                gameId = 1,
+            )
+
+        val round2 =
+            Round(
+                number = 1,
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = players,
+                playerHands = emptyMap(),
+                gameId = 1,
+            )
 
         assertEquals(round1, round2)
-        assert(round1 != round3)
     }
 }
+

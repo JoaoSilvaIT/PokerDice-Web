@@ -1,6 +1,5 @@
 package pt.isel
 
-import pt.isel.domain.users.Sha256InviteEncoder
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -12,9 +11,9 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import pt.isel.domain.users.InviteDomainConfig
+import pt.isel.domain.users.Sha256InviteEncoder
 import pt.isel.domain.users.Sha256TokenEncoder
 import pt.isel.domain.users.UsersDomainConfig
-import pt.isel.repo.JdbiTransactionManager
 import java.time.Clock
 import java.time.Duration
 import kotlin.time.Duration.Companion.hours

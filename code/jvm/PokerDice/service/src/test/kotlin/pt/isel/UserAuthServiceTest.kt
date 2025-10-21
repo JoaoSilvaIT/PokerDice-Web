@@ -22,9 +22,31 @@ class UserAuthServiceTest {
     @Autowired
     private lateinit var trxManager: TransactionManager
 
+    @Autowired
+    private lateinit var inviteDomain: pt.isel.domain.users.InviteDomain
+
+    @Autowired
+    private lateinit var clock: java.time.Clock
+
     @BeforeEach
     fun setup() {
-        trxManager.run { repoUsers.clear() }
+        trxManager.run {
+            repoUsers.clear()
+            (repoInvite as pt.isel.mem.RepositoryInviteInMem).clear()
+        }
+    }
+
+    private fun createValidInvite(): String {
+        val inviteCode = inviteDomain.generateInviteValue()
+        trxManager.run {
+            repoInvite.createAppInvite(
+                inviterId = 1,
+                inviteValidationInfo = inviteDomain.createInviteValidationInformation(inviteCode),
+                state = inviteDomain.validState,
+                createdAt = clock.instant(),
+            )
+        }
+        return inviteCode
     }
 
     @Test
@@ -32,8 +54,9 @@ class UserAuthServiceTest {
         val name = "Alice"
         val email = "alice@example.com"
         val password = "securePassword123"
+        val invite = createValidInvite()
 
-        val result = serviceUser.createUser(name, email, password)
+        val result = serviceUser.createUser(name, email, password, invite)
 
         assertIs<Either.Success<User>>(result)
         val user = result.value
@@ -44,9 +67,11 @@ class UserAuthServiceTest {
 
     @Test
     fun `createUser with already used email should return failure`() {
-        serviceUser.createUser("Alice", "alice@example.com", "password123")
+        val invite1 = createValidInvite()
+        serviceUser.createUser("Alice", "alice@example.com", "password123", invite1)
 
-        val result = serviceUser.createUser("Bob", "alice@example.com", "password456")
+        val invite2 = createValidInvite()
+        val result = serviceUser.createUser("Bob", "alice@example.com", "password456", invite2)
 
         assertIs<Either.Failure<AuthTokenError>>(result)
         assertEquals(AuthTokenError.EmailAlreadyInUse, result.value)
@@ -54,7 +79,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `createUser should trim name and email`() {
-        val result = serviceUser.createUser(" John ", " john@doe.com ", "secret")
+        val invite = createValidInvite()
+        val result = serviceUser.createUser(" John ", " john@doe.com ", "secret", invite)
 
         assertIs<Either.Success<User>>(result)
         val user = result.value
@@ -64,7 +90,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `createToken succeeds with valid credentials`() {
-        serviceUser.createUser("John", "john@doe.com", "mypassword")
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "mypassword", invite)
 
         val result = serviceUser.createToken("john@doe.com", "mypassword")
 
@@ -90,7 +117,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `createToken fails with invalid credentials`() {
-        serviceUser.createUser("John", "john@doe.com", "correctpassword")
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "correctpassword", invite)
 
         val result = serviceUser.createToken("john@doe.com", "wrongpassword")
 
@@ -108,7 +136,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `getUserByToken returns user when token is valid`() {
-        val userResult = serviceUser.createUser("John", "john@doe.com", "password")
+        val invite = createValidInvite()
+        val userResult = serviceUser.createUser("John", "john@doe.com", "password", invite)
         assertIs<Either.Success<User>>(userResult)
         val user = userResult.value
         val tokenResult = serviceUser.createToken("john@doe.com", "password")
@@ -131,7 +160,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `revokeToken removes token`() {
-        serviceUser.createUser("John", "john@doe.com", "password")
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "password", invite)
         val tokenResult = serviceUser.createToken("john@doe.com", "password")
         assertIs<Either.Success<TokenExternalInfo>>(tokenResult)
         val token = tokenResult.value.tokenValue

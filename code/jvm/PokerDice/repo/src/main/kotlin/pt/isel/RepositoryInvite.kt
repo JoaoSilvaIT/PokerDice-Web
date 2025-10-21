@@ -18,5 +18,4 @@ interface RepositoryInvite {
     ): Int
 
     fun getAppInviteByValidationInfo(inviteValidationInfo: InviteValidationInfo): Invite?
-
 }

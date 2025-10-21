@@ -21,28 +21,6 @@ class HandTests {
         assertEquals(dices, hand.dices)
     }
 
-    @Test
-    fun `test Hand rollDices creates 5 dices`() {
-        val hand = Hand.rollDices()
-        assertEquals(5, hand.dices.size)
-    }
-
-    @Test
-    fun `test Hand rollDices returns valid faces`() {
-        val hand = Hand.rollDices()
-        hand.dices.forEach { dice ->
-            assertTrue(Face.entries.contains(dice.face))
-        }
-    }
-
-    @Test
-    fun `test Hand rollDices randomness`() {
-        val hands = List(20) { Hand.rollDices() }
-        val uniqueHands = hands.map { it.dices.map { dice -> dice.face } }.toSet()
-
-        // With 20 rolls, we should get more than 1 unique hand (statistically very likely)
-        assertTrue(uniqueHands.size > 1, "Expected multiple unique hands in 20 rolls")
-    }
 
     @Test
     fun `test Hand equality`() {

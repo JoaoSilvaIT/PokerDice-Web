@@ -1,8 +1,8 @@
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import pt.isel.domain.users.MIN_BALANCE
 import pt.isel.domain.users.PasswordValidationInfo
 import pt.isel.domain.users.User
-import pt.isel.utils.MIN_BALANCE
 
 class UserTests {
     @Test
@@ -33,7 +33,7 @@ class UserTests {
                 name = "Jane Doe",
                 email = "jane@example.com",
                 balance = MIN_BALANCE,
-                passwordValidation = passwordValidation
+                passwordValidation = passwordValidation,
             )
 
         assertEquals(100, user.balance)

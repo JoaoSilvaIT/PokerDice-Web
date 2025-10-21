@@ -5,5 +5,5 @@ data class PlayerResult(
     val finalBalance: Int,
     val roundsWon: Int,
     val coinsWon: Int,
-    val coinsLost: Int
+    val coinsLost: Int,
 )

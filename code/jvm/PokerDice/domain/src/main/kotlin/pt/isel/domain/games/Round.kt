@@ -1,8 +1,5 @@
 package pt.isel.domain.games
 
-import pt.isel.domain.users.User
-import pt.isel.domain.users.UserExternalInfo
-
 const val MIN_ANTE = 10
 
 data class Round(
@@ -13,7 +10,7 @@ data class Round(
     val players: List<PlayerInGame>,
     val playerHands: Map<PlayerInGame, Hand>,
     val ante: Int = MIN_ANTE,
-    val pot : Int = 0,
+    val pot: Int = 0,
     val winners: List<PlayerInGame> = emptyList(),
-    val gameId : Int,
+    val gameId: Int,
 )

@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.lobby.LobbyExternalInfo
 import pt.isel.domain.users.User
-import pt.isel.domain.users.UserExternalInfo
 
 @Component
 interface RepositoryLobby : Repository<Lobby> {

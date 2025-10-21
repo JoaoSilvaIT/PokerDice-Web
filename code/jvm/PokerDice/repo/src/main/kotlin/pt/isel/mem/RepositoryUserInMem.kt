@@ -27,7 +27,6 @@ class RepositoryUserInMem : RepositoryUser {
 
     override fun findByEmail(email: String): User? = users.firstOrNull { it.email == email }
 
-
     override fun getUserById(id: Int): UserExternalInfo? {
         return users.firstOrNull { it.id == id }?.let { user ->
             UserExternalInfo(
@@ -37,7 +36,7 @@ class RepositoryUserInMem : RepositoryUser {
             )
         }
     }
-    
+
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? =
         tokens.firstOrNull { it.tokenValidationInfo == tokenValidationInfo }?.let {
             val user = findById(it.userId)

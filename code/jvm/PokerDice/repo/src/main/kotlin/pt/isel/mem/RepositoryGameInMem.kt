@@ -2,9 +2,8 @@ package pt.isel.mem
 
 import pt.isel.RepositoryGame
 import pt.isel.domain.games.*
-import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.utils.State
-
+import pt.isel.domain.lobby.Lobby
 
 class RepositoryGameInMem : RepositoryGame {
     private val games = mutableListOf<Game>()
@@ -15,23 +14,25 @@ class RepositoryGameInMem : RepositoryGame {
         lobby: Lobby,
         numberOfRounds: Int,
     ): Game {
-        val playersInTheGame = lobby.players.map { user ->
+        val playersInTheGame =
+            lobby.players.map { user ->
                 PlayerInGame(
                     user.id,
                     user.name,
                     user.balance,
-                    0
+                    0,
                 )
             }
-        val game = Game(
-            game++,
-            lobby.id,
-            playersInTheGame,
-            numberOfRounds,
-            State.WAITING,
-            null,
-            startedAt,
-            null
+        val game =
+            Game(
+                game++,
+                lobby.id,
+                playersInTheGame,
+                numberOfRounds,
+                State.WAITING,
+                null,
+                startedAt,
+                null,
             )
         games.add(game)
         return game
@@ -69,30 +70,37 @@ class RepositoryGameInMem : RepositoryGame {
     override fun startNewRound(game: Game): Game {
         val nextRoundNr = (game.currentRound?.number ?: 0) + 1
         val firstPlayerIndex = (nextRoundNr - 1) % game.players.size
-        val newRound = Round(
-            number = nextRoundNr,
-            firstPlayerIdx = firstPlayerIndex,
-            turn = Turn(
-                game.players[firstPlayerIndex],
-                MAX_ROLLS,
-                emptyList()),
-            game.players,
-            emptyMap(),
-            gameId = game.id
+        val newRound =
+            Round(
+                number = nextRoundNr,
+                firstPlayerIdx = firstPlayerIndex,
+                turn =
+                    Turn(
+                        game.players[firstPlayerIndex],
+                        MAX_ROLLS,
+                        emptyList(),
+                    ),
+                game.players,
+                emptyMap(),
+                gameId = game.id,
             )
         val updatedGame = game.copy(currentRound = newRound)
         save(updatedGame)
         return updatedGame
     }
 
-    override fun setAnte(ante: Int, round: Round): Round {
+    override fun setAnte(
+        ante: Int,
+        round: Round,
+    ): Round {
         return round.copy(ante = ante)
     }
 
     override fun payAnte(round: Round): Round {
-        val updatedPlayers = round.players.map { user ->
-            user.copy(currentBalance = user.currentBalance - round.ante)
-        }
+        val updatedPlayers =
+            round.players.map { user ->
+                user.copy(currentBalance = user.currentBalance - round.ante)
+            }
         return round.copy(players = updatedPlayers)
     }
 
@@ -102,22 +110,23 @@ class RepositoryGameInMem : RepositoryGame {
         val nextIndex = (currentIndex + 1) % round.players.size
 
         return if (nextIndex == round.firstPlayerIdx) {
-            val parentGame = findById(round.gameId)
-                ?: throw IllegalStateException("Game not found for round with gameId=${round.gameId}")
+            val parentGame =
+                findById(round.gameId)
+                    ?: throw IllegalStateException("Game not found for round with gameId=${round.gameId}")
             val newGame = startNewRound(parentGame)
             newGame.currentRound
                 ?: throw IllegalStateException("Failed to start new round for game id=${parentGame.id}")
         } else {
             round.copy(
                 turn = Turn(round.players[nextIndex], MAX_ROLLS, emptyList()),
-                playerHands = updatedPlayerHands
+                playerHands = updatedPlayerHands,
             )
         }
     }
 
     override fun updateTurn(
         chosenDice: Dice,
-        round: Round
+        round: Round,
     ): Round {
         TODO("Not yet implemented")
     }
@@ -126,11 +135,18 @@ class RepositoryGameInMem : RepositoryGame {
         TODO("Not yet implemented")
     }
 
-    override fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand> {
+    override fun loadPlayerHands(
+        gameId: Int,
+        roundNumber: Int,
+        players: List<PlayerInGame>,
+    ): Map<PlayerInGame, Hand> {
         TODO("Not yet implemented")
     }
 
-    override fun updateGameRound(round: Round, game: Game): Game {
+    override fun updateGameRound(
+        round: Round,
+        game: Game,
+    ): Game {
         val newGame = game.copy(currentRound = round)
         save(newGame)
         return newGame
@@ -140,5 +156,3 @@ class RepositoryGameInMem : RepositoryGame {
         TODO("Not yet implemented")
     }
 }
-
-

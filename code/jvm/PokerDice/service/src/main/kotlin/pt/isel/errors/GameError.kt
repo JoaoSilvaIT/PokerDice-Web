@@ -1,9 +1,5 @@
 package pt.isel.errors
 
-import org.springframework.beans.factory.parsing.Problem
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-
 sealed class GameError {
     data object InvalidNumberOfRounds : GameError()
 

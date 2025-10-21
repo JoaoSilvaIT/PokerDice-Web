@@ -25,7 +25,7 @@ class TransactionManagerInMem : TransactionManager {
                 repoUsers = repoUsers,
                 repoLobby = repoLobby,
                 repoGame = repoGame,
-                repoInvite = repoInvite
+                repoInvite = repoInvite,
             )
         return transaction.block()
     }
@@ -35,7 +35,7 @@ class TransactionInMem(
     override val repoUsers: RepositoryUserInMem,
     override val repoLobby: RepositoryLobbyInMem,
     override val repoGame: RepositoryGameInMem,
-    override val repoInvite: RepositoryInviteInMem
+    override val repoInvite: RepositoryInviteInMem,
 ) : Transaction {
     override fun rollback() {
     }

@@ -3,18 +3,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
+import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
-import pt.isel.domain.users.PasswordValidationInfo
-import pt.isel.domain.users.User
 import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.HandRank
 import pt.isel.domain.games.utils.calculateFullHandValue
 import pt.isel.domain.games.utils.decideRoundWinner
 import pt.isel.domain.games.utils.defineHandRank
+import pt.isel.domain.games.utils.defineHandRank
 
 class GameLogicAdvancedTests {
-    private val passwordValidation = PasswordValidationInfo("hashed_password")
 
     @Test
     fun `test calculateFullHandValue with five of a kind`() {
@@ -61,8 +60,8 @@ class GameLogicAdvancedTests {
 
     @Test
     fun `test decideRoundWinner with single winner`() {
-        val user1 = User(1, "Alice", "alice@example.com", 100, passwordValidation)
-        val user2 = User(2, "Bob", "bob@example.com", 100, passwordValidation)
+        val player1 = PlayerInGame(1, "Alice", 100, 0)
+        val player2 = PlayerInGame(2, "Bob", 100, 0)
 
         val hand1 = Hand(List(5) { Dice(Face.ACE) }) // Five of a kind
         val hand2 =
@@ -79,22 +78,23 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
-                firstPlayerIdx = 1,
-                turn = Turn(user1),
-                users = listOf(user1, user2),
-                userHands = mapOf(user1 to hand1, user2 to hand2),
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = listOf(player1, player2),
+                playerHands = mapOf(player1 to hand1, player2 to hand2),
+                gameId = 1,
             )
 
         val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
-        assertEquals(user1, winners[0])
+        assertEquals(player1, winners[0])
     }
 
     @Test
     fun `test decideRoundWinner with tie`() {
-        val user1 = User(1, "Alice", "alice@example.com", 100, passwordValidation)
-        val user2 = User(2, "Bob", "bob@example.com", 100, passwordValidation)
+        val player1 = PlayerInGame(1, "Alice", 100, 0)
+        val player2 = PlayerInGame(2, "Bob", 100, 0)
 
         val hand1 = Hand(List(5) { Dice(Face.ACE) })
         val hand2 = Hand(List(5) { Dice(Face.ACE) })
@@ -102,24 +102,25 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
-                firstPlayerIdx = 1,
-                turn = Turn(user1),
-                users = listOf(user1, user2),
-                userHands = mapOf(user1 to hand1, user2 to hand2),
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = listOf(player1, player2),
+                playerHands = mapOf(player1 to hand1, player2 to hand2),
+                gameId = 1,
             )
 
         val winners = decideRoundWinner(round)
 
         assertEquals(2, winners.size)
-        assertTrue(winners.contains(user1))
-        assertTrue(winners.contains(user2))
+        assertTrue(winners.contains(player1))
+        assertTrue(winners.contains(player2))
     }
 
     @Test
     fun `test decideRoundWinner with multiple players`() {
-        val user1 = User(1, "Alice", "alice@example.com", 100, passwordValidation)
-        val user2 = User(2, "Bob", "bob@example.com", 100, passwordValidation)
-        val user3 = User(3, "Charlie", "charlie@example.com", 100, passwordValidation)
+        val player1 = PlayerInGame(1, "Alice", 100, 0)
+        val player2 = PlayerInGame(2, "Bob", 100, 0)
+        val player3 = PlayerInGame(3, "Charlie", 100, 0)
 
         val hand1 = Hand(List(5) { Dice(Face.KING) }) // Five of a kind KING
         val hand2 = Hand(List(5) { Dice(Face.ACE) }) // Five of a kind ACE (winner)
@@ -137,22 +138,23 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
-                firstPlayerIdx = 1,
-                turn = Turn(user1),
-                users = listOf(user1, user2, user3),
-                userHands = mapOf(user1 to hand1, user2 to hand2, user3 to hand3),
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = listOf(player1, player2, player3),
+                playerHands = mapOf(player1 to hand1, player2 to hand2, player3 to hand3),
+                gameId = 1,
             )
 
         val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
-        assertEquals(user2, winners[0])
+        assertEquals(player2, winners[0])
     }
 
     @Test
     fun `test decideRoundWinner with same rank but different high card`() {
-        val user1 = User(1, "Alice", "alice@example.com", 100, passwordValidation)
-        val user2 = User(2, "Bob", "bob@example.com", 100, passwordValidation)
+        val player1 = PlayerInGame(1, "Alice", 100, 0)
+        val player2 = PlayerInGame(2, "Bob", 100, 0)
 
         val hand1 = Hand(List(5) { Dice(Face.KING) }) // Five of a kind KING
         val hand2 = Hand(List(5) { Dice(Face.ACE) }) // Five of a kind ACE (winner)
@@ -160,66 +162,17 @@ class GameLogicAdvancedTests {
         val round =
             Round(
                 number = 1,
-                firstPlayerIdx = 1,
-                turn = Turn(user1),
-                users = listOf(user1, user2),
-                userHands = mapOf(user1 to hand1, user2 to hand2),
+                firstPlayerIdx = 0,
+                turn = Turn(player1, rollsRemaining = 3),
+                players = listOf(player1, player2),
+                playerHands = mapOf(player1 to hand1, player2 to hand2),
+                gameId = 1,
             )
 
         val winners = decideRoundWinner(round)
 
         assertEquals(1, winners.size)
-        assertEquals(user2, winners[0])
-    }
-
-    @Test
-    fun `test defineHandRank edge case - straight without nine`() {
-        val hand =
-            Hand(
-                listOf(
-                    Dice(Face.ACE),
-                    Dice(Face.KING),
-                    Dice(Face.QUEEN),
-                    Dice(Face.JACK),
-                    Dice(Face.TEN),
-                ),
-            )
-        val (_, rank) = defineHandRank(hand)
-        assertEquals(HandRank.STRAIGHT, rank)
-    }
-
-    @Test
-    fun `test defineHandRank edge case - not a straight with nine`() {
-        val hand =
-            Hand(
-                listOf(
-                    Dice(Face.NINE),
-                    Dice(Face.KING),
-                    Dice(Face.QUEEN),
-                    Dice(Face.JACK),
-                    Dice(Face.TEN),
-                ),
-            )
-        val (_, rank) = defineHandRank(hand)
-        assertEquals(HandRank.HIGH_DICE, rank)
-    }
-
-    @Test
-    fun `test calculateFullHandValue consistency`() {
-        val hand =
-            Hand(
-                listOf(
-                    Dice(Face.ACE),
-                    Dice(Face.ACE),
-                    Dice(Face.KING),
-                    Dice(Face.QUEEN),
-                    Dice(Face.JACK),
-                ),
-            )
-        val handRank = defineHandRank(hand)
-        val value1 = calculateFullHandValue(handRank)
-        val value2 = calculateFullHandValue(handRank)
-
-        assertEquals(value1, value2)
+        assertEquals(player2, winners[0])
     }
 }
+

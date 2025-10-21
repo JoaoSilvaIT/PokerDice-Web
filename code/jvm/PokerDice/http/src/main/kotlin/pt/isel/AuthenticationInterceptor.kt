@@ -8,7 +8,7 @@ import org.springframework.web.servlet.HandlerInterceptor
 import pt.isel.domain.users.AuthenticatedUser
 
 @Component
-class  AuthenticationInterceptor(
+class AuthenticationInterceptor(
     private val authorizationHeaderProcessor: RequestTokenProcessor,
 ) : HandlerInterceptor {
     override fun preHandle(

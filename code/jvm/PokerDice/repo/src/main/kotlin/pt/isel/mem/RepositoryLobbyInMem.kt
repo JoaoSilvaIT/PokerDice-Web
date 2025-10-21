@@ -22,20 +22,22 @@ class RepositoryLobbyInMem : RepositoryLobby {
         maxPlayers: Int,
         host: User,
     ): Lobby {
-        val settings = LobbySettings(
-            numberOfRounds = 3, // Default value
-            minPlayers = minPlayers,
-            maxPlayers = maxPlayers
-        )
+        val settings =
+            LobbySettings(
+                numberOfRounds = 3, // Default value
+                minPlayers = minPlayers,
+                maxPlayers = maxPlayers,
+            )
         val hostInfo = UserExternalInfo(host.id, host.name, host.balance)
-        val lobby = Lobby(
-            id = lobbyIdCounter++,
-            name = name,
-            description = description,
-            host = hostInfo,
-            settings = settings,
-            players = setOf(hostInfo)
-        )
+        val lobby =
+            Lobby(
+                id = lobbyIdCounter++,
+                name = name,
+                description = description,
+                host = hostInfo,
+                settings = settings,
+                players = setOf(hostInfo),
+            )
         lobbies.add(lobby)
         return lobby
     }
@@ -47,7 +49,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
                 name = lobby.name,
                 description = lobby.description,
                 currentPlayers = lobby.players.size,
-                numberOfRounds = lobby.settings.numberOfRounds
+                numberOfRounds = lobby.settings.numberOfRounds,
             )
         } else {
             throw NoSuchElementException("Lobby with id $id not found")

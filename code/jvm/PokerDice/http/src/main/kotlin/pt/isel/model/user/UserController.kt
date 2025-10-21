@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.UserAuthService
 import pt.isel.domain.users.AuthenticatedUser
-import pt.isel.domain.users.Invite
 import pt.isel.errors.AuthTokenError
 import pt.isel.model.Problem
 import pt.isel.utils.Either
@@ -62,7 +61,8 @@ class UserController(
                     is AuthTokenError.UserNotFoundOrInvalidCredentials ->
                         Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
                     is AuthTokenError.BlankName,
-                    is AuthTokenError.EmailAlreadyInUse ->
+                    is AuthTokenError.EmailAlreadyInUse,
+                    ->
                         Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
                     is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
                     is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
@@ -72,9 +72,7 @@ class UserController(
     }
 
     @PostMapping("/api/users/invite")
-    fun createInvite(
-        users: AuthenticatedUser,
-    ): ResponseEntity<*> {
+    fun createInvite(users: AuthenticatedUser): ResponseEntity<*> {
         return when (val result = userService.createAppInvite(users.user.id)) {
             is Either.Success ->
                 ResponseEntity
@@ -88,7 +86,8 @@ class UserController(
                     is AuthTokenError.UserNotFoundOrInvalidCredentials ->
                         Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
                     is AuthTokenError.BlankName,
-                    is AuthTokenError.EmailAlreadyInUse ->
+                    is AuthTokenError.EmailAlreadyInUse,
+                    ->
                         Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
                     is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
                     is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)

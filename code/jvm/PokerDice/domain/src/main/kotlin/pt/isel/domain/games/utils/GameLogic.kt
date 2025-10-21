@@ -4,8 +4,6 @@ import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
-import pt.isel.domain.games.Turn
-import pt.isel.domain.users.User
 
 fun defineHandRank(hand: Hand): Pair<Hand, HandRank> {
     val equalDice = hand.dices.groupingBy { it }.eachCount()
@@ -47,7 +45,6 @@ fun decideGameWinner(players: List<PlayerInGame>): List<PlayerInGame> {
     return players.filter { it.moneyWon == maxWinnings }
 }
 
-
 fun roll(): Dice {
     val faces = Face.entries.toTypedArray()
     val randomFace = faces.random()
@@ -56,7 +53,7 @@ fun roll(): Dice {
 
 fun rollDicesLogic(numberOfDices: Int): List<Dice> {
     val dices = mutableListOf<Dice>()
-    repeat(numberOfDices){ dices.add(roll()) }
+    repeat(numberOfDices) { dices.add(roll()) }
     return dices
 }
 
@@ -65,7 +62,8 @@ fun lockDices(dices: List<Dice>): Hand {
     return Hand(dices)
 }
 
-fun charToFace(char: Char) : Face = when (char) {
+fun charToFace(char: Char): Face =
+    when (char) {
         'A' -> Face.ACE
         'K' -> Face.KING
         'Q' -> Face.QUEEN
@@ -74,14 +72,15 @@ fun charToFace(char: Char) : Face = when (char) {
         else -> Face.NINE
     }
 
-fun faceToChar(face: Face): Char = when (face) {
-    Face.ACE -> 'A'
-    Face.KING -> 'K'
-    Face.QUEEN -> 'Q'
-    Face.JACK -> 'J'
-    Face.TEN -> 'T'
-    Face.NINE -> '9'
-}
+fun faceToChar(face: Face): Char =
+    when (face) {
+        Face.ACE -> 'A'
+        Face.KING -> 'K'
+        Face.QUEEN -> 'Q'
+        Face.JACK -> 'J'
+        Face.TEN -> 'T'
+        Face.NINE -> '9'
+    }
 
 /*
 fun chooseDices(dicesToKeep: List<Dice>, turn: Turn): Turn {

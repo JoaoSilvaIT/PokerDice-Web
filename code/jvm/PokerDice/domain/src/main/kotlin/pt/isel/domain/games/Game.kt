@@ -1,7 +1,7 @@
 package pt.isel.domain.games
 
-import pt.isel.domain.users.User
 import pt.isel.domain.games.utils.State
+import pt.isel.domain.users.User
 
 data class Game(
     val id: Int,

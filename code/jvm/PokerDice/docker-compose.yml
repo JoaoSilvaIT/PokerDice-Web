@@ -1,59 +1,36 @@
-version: '3.8'
-
 services:
-  pokerdice-postgres:
-    image: pokerdice-postgres:latest
-    container_name: pokerdice-postgres
-    environment:
-      POSTGRES_DB: pokerdice
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    networks:
-      - pokerdice-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  pokerdice-jvm:
-    image: pokerdice-jvm:latest
-    container_name: pokerdice-jvm
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://pokerdice-postgres:5432/pokerdice
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-    ports:
-      - "8080:8080"
-    networks:
-      - pokerdice-network
-    depends_on:
-      pokerdice-postgres:
-        condition: service_healthy
-
+  # Just a machine running ubuntu, with 'dig' installed so that we can observe the docker compose environment.
   ubuntu:
-    image: pokerdice-ubuntu:latest
     container_name: ubuntu
-    networks:
-      - pokerdice-network
-    stdin_open: true
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-ubuntu
+    image: pokerdice-ubuntu
     tty: true
 
-networks:
-  pokerdice-network:
-    driver: bridge
-# Build stage
-FROM gradle:8.5-jdk21 AS build
-WORKDIR /app
-COPY . .
-RUN gradle :app:bootJar --no-daemon
+  pokerdice-postgres:
+    container_name: pokerdice-postgres
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-postgres
+    image: pokerdice-postgres
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=changeit
+      - POSTGRES_DB=db
+    ports:
+      - 5432:5432
 
-# Runtime stage
-FROM eclipse-temurin:21-jre
-WORKDIR /app
-COPY --from=build /app/app/build/libs/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-
+  pokerdice-jvm:
+    container_name: pokerdice-jvm
+    hostname: pokerdice-jvm
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile-jvm
+    image: pokerdice-jvm
+    environment:
+      PORT: 8080
+      DB_URL: "jdbc:postgresql://pokerdice-postgres:5432/db?user=dbuser&password=changeit"
+    ports:
+      - 8080:8080

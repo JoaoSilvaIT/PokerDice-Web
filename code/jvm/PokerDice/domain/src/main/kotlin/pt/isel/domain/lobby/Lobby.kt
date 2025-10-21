@@ -8,5 +8,5 @@ data class Lobby(
     val description: String,
     val host: UserExternalInfo,
     val settings: LobbySettings,
-    val players: Set<UserExternalInfo>
+    val players: Set<UserExternalInfo>,
 )

@@ -28,18 +28,39 @@ class GameServiceTest {
     @Autowired
     private lateinit var trxManager: TransactionManagerInMem
 
+    @Autowired
+    private lateinit var inviteDomain: pt.isel.domain.users.InviteDomain
+
+    @Autowired
+    private lateinit var clock: java.time.Clock
+
     @BeforeEach
     fun setup() {
         trxManager.run {
             repoUsers.clear()
             repoLobby.clear()
             repoGame.clear()
+            (repoInvite as pt.isel.mem.RepositoryInviteInMem).clear()
         }
+    }
+
+    private fun createValidInvite(): String {
+        val inviteCode = inviteDomain.generateInviteValue()
+        trxManager.run {
+            repoInvite.createAppInvite(
+                inviterId = 1,
+                inviteValidationInfo = inviteDomain.createInviteValidationInformation(inviteCode),
+                state = inviteDomain.validState,
+                createdAt = clock.instant(),
+            )
+        }
+        return inviteCode
     }
 
     @Test
     fun `createGame should create and return a game`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -55,7 +76,8 @@ class GameServiceTest {
 
     @Test
     fun `createGame fails with invalid number of rounds`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -69,7 +91,8 @@ class GameServiceTest {
 
     @Test
     fun `createGame fails with invalid time`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -83,7 +106,8 @@ class GameServiceTest {
 
     @Test
     fun `createGame by lobbyId should create and return a game`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -105,7 +129,8 @@ class GameServiceTest {
 
     @Test
     fun `getGame should return game when it exists`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -128,7 +153,8 @@ class GameServiceTest {
 
     @Test
     fun `endGame should end a game successfully`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -146,7 +172,8 @@ class GameServiceTest {
 
     @Test
     fun `endGame fails with invalid end time before start time`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -163,7 +190,8 @@ class GameServiceTest {
 
     @Test
     fun `endGame fails when game already ended`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
@@ -181,7 +209,8 @@ class GameServiceTest {
 
     @Test
     fun `endGame by gameId should end a game successfully`() {
-        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123")
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
         assertIs<Either.Success<User>>(hostResult)
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)

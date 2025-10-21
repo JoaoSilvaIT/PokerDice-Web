@@ -1,6 +1,5 @@
 package pt.isel
 
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import pt.isel.domain.games.*
 import pt.isel.domain.lobby.Lobby
@@ -21,11 +20,17 @@ interface RepositoryGame : Repository<Game> {
         endedAt: Long,
     ): Game
 
-    fun updateGameRound(round: Round, game: Game): Game
+    fun updateGameRound(
+        round: Round,
+        game: Game,
+    ): Game
 
     fun startNewRound(game: Game): Game
 
-    fun setAnte(ante: Int,round: Round): Round
+    fun setAnte(
+        ante: Int,
+        round: Round,
+    ): Round
 
     fun payAnte(round: Round): Round
 
@@ -33,12 +38,16 @@ interface RepositoryGame : Repository<Game> {
 
     fun nextTurn(round: Round): Round
 
-    fun updateTurn(chosenDice: Dice, round: Round): Round
+    fun updateTurn(
+        chosenDice: Dice,
+        round: Round,
+    ): Round
 
-    fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand>
+    fun loadPlayerHands(
+        gameId: Int,
+        roundNumber: Int,
+        players: List<PlayerInGame>,
+    ): Map<PlayerInGame, Hand>
 
     fun findActiveGamesByLobbyId(lobbyId: Int): List<Game>
 }
-
-
-
