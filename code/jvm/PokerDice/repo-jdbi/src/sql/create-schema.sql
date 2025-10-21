@@ -77,7 +77,7 @@ create table dbo.ROUND_WINNER (
     foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number) on delete cascade
 );
 
-create table dbo.APP_INVITE(
+create table dbo.INVITE(
     id serial primary key,
     inviterId integer references dbo.USERS(id),
     inviteValidationInfo varchar(255) unique not null,

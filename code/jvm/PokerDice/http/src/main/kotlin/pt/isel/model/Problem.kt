@@ -23,10 +23,12 @@ sealed class Problem(
     // Authentication errors
     data object BlankEmail : Problem(URI("$PROBLEM_URI_PATH/blank-email"))
     data object BlankPassword : Problem(URI("$PROBLEM_URI_PATH/blank-password"))
+    data object BlankInvite : Problem(URI("$PROBLEM_URI_PATH/blank-invite"))
     data object UserNotFoundOrInvalidCredentials : Problem(URI("$PROBLEM_URI_PATH/user-not-found-or-invalid-credentials"))
     data object EmailAlreadyInUse : Problem(URI("$PROBLEM_URI_PATH/email-already-in-use"))
     data object InsecurePassword : Problem(URI("$PROBLEM_URI_PATH/insecure-password"))
     data object InvalidOrMissingToken : Problem(URI("$PROBLEM_URI_PATH/invalid-or-missing-token"))
+    data object InvalidInvite : Problem(URI("$PROBLEM_URI_PATH/invalid-invite"))
 
     // Lobby errors
     data object BlankName : Problem(URI("$PROBLEM_URI_PATH/blank-name"))

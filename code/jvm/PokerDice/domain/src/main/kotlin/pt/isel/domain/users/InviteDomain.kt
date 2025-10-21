@@ -1,8 +1,8 @@
 package pt.isel.domain.users
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import java.time.Instant
 import org.springframework.stereotype.Component
 import java.security.SecureRandom
+import java.time.Duration
 import java.util.Base64
 
 @Component
@@ -28,9 +28,9 @@ class InviteDomain(
 
     fun isInviteTimeNotExpired(
         createdAt: Instant,
-        clock: Clock,
+        expireInviteTime: Duration,
+        now: Instant = Instant.now()
     ): Boolean {
-        val now = clock.now()
-        return (now - createdAt) <= expireInviteTime
+        return Duration.between(createdAt, now) <= expireInviteTime
     }
 }
