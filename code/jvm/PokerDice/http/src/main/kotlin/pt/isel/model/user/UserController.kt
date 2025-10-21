@@ -20,9 +20,8 @@ class UserController(
     @PostMapping("/api/users")
     fun createUser(
         @RequestBody userInput: UserInput,
-        admin: AuthenticatedUser
     ): ResponseEntity<*> {
-        return when (val result = userService.createUser(userInput.name, userInput.email, userInput.password)) {
+        return when (val result = userService.createUser(userInput.name, userInput.email, userInput.password, userInput.invite)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -39,6 +38,8 @@ class UserController(
                     is AuthTokenError.EmailAlreadyInUse -> Problem.EmailAlreadyInUse.response(HttpStatus.CONFLICT)
                     is AuthTokenError.UserNotFoundOrInvalidCredentials ->
                         Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
+                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
                 }
             }
         }
@@ -63,6 +64,8 @@ class UserController(
                     is AuthTokenError.BlankName,
                     is AuthTokenError.EmailAlreadyInUse ->
                         Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
                 }
             }
         }
@@ -87,6 +90,8 @@ class UserController(
                     is AuthTokenError.BlankName,
                     is AuthTokenError.EmailAlreadyInUse ->
                         Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
+                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
                 }
             }
         }

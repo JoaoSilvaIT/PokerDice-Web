@@ -10,4 +10,8 @@ sealed class AuthTokenError {
     data object BlankName : AuthTokenError()
 
     data object EmailAlreadyInUse : AuthTokenError()
+
+    data object BlankInvite : AuthTokenError()
+
+    data object InvalidInvite : AuthTokenError()
 }

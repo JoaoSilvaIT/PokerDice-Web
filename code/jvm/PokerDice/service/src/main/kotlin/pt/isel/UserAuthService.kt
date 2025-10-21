@@ -28,10 +28,12 @@ class UserAuthService(
         name: String,
         email: String,
         password: String,
+        invite: String
     ): Either<AuthTokenError, User> {
         if (name.isBlank()) return failure(AuthTokenError.BlankName)
         if (email.isBlank()) return failure(AuthTokenError.BlankEmail)
         if (password.isBlank()) return failure(AuthTokenError.BlankPassword)
+        if(invite.isBlank()) return failure(AuthTokenError.BlankInvite)
 
         val emailTrimmed = email.trim()
 
@@ -40,7 +42,14 @@ class UserAuthService(
                 return@run failure(AuthTokenError.EmailAlreadyInUse)
             }
             val passwordValidationInfo = createPasswordValidationInformation(password)
-            success(repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo))
+            val inviteValidationInfo = inviteDomain.createInviteValidationInformation(invite)
+            val invite = repoInvite.getAppInviteByValidationInfo(inviteValidationInfo)
+            if(invite == null || !inviteDomain.isInviteCodeValid(invite.state)){
+                return@run failure(AuthTokenError.InvalidInvite)
+            }
+            val newUser = repoUsers.createUser(name.trim(), emailTrimmed, passwordValidationInfo)
+            repoInvite.changeInviteState(invite.id, inviteDomain.usedState)
+            success(newUser)
         }
     }
 
