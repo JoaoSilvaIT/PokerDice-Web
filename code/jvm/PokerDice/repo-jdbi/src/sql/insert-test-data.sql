@@ -2,6 +2,9 @@
 -- Test data for manual API testing (users, tokens, lobbies, lobby membership, one running game + round + hands)
 -- Truncate existing data (order respects FKs) and insert deterministic IDs so tests can reference them easily.
 
+-- Enable pgcrypto extension for generating BCrypt hashes
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Clear existing data
 TRUNCATE TABLE dbo.ROUND_WINNER CASCADE;
 TRUNCATE TABLE dbo.TURN CASCADE;
@@ -14,11 +17,11 @@ TRUNCATE TABLE dbo.INVITE CASCADE;
 TRUNCATE TABLE dbo.USERS RESTART IDENTITY CASCADE;
 
 -- Insert users (explicit ids for predictable tests)
+-- Password for all test users: 'password123'
 INSERT INTO dbo.USERS (id, username, email, password_hash, balance)
-VALUES (1, 'Paul Atreides', 'paul@atreides.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye1hzjJHGRarQk6ZKMX8sFgYjKhKdKxQi', 1000),
-       (2, 'Duncan Idaho', 'duncan@idaho.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye1hzjJHGRarQk6ZKMX8sFgYjKhKdKxQi', 800),
-       (3, 'Lady Jessica', 'jessica@benegesserit.org', '$2a$10$N9qo8uLOickgx2ZMRZoMye1hzjJHGRarQk6ZKMX8sFgYjKhKdKxQi',
-        1200);
+VALUES (1, 'Admin', 'Admin@gmail.com', crypt('password123', gen_salt('bf', 10)), 1000),
+       (2, 'Duncan Idaho', 'duncan@idaho.com', crypt('password123', gen_salt('bf', 10)), 800),
+       (3, 'Lady Jessica', 'jessica@benegesserit.org', crypt('password123', gen_salt('bf', 10)), 1200);
 
 -- Insert tokens for authentication tests (replace token values as needed)
 INSERT INTO dbo.TOKEN (token, user_id, created_at, last_used_at)

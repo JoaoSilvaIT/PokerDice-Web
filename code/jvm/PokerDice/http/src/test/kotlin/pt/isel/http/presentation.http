@@ -1,0 +1,207 @@
+### Admin Login
+POST http://localhost:8080/api/users/token
+Content-Type: application/json
+
+{
+  "email": "Admin@gmail.com",
+  "password": "password123"
+}
+
+### Generate Invite for new user
+POST http://localhost:8080/api/users/invite
+Authorization: Bearer
+
+### Create New First User
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "host",
+  "email": "host@gmail.com",
+  "password": "host",
+  "invite": ""
+}
+
+### Create New Second User
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "player1",
+  "email": "player1@gmail.com",
+  "password": "player1",
+  "invite": ""
+}
+
+### Get token of first user
+POST http://localhost:8080/api/users/token
+Content-Type: application/json
+
+{
+  "email": "host@gmail.com",
+  "password": "host"
+}
+
+### Get token of second user
+POST http://localhost:8080/api/users/token
+Content-Type: application/json
+
+{
+  "email": "player@gmail.com",
+  "password": "player"
+}
+
+### Create Lobby with First User (host)
+POST http://localhost:8080/api/lobbies
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "name": "host lobby",
+  "description": "lobby for presentation",
+  "maxPlayers": 6,
+  "minPlayers": 2
+}
+
+### Join Lobby with Second User (player1)
+POST http://localhost:8080/api/lobbies/1/join
+Authorization: Bearer
+
+### Create Game with host permission
+POST http://localhost:8080/api/games
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "lobbyId": 1,
+  "numberOfRounds": 2
+}
+
+### Start Game with host permission
+POST http://localhost:8080/api/games/1/start
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "lobbyId": 1
+}
+
+### Start new round
+POST http://localhost:8080/api/games/1/rounds/start
+Authorization: Bearer
+
+### First player of the rounds sets ante
+POST http://localhost:8080/api/games/1/rounds/ante
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "ante": 50
+}
+
+### Everyone pays the ante
+POST http://localhost:8080/api/games/1/rounds/pay-ante
+Authorization: Bearer
+Content-Type: application/json
+
+### Roll dices
+POST http://localhost:8080/api/games/1/rounds/roll-dices
+Authorization: Bearer
+
+### Choose which dices to keep
+POST http://localhost:8080/api/games/1/rounds/update-turn
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "dice": ""
+}
+
+### Move on to next player's turn
+POST http://localhost:8080/api/games/1/rounds/next-turn
+Authorization: Bearer
+
+### Roll dices
+POST http://localhost:8080/api/games/6/rounds/roll-dices
+Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg=
+
+### Choose which dices to keep
+POST http://localhost:8080/api/games/1/rounds/update-turn
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "dice": ""
+}
+
+### Check Winner of the round
+POST http://localhost:8080/api/games/1/rounds/check-winner
+Authorization: Bearer
+
+### Distribute Winnings
+POST http://localhost:8080/api/games/1/rounds/distribute-winnings
+Authorization: Bearer
+
+### Start second
+POST http://localhost:8080/api/games/1/rounds/start
+Authorization: Bearer
+
+### First player of the rounds sets ante
+POST http://localhost:8080/api/games/1/rounds/ante
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "ante": 50
+}
+
+### Everyone pays the ante
+POST http://localhost:8080/api/games/1/rounds/pay-ante
+Authorization: Bearer
+Content-Type: application/json
+
+### Roll dices
+POST http://localhost:8080/api/games/1/rounds/roll-dices
+Authorization: Bearer
+
+### Choose which dices to keep
+POST http://localhost:8080/api/games/1/rounds/update-turn
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "dice": ""
+}
+
+### Move on to next player's turn
+POST http://localhost:8080/api/games/1/rounds/next-turn
+Authorization: Bearer
+
+### Roll dices
+POST http://localhost:8080/api/games/6/rounds/roll-dices
+Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg=
+
+### Choose which dices to keep
+POST http://localhost:8080/api/games/1/rounds/update-turn
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "dice": ""
+}
+
+### Check Winner of the final round
+POST http://localhost:8080/api/games/1/rounds/check-winner
+Authorization: Bearer
+
+### Distribute Winnings
+POST http://localhost:8080/api/games/1/rounds/distribute-winnings
+Authorization: Bearer
+
+### Check winner of the game
+POST http://localhost:8080/api/games/1/check-winner
+Authorization: Bearer
+
+
+
+

@@ -3,17 +3,17 @@ POST http://localhost:8080/api/users
 
 ###Create Invite
 POST http://localhost:8080/api/users/invite
-Authorization: Bearer fU2MPJmNxfOCEHp_35-N4m_gxgP-FMTHGsk4DdY7itk=
+Authorization: Bearer Q3wgBpIZkJ5zH7ccNVU4ADlFc1NFB9itmuWd4fHeHWE=
 
 ### Create user
 POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "testef2",
-  "email": "testef2@gmail.com",
-  "password": "testef2",
-  "invite": "OryUdkkap4BYJ-7rCbeGEA=="
+  "name": "teste1",
+  "email": "teste1@gmail.com",
+  "password": "teste1",
+  "invite": "2PcP1oQ4L4xaeC7Z3jWyhA=="
 }
 
 ### Create a Second User
@@ -31,8 +31,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "testef2@gmail.com",
-  "password": "testef2"
+  "email": "Admin@gmail.com",
+  "password": "password123"
 }
 
 
