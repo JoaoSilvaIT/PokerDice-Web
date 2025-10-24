@@ -5,7 +5,7 @@ import pt.isel.domain.users.AuthenticatedUser
 
 @Component
 class RequestTokenProcessor(
-    val usersService: UserAuthService,
+    private val usersService: UserAuthService,
 ) {
     fun processAuthorizationHeaderValue(authorizationValue: String?): AuthenticatedUser? {
         if (authorizationValue == null) {

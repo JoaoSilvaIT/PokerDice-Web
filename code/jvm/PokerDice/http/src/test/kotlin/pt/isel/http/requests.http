@@ -78,8 +78,8 @@ POST http://localhost:8080/api/lobbies/2/join
 Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg= // Trying to join a lobby I'm already in is giving a 200
 
 ### Leave lobby (requires valid token)
-POST http://localhost:8080/api/lobbies/1/leave
-Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg= // Leaving the loby as an host reutunrs "closed = true", and closes the lobby
+POST http://localhost:8080/api/lobbies/2/leave
+Authorization: Bearer sX8BI404jysGvSvXdjbUXnrUMKdbKiopWh98-jM-g9s= // Leaving the loby as an host reutunrs "closed = true", and closes the lobby
 
 ### Close lobby (requires valid token)
 DELETE http://localhost:8080/api/lobbies/1

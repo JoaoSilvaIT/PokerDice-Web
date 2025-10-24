@@ -29,18 +29,7 @@ class UserController(
                         "/api/users/${result.value.id}",
                     ).body(UserOutputModel.fromDomain(result.value))
 
-            is Either.Failure -> {
-                when (result.value) {
-                    is AuthTokenError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.EmailAlreadyInUse -> Problem.EmailAlreadyInUse.response(HttpStatus.CONFLICT)
-                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
-                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
-                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
@@ -54,62 +43,37 @@ class UserController(
                     .status(HttpStatus.OK)
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
 
-            is Either.Failure -> {
-                when (result.value) {
-                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
-                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
-                    is AuthTokenError.BlankName,
-                    is AuthTokenError.EmailAlreadyInUse,
-                    ->
-                        Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
     @PostMapping("/api/users/invite")
-    fun createInvite(users: AuthenticatedUser): ResponseEntity<*> {
-        return when (val result = userService.createAppInvite(users.user.id)) {
+    fun createInvite(user: AuthenticatedUser): ResponseEntity<*> {
+        return when (val result = userService.createAppInvite(user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(InviteOutputModel(result.value))
 
-            is Either.Failure -> {
-                when (result.value) {
-                    is AuthTokenError.BlankEmail -> Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankPassword -> Problem.BlankPassword.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.UserNotFoundOrInvalidCredentials ->
-                        Problem.UserNotFoundOrInvalidCredentials.response(HttpStatus.UNAUTHORIZED)
-                    is AuthTokenError.BlankName,
-                    is AuthTokenError.EmailAlreadyInUse,
-                    ->
-                        Problem.BlankEmail.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
-                    is AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
     @PostMapping("/api/logout")
-    fun logout(user: AuthenticatedUser) {
+    fun logout(user: AuthenticatedUser): ResponseEntity<Unit> {
         userService.revokeToken(user.token)
+        return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/api/me")
-    fun userHome(userAuthenticatedUser: AuthenticatedUser): ResponseEntity<UserHomeOutputModel> =
+    fun userHome(user: AuthenticatedUser): ResponseEntity<UserHomeOutputModel> =
         ResponseEntity
             .status(HttpStatus.OK)
             .body(
                 UserHomeOutputModel(
-                    id = userAuthenticatedUser.user.id,
-                    name = userAuthenticatedUser.user.name,
-                    email = userAuthenticatedUser.user.email,
+                    id = user.user.id,
+                    name = user.user.name,
+                    email = user.user.email,
                 ),
             )
 }

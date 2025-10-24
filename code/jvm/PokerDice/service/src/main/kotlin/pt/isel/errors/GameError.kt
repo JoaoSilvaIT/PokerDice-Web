@@ -26,4 +26,16 @@ sealed class GameError {
     data object LobbyHasActiveGame : GameError()
 
     data object HandAlreadyFull : GameError()
+
+    data object InsufficientFunds : GameError()
+
+    data object NoRollsRemaining : GameError()
+
+    data object UserNotLobbyHost : GameError()
+
+    data object UserNotFirstPlayerOfRound : GameError()
+
+    data object UserNotPlayerOfTurn: GameError()
+
+    data object RoundWinnerNotDecided: GameError()
 }

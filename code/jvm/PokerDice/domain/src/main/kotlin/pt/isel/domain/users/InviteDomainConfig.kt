@@ -12,5 +12,8 @@ data class InviteDomainConfig(
     init {
         require(expireInviteTime.isPositive())
         require(validState.isNotBlank())
+        require(expiredState.isNotBlank())
+        require(usedState.isNotBlank())
+        require(declinedState.isNotBlank())
     }
 }

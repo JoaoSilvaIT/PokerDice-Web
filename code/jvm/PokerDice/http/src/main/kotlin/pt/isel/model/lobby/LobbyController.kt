@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.LobbyService
 import pt.isel.domain.users.AuthenticatedUser
-import pt.isel.errors.LobbyError
-import pt.isel.model.Problem
 import pt.isel.utils.Either
 
 @RestController
@@ -23,59 +21,20 @@ class LobbyController(
         user: AuthenticatedUser,
         @RequestBody input: LobbyCreateInputModel,
     ): ResponseEntity<*> {
-        val result = lobbyService.createLobby(user.user, input.name, input.description, input.minPlayers, input.maxPlayers)
-        return when (result) {
+        return when (val result = lobbyService.createLobby(user.user, input.name, input.description, input.minPlayers, input.maxPlayers)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
                     .header("Location", "/api/lobbies/${result.value.id}")
-                    .body(
-                        LobbyOutputModel(
-                            id = result.value.id,
-                            name = result.value.name,
-                            description = result.value.description,
-                            minPlayers = result.value.settings.minPlayers,
-                            maxPlayers = result.value.settings.maxPlayers,
-                            players =
-                                result.value.players.map {
-                                    LobbyPlayerOutputModel(it.id, it.name)
-                                },
-                            hostId = result.value.host.id,
-                        ),
-                    )
-            is Either.Failure -> {
-                when (result.value) {
-                    LobbyError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MinPlayersTooLow -> Problem.MinPlayersTooLow.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MaxPlayersTooHigh -> Problem.MaxPlayersTooHigh.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.NameAlreadyUsed -> Problem.NameAlreadyUsed.response(HttpStatus.CONFLICT)
-                    LobbyError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    LobbyError.LobbyFull -> Problem.LobbyFull.response(HttpStatus.CONFLICT)
-                    LobbyError.NotHost -> Problem.NotHost.response(HttpStatus.FORBIDDEN)
-                    LobbyError.UserAlreadyInLobby -> Problem.UserAlreadyInLobby.response(HttpStatus.CONFLICT)
-                    LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+                    .body(result.value.toOutputModel())
+
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
     @GetMapping("/api/lobbies")
     fun list(): ResponseEntity<LobbyListOutputModel> {
-        val lobbies =
-            lobbyService.listVisibleLobbies().map { lobby ->
-                LobbyOutputModel(
-                    id = lobby.id,
-                    name = lobby.name,
-                    description = lobby.description,
-                    minPlayers = lobby.settings.minPlayers,
-                    maxPlayers = lobby.settings.maxPlayers,
-                    players =
-                        lobby.players.map {
-                            LobbyPlayerOutputModel(it.id, it.name)
-                        },
-                    hostId = lobby.host.id,
-                )
-            }
+        val lobbies = lobbyService.listVisibleLobbies().map { it.toOutputModel() }
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(LobbyListOutputModel(lobbies))
@@ -88,33 +47,11 @@ class LobbyController(
     ): ResponseEntity<*> {
         return when (val result = lobbyService.joinLobby(id, user.user)) {
             is Either.Success ->
-                ResponseEntity.status(HttpStatus.OK).body(
-                    LobbyOutputModel(
-                        id = result.value.id,
-                        name = result.value.name,
-                        description = result.value.description,
-                        minPlayers = result.value.settings.minPlayers,
-                        maxPlayers = result.value.settings.maxPlayers,
-                        players =
-                            result.value.players.map {
-                                LobbyPlayerOutputModel(it.id, it.name)
-                            },
-                        hostId = result.value.host.id,
-                    ),
-                )
-            is Either.Failure -> {
-                when (result.value) {
-                    LobbyError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MinPlayersTooLow -> Problem.MinPlayersTooLow.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MaxPlayersTooHigh -> Problem.MaxPlayersTooHigh.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.NameAlreadyUsed -> Problem.NameAlreadyUsed.response(HttpStatus.CONFLICT)
-                    LobbyError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    LobbyError.LobbyFull -> Problem.LobbyFull.response(HttpStatus.CONFLICT)
-                    LobbyError.NotHost -> Problem.NotHost.response(HttpStatus.FORBIDDEN)
-                    LobbyError.UserAlreadyInLobby -> Problem.UserAlreadyInLobby.response(HttpStatus.CONFLICT)
-                    LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(result.value.toOutputModel())
+
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
@@ -124,20 +61,12 @@ class LobbyController(
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = lobbyService.leaveLobby(id, user.user)) {
-            is Either.Success -> ResponseEntity.status(HttpStatus.OK).body(mapOf("closed" to result.value))
-            is Either.Failure -> {
-                when (result.value) {
-                    LobbyError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MinPlayersTooLow -> Problem.MinPlayersTooLow.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MaxPlayersTooHigh -> Problem.MaxPlayersTooHigh.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.NameAlreadyUsed -> Problem.NameAlreadyUsed.response(HttpStatus.CONFLICT)
-                    LobbyError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    LobbyError.LobbyFull -> Problem.LobbyFull.response(HttpStatus.CONFLICT)
-                    LobbyError.NotHost -> Problem.NotHost.response(HttpStatus.FORBIDDEN)
-                    LobbyError.UserAlreadyInLobby -> Problem.UserAlreadyInLobby.response(HttpStatus.CONFLICT)
-                    LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+            is Either.Success ->
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(mapOf("closed" to result.value))
+
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 
@@ -147,20 +76,9 @@ class LobbyController(
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = lobbyService.closeLobby(id, user.user)) {
-            is Either.Success -> ResponseEntity.status(HttpStatus.NO_CONTENT).build<Unit>()
-            is Either.Failure -> {
-                when (result.value) {
-                    LobbyError.BlankName -> Problem.BlankName.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MinPlayersTooLow -> Problem.MinPlayersTooLow.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.MaxPlayersTooHigh -> Problem.MaxPlayersTooHigh.response(HttpStatus.BAD_REQUEST)
-                    LobbyError.NameAlreadyUsed -> Problem.NameAlreadyUsed.response(HttpStatus.CONFLICT)
-                    LobbyError.LobbyNotFound -> Problem.LobbyNotFound.response(HttpStatus.NOT_FOUND)
-                    LobbyError.LobbyFull -> Problem.LobbyFull.response(HttpStatus.CONFLICT)
-                    LobbyError.NotHost -> Problem.NotHost.response(HttpStatus.FORBIDDEN)
-                    LobbyError.UserAlreadyInLobby -> Problem.UserAlreadyInLobby.response(HttpStatus.CONFLICT)
-                    LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
-                }
-            }
+            is Either.Success -> ResponseEntity.noContent().build<Unit>()
+            is Either.Failure -> result.value.toProblemResponse()
         }
     }
 }
+

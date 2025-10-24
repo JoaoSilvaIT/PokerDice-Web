@@ -218,26 +218,42 @@ class JdbiGamesRepository(
             }
         }
 
+        // Store the winnings amount in ROUND_WINNER table - use UPSERT to ensure it's always set
+        round.winners.forEach { winner ->
+
+            val rowsAffected = handle.createUpdate(
+                """
+                INSERT INTO dbo.ROUND_WINNER (game_id, round_number, user_id, winnings_amount)
+                VALUES (:game_id, :round_number, :user_id, :winnings)
+                ON CONFLICT (game_id, round_number, user_id)
+                DO UPDATE SET winnings_amount = EXCLUDED.winnings_amount
+                """
+            )
+                .bind("winnings", winningsPerWinner)
+                .bind("game_id", round.gameId)
+                .bind("round_number", round.number)
+                .bind("user_id", winner.id)
+                .execute()
+
+            // Verify the value was actually set
+            val storedValue = handle.createQuery(
+                "SELECT winnings_amount FROM dbo.ROUND_WINNER WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id"
+            )
+                .bind("game_id", round.gameId)
+                .bind("round_number", round.number)
+                .bind("user_id", winner.id)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(-1)
+
+        }
+
+
         return round.copy(players = updatedPlayers, pot = 0)
     }
 
 
     private fun saveRound(gameId: Int, round: Round) {
-        // 1. Limpar turnos de jogadores anteriores
-        handle.createUpdate(
-            """
-        DELETE FROM dbo.TURN
-        WHERE game_id = :game_id
-          AND round_number = :round_number
-          AND user_id != :current_user_id
-        """
-        )
-            .bind("game_id", gameId)
-            .bind("round_number", round.number)
-            .bind("current_user_id", round.turn.player.id)
-            .execute()
-
-        // 2. Upsert ROUND
         handle.createUpdate(
             """
         INSERT INTO dbo.ROUND (game_id, round_number, first_player_idx, turn_of_player, ante, pot)
@@ -258,7 +274,6 @@ class JdbiGamesRepository(
             .bind("pot", round.pot)
             .execute()
 
-        // 3. Criar/atualizar entrada na TURN para o jogador atual
         val diceArray = round.turn.currentDice.map { faceToChar(it.face).toString() }.toTypedArray()
 
         handle.createUpdate(
@@ -276,23 +291,14 @@ class JdbiGamesRepository(
             .bind("rolls_left", round.turn.rollsRemaining)
             .execute()
 
-        // 4. Guardar winners (código existente)
+        // Only insert winners if they don't already exist (to avoid overwriting winnings_amount)
         if (round.winners.isNotEmpty()) {
-            handle.createUpdate(
-                """
-            DELETE FROM dbo.ROUND_WINNER
-            WHERE game_id = :game_id AND round_number = :round_number
-            """
-            )
-                .bind("game_id", gameId)
-                .bind("round_number", round.number)
-                .execute()
-
             round.winners.forEach { winner ->
                 handle.createUpdate(
                     """
-                INSERT INTO dbo.ROUND_WINNER (game_id, round_number, user_id)
-                VALUES (:game_id, :round_number, :user_id)
+                INSERT INTO dbo.ROUND_WINNER (game_id, round_number, user_id, winnings_amount)
+                VALUES (:game_id, :round_number, :user_id, 0)
+                ON CONFLICT (game_id, round_number, user_id) DO NOTHING
                 """
                 )
                     .bind("game_id", gameId)
@@ -379,11 +385,13 @@ class JdbiGamesRepository(
                     """,
                 ).bind("lobby_id", lobbyId)
                 .map { playerRs, _ ->
+                    val playerId = playerRs.getInt("id")
+                    val moneyWon = calculatePlayerMoneyWon(gameId, playerId)
                     PlayerInGame(
-                        playerRs.getInt("id"),
+                        playerId,
                         playerRs.getString("username"),
                         playerRs.getInt("balance"),
-                        0 // wins count
+                        moneyWon
                     )
                 }.list()
 
@@ -400,6 +408,48 @@ class JdbiGamesRepository(
             startedAt = rs.getLong("started_at"),
             endedAt = rs.getLong("ended_at").takeIf { !rs.wasNull() }
         )
+    }
+
+    private fun calculatePlayerMoneyWon(gameId: Int, userId: Int): Int {
+        println("=== DEBUG calculatePlayerMoneyWon START ===")
+        println("gameId=$gameId, userId=$userId")
+
+        // First, let's see what rows exist in ROUND_WINNER for this game and user
+        val winnerRows = handle.createQuery(
+            """
+            SELECT game_id, round_number, user_id, winnings_amount 
+            FROM dbo.ROUND_WINNER
+            WHERE game_id = :game_id AND user_id = :user_id
+            """
+        )
+            .bind("game_id", gameId)
+            .bind("user_id", userId)
+            .mapToMap()
+            .list()
+
+        println("Found ${winnerRows.size} winner rows for this user:")
+        winnerRows.forEach { row ->
+            println("  Round ${row["round_number"]}: winnings_amount = ${row["winnings_amount"]}")
+        }
+
+        // Simply sum up the winnings_amount from ROUND_WINNER table
+        val totalWinnings = handle.createQuery(
+            """
+            SELECT COALESCE(SUM(winnings_amount), 0) as total
+            FROM dbo.ROUND_WINNER
+            WHERE game_id = :game_id AND user_id = :user_id
+            """
+        )
+            .bind("game_id", gameId)
+            .bind("user_id", userId)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(0)
+
+        println("Total winnings calculated: $totalWinnings")
+        println("=== DEBUG calculatePlayerMoneyWon END ===")
+
+        return totalWinnings
     }
 
     private fun loadRound(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Round? {
@@ -480,4 +530,3 @@ class JdbiGamesRepository(
             .map { rs, _ -> mapRowToGame(rs) }
             .list()
 }
-

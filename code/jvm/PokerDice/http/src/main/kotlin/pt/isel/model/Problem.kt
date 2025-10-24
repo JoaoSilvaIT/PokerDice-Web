@@ -5,8 +5,7 @@ import org.springframework.http.ResponseEntity
 import java.net.URI
 
 private const val MEDIA_TYPE = "application/problem+json"
-private const val PROBLEM_URI_PATH =
-    "https://github.com/isel-leic-daw/2025-daw-leic51d-06/tree/main/docs/problems/"
+private const val PROBLEM_URI_PATH = "https://github.com/isel-leic-daw/2025-daw-leic51d-06/tree/main/docs/problems/"
 
 sealed class Problem(
     typeUri: URI,
@@ -74,4 +73,22 @@ sealed class Problem(
     data object RoundNotFound : Problem(URI("$PROBLEM_URI_PATH/round-not-found"))
 
     data object FinalHandNotValid : Problem(URI("$PROBLEM_URI_PATH/final-hand-not-valid"))
+
+    data object GameNotFinished : Problem(URI("$PROBLEM_URI_PATH/game-not-finished"))
+
+    data object LobbyHasActiveGame : Problem(URI("$PROBLEM_URI_PATH/lobby-has-active-game"))
+
+    data object HandAlreadyFull : Problem(URI("$PROBLEM_URI_PATH/hand-already-full"))
+
+    data object InsufficientFunds : Problem(URI("$PROBLEM_URI_PATH/insufficient-funds"))
+
+    data object NoRollsRemaining : Problem(URI("$PROBLEM_URI_PATH/no-rolls-remaining"))
+
+    data object UserNotLobbyHost : Problem(URI("$PROBLEM_URI_PATH/user-not-lobby-host"))
+
+    data object UserNotFirstPlayerOfRound : Problem(URI("$PROBLEM_URI_PATH/user-not-first-player-of-round"))
+
+    data object UserNotPlayerOfTurn : Problem(URI("$PROBLEM_URI_PATH/user-not-player-of-turn"))
+
+    data object RoundWinnerNotDecided : Problem(URI("$PROBLEM_URI_PATH/round-winner-not-decided"))
 }

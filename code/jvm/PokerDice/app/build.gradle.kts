@@ -18,7 +18,6 @@ dependencies {
     implementation(project(":repo-jdbi"))
     implementation(project(":domain"))
     implementation(project(":service"))
-    implementation("org.postgresql:postgresql")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

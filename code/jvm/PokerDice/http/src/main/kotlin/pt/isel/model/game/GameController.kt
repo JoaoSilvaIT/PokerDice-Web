@@ -23,12 +23,12 @@ class GameController(
         user: AuthenticatedUser,
         @RequestBody input: GameCreateInputModel,
     ): ResponseEntity<*> {
-        return when (val result = gameService.createGame(System.currentTimeMillis(), input.lobbyId, input.numberOfRounds)) {
+        return when (val result = gameService.createGame(System.currentTimeMillis(), input.lobbyId, input.numberOfRounds, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
                     .header("Location", "/api/games/${result.value.id}")
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
 
             is Either.Failure -> {
                 result.value.toProblemResponse()
@@ -47,7 +47,7 @@ class GameController(
 
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(GameOutputModel.fromDomain(game))
+            .body(game.toOutputModel())
     }
 
     @PostMapping("/api/games/{id}/start")
@@ -55,11 +55,11 @@ class GameController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        return when (val result = gameService.startGame(id)) {
+        return when (val result = gameService.startGame(id, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }
@@ -75,7 +75,7 @@ class GameController(
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }
@@ -88,11 +88,11 @@ class GameController(
         @PathVariable id: Int,
         @RequestBody input: SetAnteInputModel,
     ): ResponseEntity<*> {
-        return when (val result = gameService.setAnte(id, input.ante)) {
+        return when (val result = gameService.setAnte(id, input.ante, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }
@@ -108,7 +108,7 @@ class GameController(
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }
@@ -120,11 +120,11 @@ class GameController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        return when (val result = gameService.nextTurn(id)) {
+        return when (val result = gameService.nextTurn(id, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(GameOutputModel.fromDomain(result.value))
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }
@@ -153,7 +153,7 @@ class GameController(
         user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        return when (val result = gameService.rollDices(id)) {
+        return when (val result = gameService.rollDices(id, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
@@ -180,7 +180,7 @@ class GameController(
         }
     }
 
-    @PostMapping("/api/games/{id}/rounds/check-winner")
+    @PostMapping("/api/games/{id}/rounds/check-round-winner")
     fun checkRoundWinner(
         user: AuthenticatedUser,
         @PathVariable id: Int,
@@ -196,7 +196,7 @@ class GameController(
         }
     }
 
-    @PostMapping("/api/games/{id}/check-winner")
+    @PostMapping("/api/games/{id}/check-game-winner")
     fun checkGameWinner(
         user: AuthenticatedUser,
         @PathVariable id: Int,
@@ -218,7 +218,10 @@ class GameController(
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.endGame(id, System.currentTimeMillis())) {
-            is Either.Success -> ResponseEntity.status(HttpStatus.OK).body(GameOutputModel.fromDomain(result.value))
+            is Either.Success ->
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(result.value.toOutputModel())
             is Either.Failure -> {
                 result.value.toProblemResponse()
             }

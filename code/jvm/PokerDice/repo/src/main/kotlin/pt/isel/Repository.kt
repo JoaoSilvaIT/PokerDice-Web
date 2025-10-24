@@ -1,8 +1,5 @@
 package pt.isel
 
-/**
- * Generic repository interface for basic CRUD operations
- */
 interface Repository<T> {
     fun findById(id: Int): T? // Find an entity by its ID
 

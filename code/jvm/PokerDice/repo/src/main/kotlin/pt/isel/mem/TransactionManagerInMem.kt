@@ -6,10 +6,6 @@ import org.springframework.stereotype.Component
 import pt.isel.repo.Transaction
 import pt.isel.repo.TransactionManager
 
-/**
- * In-memory transaction manager for testing purposes.
- * Does not provide true transactional semantics but allows tests to run without a database.
- */
 @Component
 @Profile("mem")
 @Primary

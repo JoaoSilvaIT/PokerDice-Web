@@ -73,6 +73,7 @@ create table dbo.ROUND_WINNER (
     game_id integer not null,
     round_number integer not null,
     user_id integer not null references dbo.USERS(id) on delete cascade,
+    winnings_amount integer not null default 0,
     primary key (game_id, round_number, user_id),
     foreign key (game_id, round_number) references dbo.ROUND(game_id, round_number) on delete cascade
 );

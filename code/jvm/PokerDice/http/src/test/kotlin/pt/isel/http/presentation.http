@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ### Generate Invite for new user
 POST http://localhost:8080/api/users/invite
-Authorization: Bearer
+Authorization: Bearer Mh4ufCvpKmlsGR7JfJXyTcVB0n2eq8X1qH0zt0xby2Y=
 
 ### Create New First User
 POST http://localhost:8080/api/users
@@ -19,7 +19,7 @@ Content-Type: application/json
   "name": "host",
   "email": "host@gmail.com",
   "password": "host",
-  "invite": ""
+  "invite": "vj0foobdnyTZB0Hs1Tn1Fw=="
 }
 
 ### Create New Second User
@@ -30,7 +30,7 @@ Content-Type: application/json
   "name": "player1",
   "email": "player1@gmail.com",
   "password": "player1",
-  "invite": ""
+  "invite": "Wz4klZSMTX2wxWOeg6gP-Q=="
 }
 
 ### Get token of first user
@@ -47,13 +47,13 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "player@gmail.com",
-  "password": "player"
+  "email": "player1@gmail.com",
+  "password": "player1"
 }
 
 ### Create Lobby with First User (host)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 {
@@ -65,11 +65,11 @@ Content-Type: application/json
 
 ### Join Lobby with Second User (player1)
 POST http://localhost:8080/api/lobbies/1/join
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
 ### Create Game with host permission
 POST http://localhost:8080/api/games
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 {
@@ -79,76 +79,71 @@ Content-Type: application/json
 
 ### Start Game with host permission
 POST http://localhost:8080/api/games/1/start
-Authorization: Bearer
-Content-Type: application/json
-
-{
-  "lobbyId": 1
-}
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### Start new round
 POST http://localhost:8080/api/games/1/rounds/start
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### First player of the rounds sets ante
 POST http://localhost:8080/api/games/1/rounds/ante
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 {
-  "ante": 50
+  "ante": 25
 }
 
 ### Everyone pays the ante
 POST http://localhost:8080/api/games/1/rounds/pay-ante
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 ### Roll dices
 POST http://localhost:8080/api/games/1/rounds/roll-dices
-Authorization: Bearer
+Authorization: Bearer gkyiT2FNA2J5-iWcAtrqmYtfpPrA0_Fqxmag9KiZmxg=
 
 ### Choose which dices to keep
 POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 {
-  "dice": ""
+  "dice": "9"
 }
 
 ### Move on to next player's turn
 POST http://localhost:8080/api/games/1/rounds/next-turn
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
 ### Roll dices
-POST http://localhost:8080/api/games/6/rounds/roll-dices
-Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg=
+POST http://localhost:8080/api/games/1/rounds/roll-dices
+Authorization: Bearer s0aP2jtgKkWUczI4W0Ha894_xQP-r1cGItTBzGK5p-E=
 
 ### Choose which dices to keep
 POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 Content-Type: application/json
 
 {
-  "dice": ""
+  "dice": "A"
 }
 
 ### Check Winner of the round
-POST http://localhost:8080/api/games/1/rounds/check-winner
-Authorization: Bearer
+POST http://localhost:8080/api/games/1/rounds/check-round-winner
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
 ### Distribute Winnings
 POST http://localhost:8080/api/games/1/rounds/distribute-winnings
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
-### Start second
+### Start second Round
 POST http://localhost:8080/api/games/1/rounds/start
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
 ### First player of the rounds sets ante
 POST http://localhost:8080/api/games/1/rounds/ante
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 Content-Type: application/json
 
 {
@@ -157,25 +152,25 @@ Content-Type: application/json
 
 ### Everyone pays the ante
 POST http://localhost:8080/api/games/1/rounds/pay-ante
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 Content-Type: application/json
 
 ### Roll dices
 POST http://localhost:8080/api/games/1/rounds/roll-dices
-Authorization: Bearer
+Authorization: Bearer gkyiT2FNA2J5-iWcAtrqmYtfpPrA0_Fqxmag9KiZmxg=
 
 ### Choose which dices to keep
 POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 Content-Type: application/json
 
 {
-  "dice": ""
+  "dice": "9"
 }
 
 ### Move on to next player's turn
 POST http://localhost:8080/api/games/1/rounds/next-turn
-Authorization: Bearer
+Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
 
 ### Roll dices
 POST http://localhost:8080/api/games/6/rounds/roll-dices
@@ -183,25 +178,25 @@ Authorization: Bearer fyRrCiQtTpmZgwwQZ-rFKyk55cEGd54fRFUOMJotPjg=
 
 ### Choose which dices to keep
 POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 Content-Type: application/json
 
 {
-  "dice": ""
+  "dice": "A"
 }
 
 ### Check Winner of the final round
-POST http://localhost:8080/api/games/1/rounds/check-winner
-Authorization: Bearer
+POST http://localhost:8080/api/games/1/rounds/check-round-winner
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### Distribute Winnings
 POST http://localhost:8080/api/games/1/rounds/distribute-winnings
-Authorization: Bearer
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+
+### End game
+POST http://localhost:8080/api/games/1/end
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### Check winner of the game
-POST http://localhost:8080/api/games/1/check-winner
-Authorization: Bearer
-
-
-
-
+POST http://localhost:8080/api/games/1/check-game-winner
+Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=

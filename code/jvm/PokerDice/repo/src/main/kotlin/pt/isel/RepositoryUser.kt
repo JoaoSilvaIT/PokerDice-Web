@@ -8,9 +8,6 @@ import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
 import java.time.Instant
 
-/**
- * Repository interface for managing users, extends the generic Repository
- */
 @Component
 interface RepositoryUser : Repository<User> {
     fun createUser(

@@ -8,9 +8,6 @@ import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.lobby.Lobby
 
-/**
- * Repository interface for managing games, extends the generic Repository
- */
 @Component
 interface RepositoryGame : Repository<Game> {
     fun createGame(
