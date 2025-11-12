@@ -2,7 +2,6 @@ package pt.isel.model.user
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import pt.isel.domain.users.User
 import pt.isel.errors.AuthTokenError
 import pt.isel.model.Problem
 
@@ -17,9 +16,3 @@ fun AuthTokenError.toProblemResponse(): ResponseEntity<Any> =
         AuthTokenError.BlankInvite -> Problem.BlankInvite.response(HttpStatus.BAD_REQUEST)
         AuthTokenError.InvalidInvite -> Problem.InvalidInvite.response(HttpStatus.BAD_REQUEST)
     }
-
-fun User.toOutputModel() = UserOutputModel(
-    name = name,
-    balance = balance
-)
-

@@ -14,7 +14,7 @@ class RepositoryInviteInMem : RepositoryInvite {
         inviteValidationInfo: InviteValidationInfo,
         state: String,
         createdAt: Instant,
-    ): String? {
+    ): String {
         val id = nextId++
         val invite =
             Invite(

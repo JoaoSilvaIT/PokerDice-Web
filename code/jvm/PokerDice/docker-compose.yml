@@ -1,5 +1,4 @@
 services:
-  # Just a machine running ubuntu, with 'dig' installed so that we can observe the docker compose environment.
   ubuntu:
     container_name: ubuntu
     image: pokerdice-ubuntu

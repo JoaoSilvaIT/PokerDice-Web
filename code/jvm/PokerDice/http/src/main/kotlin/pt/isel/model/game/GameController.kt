@@ -38,7 +38,6 @@ class GameController(
 
     @GetMapping("/api/games/{id}")
     fun getById(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         val game =
@@ -68,7 +67,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/rounds/start")
     fun startRound(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.startNewRound(id)) {
@@ -101,7 +99,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/rounds/pay-ante")
     fun payAnte(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.payAnte(id)) {
@@ -133,7 +130,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/rounds/update-turn")
     fun updateTurn(
-        user: AuthenticatedUser,
         @RequestBody input: DiceUpdateInputModel,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
@@ -166,7 +162,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/rounds/distribute-winnings")
     fun distributeWinnings(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.distributeWinnings(id)) {
@@ -182,7 +177,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/rounds/check-round-winner")
     fun checkRoundWinner(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.decideRoundWinner(id)) {
@@ -198,7 +192,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/check-game-winner")
     fun checkGameWinner(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.decideGameWinner(id)) {
@@ -214,7 +207,6 @@ class GameController(
 
     @PostMapping("/api/games/{id}/end")
     fun end(
-        user: AuthenticatedUser,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
         return when (val result = gameService.endGame(id, System.currentTimeMillis())) {

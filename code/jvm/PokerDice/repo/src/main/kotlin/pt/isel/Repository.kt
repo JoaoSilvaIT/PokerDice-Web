@@ -1,13 +1,13 @@
 package pt.isel
 
 interface Repository<T> {
-    fun findById(id: Int): T? // Find an entity by its ID
+    fun findById(id: Int): T?
 
-    fun findAll(): List<T> // Retrieve all entities
+    fun findAll(): List<T>
 
-    fun save(entity: T) // Save a new or existing entity
+    fun save(entity: T)
 
-    fun deleteById(id: Int) // Delete an entity by its ID
+    fun deleteById(id: Int)
 
-    fun clear() // Delete all entries
+    fun clear()
 }

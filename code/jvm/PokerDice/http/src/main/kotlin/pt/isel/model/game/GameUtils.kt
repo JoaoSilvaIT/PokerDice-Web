@@ -2,9 +2,9 @@ package pt.isel.model.game
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import pt.isel.domain.games.Game
 import pt.isel.errors.GameError
 import pt.isel.model.Problem
-import pt.isel.domain.games.Game
 
 fun GameError.toProblemResponse(): ResponseEntity<Any> =
     when (this) {
@@ -26,26 +26,23 @@ fun GameError.toProblemResponse(): ResponseEntity<Any> =
         GameError.UserNotLobbyHost -> Problem.UserNotLobbyHost.response(HttpStatus.FORBIDDEN)
         GameError.UserNotFirstPlayerOfRound -> Problem.UserNotFirstPlayerOfRound.response(HttpStatus.FORBIDDEN)
         GameError.UserNotPlayerOfTurn -> Problem.UserNotPlayerOfTurn.response(HttpStatus.FORBIDDEN)
-        GameError.FinalHandNotValid -> Problem.FinalHandNotValid.response(HttpStatus.BAD_REQUEST)
-        GameError.GameNotFinished -> Problem.GameAlreadyEnded.response(HttpStatus.CONFLICT)
-        GameError.LobbyHasActiveGame -> Problem.InvalidLobby.response(HttpStatus.CONFLICT)
-        GameError.HandAlreadyFull -> Problem.FinalHandNotValid.response(HttpStatus.BAD_REQUEST)
         GameError.RoundWinnerNotDecided -> Problem.RoundWinnerNotDecided.response(HttpStatus.CONFLICT)
     }
 
-fun Game.toOutputModel() = GameOutputModel(
-    id = id,
-    startedAt = startedAt,
-    endedAt = endedAt,
-    lobbyId = lobbyId,
-    numberOfRounds = numberOfRounds,
-    state = state.name,
-    currentRound = currentRound?.let { round ->
-        GameRoundOutputModel(
-            number = round.number,
-            ante = round.ante,
-            turnUserId = round.turn.player.id,
-        )
-    }
-)
-
+fun Game.toOutputModel() =
+    GameOutputModel(
+        id = id,
+        startedAt = startedAt,
+        endedAt = endedAt,
+        lobbyId = lobbyId,
+        numberOfRounds = numberOfRounds,
+        state = state.name,
+        currentRound =
+            currentRound?.let { round ->
+                GameRoundOutputModel(
+                    number = round.number,
+                    ante = round.ante,
+                    turnUserId = round.turn.player.id,
+                )
+            },
+    )

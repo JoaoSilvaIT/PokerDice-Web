@@ -26,7 +26,7 @@ class AuthenticationInterceptor(
                 authorizationHeaderProcessor.processAuthorizationHeaderValue(request.getHeader(NAME_AUTHORIZATION_HEADER))
             return if (user == null) {
                 response.status = 401
-                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.Companion.SCHEME)
+                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
                 false
             } else {
                 AuthenticatedUserArgumentResolver.addUserTo(user, request)

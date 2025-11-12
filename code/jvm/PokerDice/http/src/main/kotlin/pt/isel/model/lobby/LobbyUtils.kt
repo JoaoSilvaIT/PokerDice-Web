@@ -19,12 +19,13 @@ fun LobbyError.toProblemResponse(): ResponseEntity<Any> =
         LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
     }
 
-fun Lobby.toOutputModel() = LobbyOutputModel(
-    id = id,
-    name = name,
-    description = description,
-    minPlayers = settings.minPlayers,
-    maxPlayers = settings.maxPlayers,
-    players = players.map { LobbyPlayerOutputModel(it.id, it.name) },
-    hostId = host.id
-)
+fun Lobby.toOutputModel() =
+    LobbyOutputModel(
+        id = id,
+        name = name,
+        description = description,
+        minPlayers = settings.minPlayers,
+        maxPlayers = settings.maxPlayers,
+        players = players.map { LobbyPlayerOutputModel(it.id, it.name) },
+        hostId = host.id,
+    )

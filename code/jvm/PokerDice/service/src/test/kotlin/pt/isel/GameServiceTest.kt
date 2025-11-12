@@ -67,7 +67,7 @@ class GameServiceTest {
         assertIs<Either.Success<Lobby>>(lobbyResult)
         val lobby = lobbyResult.value
 
-        val result = serviceGame.createGame(System.currentTimeMillis(), lobby.id, 5)
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobby.id, 5, host.id)
 
         assertIs<Either.Success<Game>>(result)
         assertEquals(5, result.value.numberOfRounds)
@@ -83,7 +83,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
 
-        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 0)
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 0, host.id)
 
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.InvalidNumberOfRounds, result.value)
@@ -98,7 +98,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
 
-        val result = serviceGame.createGame(-1, lobbyResult.value.id, 5)
+        val result = serviceGame.createGame(-1, lobbyResult.value.id, 5, host.id)
 
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.InvalidTime, result.value)
@@ -113,7 +113,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
 
-        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 5)
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 5, host.id)
 
         assertIs<Either.Success<Game>>(result)
         assertEquals(5, result.value.numberOfRounds)
@@ -121,7 +121,7 @@ class GameServiceTest {
 
     @Test
     fun `createGame by lobbyId fails when lobby not found`() {
-        val result = serviceGame.createGame(System.currentTimeMillis(), 999, 5)
+        val result = serviceGame.createGame(System.currentTimeMillis(), 999, 5, 1)
 
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.LobbyNotFound, result.value)
@@ -135,7 +135,7 @@ class GameServiceTest {
         val host = hostResult.value
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
-        val gameResult = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 5)
+        val gameResult = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 5, host.id)
         assertIs<Either.Success<Game>>(gameResult)
 
         val game = serviceGame.getGame(gameResult.value.id)
@@ -160,7 +160,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
         val startTime = System.currentTimeMillis()
-        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5)
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
         assertIs<Either.Success<Game>>(gameResult)
         val game = gameResult.value
 
@@ -179,7 +179,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
         val startTime = System.currentTimeMillis()
-        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5)
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
         assertIs<Either.Success<Game>>(gameResult)
 
         val result = serviceGame.endGame(gameResult.value.id, startTime - 1000)
@@ -197,7 +197,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
         val startTime = System.currentTimeMillis()
-        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5)
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
         assertIs<Either.Success<Game>>(gameResult)
         serviceGame.endGame(gameResult.value.id, startTime + 1000)
 
@@ -216,7 +216,7 @@ class GameServiceTest {
         val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
         assertIs<Either.Success<Lobby>>(lobbyResult)
         val startTime = System.currentTimeMillis()
-        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5)
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
         assertIs<Either.Success<Game>>(gameResult)
 
         val result = serviceGame.endGame(gameResult.value.id, startTime + 1000)

@@ -8,6 +8,7 @@ import pt.isel.utils.success
 class EitherTests {
     // Helper functions to prevent compiler from knowing exact types
     private fun <F, S> createSuccess(value: S): Either<F, S> = success(value)
+
     private fun <F, S> createFailure(error: F): Either<F, S> = failure(error)
 
     @Test
@@ -97,4 +98,3 @@ class EitherTests {
         assertTrue(failure1 != failure3)
     }
 }
-

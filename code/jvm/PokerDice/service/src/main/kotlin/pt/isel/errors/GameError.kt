@@ -35,7 +35,7 @@ sealed class GameError {
 
     data object UserNotFirstPlayerOfRound : GameError()
 
-    data object UserNotPlayerOfTurn: GameError()
+    data object UserNotPlayerOfTurn : GameError()
 
-    data object RoundWinnerNotDecided: GameError()
+    data object RoundWinnerNotDecided : GameError()
 }

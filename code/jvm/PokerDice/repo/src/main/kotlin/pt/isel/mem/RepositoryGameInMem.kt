@@ -159,6 +159,6 @@ class RepositoryGameInMem : RepositoryGame {
     }
 
     override fun findActiveGamesByLobbyId(lobbyId: Int): List<Game> {
-        TODO("Not yet implemented")
+        return games.filter { it.lobbyId == lobbyId && it.state == State.RUNNING }
     }
 }

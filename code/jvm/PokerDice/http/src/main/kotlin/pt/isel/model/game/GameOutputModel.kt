@@ -1,6 +1,5 @@
 package pt.isel.model.game
 
-
 /**
  * Representation of a game exposed via HTTP
  */
