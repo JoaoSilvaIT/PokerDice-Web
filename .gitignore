@@ -14,3 +14,6 @@ build/
 # Ignorar ficheiros temporários do Windows e macOS
 Thumbs.db
 .vscode/
+
+# Ignorar Node Modules
+node_modules/
