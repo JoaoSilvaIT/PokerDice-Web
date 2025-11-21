@@ -2,8 +2,15 @@ import { RequestUri } from './requestUri';
 import {fetchWrapper, Result} from "./utils";
 
 interface LoginCredentials {
-    username: string;
+    email: string;
     password: string;
+}
+
+interface SignupCredentials {
+    name: string;
+    email: string;
+    password: string;
+    invite: string;
 }
 
 export const authService = {
@@ -14,7 +21,7 @@ export const authService = {
         });
     },
 
-    signup(credentials: LoginCredentials): Promise<Result<any>> {
+    signup(credentials: SignupCredentials): Promise<Result<any>> {
         return fetchWrapper(RequestUri.user.signup, {
             method: 'POST',
             body: JSON.stringify(credentials)

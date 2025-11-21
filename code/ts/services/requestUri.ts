@@ -1,9 +1,9 @@
-const BASE_API_URL = 'http://localhost:8080/api'
+const BASE_API_URL = '/api'
 
 export const RequestUri = {
     user: {
-        login: `${BASE_API_URL}/login`,
-        signup: `${BASE_API_URL}/register`,
+        login: `${BASE_API_URL}/users/token`,
+        signup: `${BASE_API_URL}/users`,
         logout: `${BASE_API_URL}/logout`,
         profile: `${BASE_API_URL}/users/profile`,
         stats: `${BASE_API_URL}/users/stats`,
@@ -37,4 +37,3 @@ export const RequestUri = {
         declineInvite: (inviteId: number) => `${BASE_API_URL}/invites/${inviteId}/decline`,
     }
 }
-

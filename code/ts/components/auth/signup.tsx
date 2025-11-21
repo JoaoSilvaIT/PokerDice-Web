@@ -6,7 +6,7 @@ import { authService} from "../../services/authService";
 type State =
     | {
     type: 'editing';
-    inputs: {username: string; password: string; confirmPassword: string; inviteCode: string};
+    inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string};
     showPassword: boolean;
     error: string | null;
     shouldRedirect: boolean;
@@ -21,7 +21,7 @@ type State =
     | {type: 'redirect'}
     | {
     type: 'submitting';
-    inputs: {username: string; password: string; confirmPassword: string; inviteCode: string};
+    inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string};
     showPassword: boolean;
     error: string | null;
     isLoading: boolean;
@@ -37,7 +37,7 @@ type State =
 
 type Action =
     | { type: 'edit'; inputName: string; inputValue: string }
-    | { type: 'submit'; inputs: {username: string; password: string; confirmPassword: string; inviteCode: string} }
+    | { type: 'submit'; inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string} }
     | { type: 'togglePassword' }
     | { type: 'setError'; error: string | null }
     | { type: 'setRedirect' }
@@ -114,7 +114,7 @@ function reduce(state: State, action: Action): State {
 export function Signup() {
     const [state, dispatch] = useReducer(reduce, {
         type: 'editing',
-        inputs: { username: '', password: '', confirmPassword: '', inviteCode: '' },
+        inputs: { name: '', email: '', password: '', confirmPassword: '', invite: '' },
         showPassword: false,
         error: null,
         shouldRedirect: false,
@@ -178,7 +178,7 @@ export function Signup() {
 
     const inputs = state.type === 'editing' || state.type === 'submitting'
         ? state.inputs
-        : { username: '', password: '', confirmPassword: '', inviteCode: '' }
+        : { name: '', email: '', password: '', confirmPassword: '', invite: '' }
 
     return (
         <div className="auth-container">
@@ -187,17 +187,32 @@ export function Signup() {
                 <fieldset disabled={state.type === 'submitting'}>
                     <div className="auth-form-group">
                         <div>
-                            <label htmlFor="username" className="auth-label">
+                            <label htmlFor="name" className="auth-label">
                                 Username
                             </label>
                             <input
                                 className="auth-input"
                                 type="text"
-                                id="username"
-                                name="username"
-                                value={inputs.username}
+                                id="name"
+                                name="name"
+                                value={inputs.name}
                                 onChange={handleChange}
                                 placeholder="Enter your username"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="email" className="auth-label">
+                                Email
+                            </label>
+                            <input
+                                className="auth-input"
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={inputs.email}
+                                onChange={handleChange}
+                                placeholder="Enter your email"
                                 required
                             />
                         </div>
@@ -254,15 +269,15 @@ export function Signup() {
                         </div>
 
                         <div>
-                            <label htmlFor="inviteCode" className="auth-label">
+                            <label htmlFor="invite" className="auth-label">
                                 Invite Code
                             </label>
                             <input
                                 className="auth-input"
                                 type="text"
-                                id="inviteCode"
-                                name="inviteCode"
-                                value={inputs.inviteCode}
+                                id="invite"
+                                name="invite"
+                                value={inputs.invite}
                                 onChange={handleChange}
                                 placeholder="Enter your invite code"
                                 required

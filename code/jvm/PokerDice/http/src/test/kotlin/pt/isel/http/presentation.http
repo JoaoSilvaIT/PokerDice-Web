@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ### Generate Invite for new user
 POST http://localhost:8080/api/users/invite
-Authorization: Bearer N7XdLeXBUcxYEaKB0wlmUb286PYnNgGcQ107L0znFBc=
+Authorization: Bearer CCXHzSmOUEdDPsnId8rVXZOzIeIkkjHS4J614SXiHGw=
 
 ### Create New First User
 POST http://localhost:8080/api/users

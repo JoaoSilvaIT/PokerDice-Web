@@ -6,13 +6,13 @@ import {isOk} from "../../services/utils";
 
 type State =
     | {type: 'editing',
-    inputs: {username: string; password: string},
+    inputs: {email: string; password: string},
     error: string | null,
     redirect: boolean
 }
     | {type: 'redirecting'}
     | {type: 'submitting',
-    inputs: {username: string; password: string},
+    inputs: {email: string; password: string},
     error: string | null,
     isLoading: boolean,
     redirect: boolean
@@ -20,7 +20,7 @@ type State =
 
 type Action =
     | {type: 'edit'; inputName: string; value: string}
-    | {type: 'submit'; inputs: {username: string; password: string}}
+    | {type: 'submit'; inputs: {email: string; password: string}}
     | {type: 'setError'; error: string | null}
     | {type: 'setRedirect';}
     | {type: 'setLoading'; isLoading: boolean}
@@ -72,7 +72,7 @@ function reduce(state: State, action: Action): State {
 export function Login(){
     const [state, dispatch] = useReducer(reduce, {
         type: 'editing',
-        inputs: {username: '', password: ''},
+        inputs: {email: '', password: ''},
         error: null,
         redirect: false
     })
@@ -94,7 +94,7 @@ export function Login(){
             const result = await authService.login(state.inputs)
 
             if (isOk(result)) {
-                setUsername(state.inputs.username)
+                setUsername(state.inputs.email)
                 dispatch({ type: 'setRedirect'})
             } else {
                 dispatch({ type: 'setError', error: result.error })
@@ -104,7 +104,7 @@ export function Login(){
 
     const inputs = state.type === 'editing' || state.type === 'submitting'
         ? state.inputs
-        : { username: '', password: '' }
+        : { email: '', password: '' }
 
     return (
         <div className="container">
@@ -113,17 +113,17 @@ export function Login(){
                 <fieldset disabled={state.type === 'submitting' && state.isLoading}>
                     <div className="input-container">
                         <div>
-                            <label htmlFor="username" className="label">
-                                Username
+                            <label htmlFor="email" className="label">
+                                Email
                             </label>
                             <input
                                 className="input"
-                                id="username"
-                                type="text"
-                                name="username"
-                                value={inputs.username}
+                                id="email"
+                                type="email"
+                                name="email"
+                                value={inputs.email}
                                 onChange={handleChange}
-                                placeholder="Enter your username"
+                                placeholder="Enter your email"
                                 required
                             />
                         </div>
