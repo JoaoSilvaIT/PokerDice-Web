@@ -21,9 +21,11 @@ export const RequestUri = {
         state: (gameId: number) => `${BASE_API_URL}/games/${gameId}/state`,
     },
     lobby: {
-        available: `${BASE_API_URL}/lobby/games`,
-        search: `${BASE_API_URL}/lobby/search?name=`,
-        invite: (lobbyId: number) => `${BASE_API_URL}/lobby/${lobbyId}/invite`,
+        list: `${BASE_API_URL}/lobbies`,
+        create: `${BASE_API_URL}/lobbies`,
+        join: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/join`,
+        leave: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/leave`,
+        close: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}`,
     },
     leaderboard: {
         global: `${BASE_API_URL}/leaderboard`,
