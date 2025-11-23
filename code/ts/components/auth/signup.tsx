@@ -11,11 +11,8 @@ type State =
     error: string | null;
     shouldRedirect: boolean;
     passwordCriteria: {
-        minLength: boolean;
+        blank: boolean;
         maxLength: boolean;
-        hasNumber: boolean;
-        hasSpecialChar: boolean;
-        hasUppercase: boolean;
     };
 }
     | {type: 'redirect'}
@@ -27,11 +24,8 @@ type State =
     isLoading: boolean;
     shouldRedirect: boolean;
     passwordCriteria: {
-        minLength: boolean;
+        blank: boolean;
         maxLength: boolean;
-        hasNumber: boolean;
-        hasSpecialChar: boolean;
-        hasUppercase: boolean;
     };
 }
 
@@ -42,11 +36,8 @@ type Action =
     | { type: 'setError'; error: string | null }
     | { type: 'setRedirect' }
     | { type: 'updatePasswordCriteria'; criteria: {
-        minLength: boolean;
+        blank: boolean;
         maxLength: boolean;
-        hasNumber: boolean;
-        hasSpecialChar: boolean;
-        hasUppercase: boolean;
     }
 }
 
@@ -92,12 +83,8 @@ function reduce(state: State, action: Action): State {
                         error: action.error,
                         shouldRedirect: false,
                         passwordCriteria: {
-                            minLength: false,
-                            maxLength: false,
-                            hasNumber: false,
-                            hasSpecialChar: false,
-                            hasUppercase: false,
-                        }
+                            blank: false,
+                            maxLength: false                        }
                     }
                 case 'setRedirect':
                     return { type: 'redirect' }
@@ -119,11 +106,8 @@ export function Signup() {
         error: null,
         shouldRedirect: false,
         passwordCriteria: {
-            minLength: false,
+            blank: false,
             maxLength: false,
-            hasNumber: false,
-            hasSpecialChar: false,
-            hasUppercase: false,
         }
     })
 
@@ -135,11 +119,8 @@ export function Signup() {
 
     function validatePassword(password: string) {
         const criteria = {
-            minLength: password.length >= 8,
-            maxLength: password.length <= 30,
-            hasNumber: /\d/.test(password),
-            hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-            hasUppercase: /[A-Z]/.test(password),
+            blank: password.length > 0,
+            maxLength: password.length <= 30
         }
         dispatch({ type: 'updatePasswordCriteria', criteria })
         return criteria
@@ -236,17 +217,16 @@ export function Signup() {
                                     onClick={() => dispatch({ type: 'togglePassword' })}
                                     className="auth-toggle-password"
                                 >
-                                    {state.showPassword ? '🙉' : '🙈'}
+                                    {state.showPassword ? '♣️' : '♦️️'}
                                 </button>
                             </div>
                             <ul className="auth-criteria-list">
                                 {Object.entries(state.passwordCriteria).map(([key, value]) => (
                                     <li key={key} className={`auth-criteria-item ${value ? 'auth-criteria-success' : 'auth-criteria-error'}`}>
-                                        {value ? '✓' : '×'} {key === 'minLength' ? 'At least 8 characters' :
+                                        {value ? '✓' : '×'} {
                                         key === 'maxLength' ? 'Less than 30 characters' :
-                                            key === 'hasNumber' ? 'Contains a number' :
-                                                key === 'hasSpecialChar' ? 'Contains a special character' :
-                                                    'Contains an uppercase letter'}
+                                            key === 'blank' ? 'Password must not be blank' :
+                                                    'Password is not blank'}
                                     </li>
                                 ))}
                             </ul>

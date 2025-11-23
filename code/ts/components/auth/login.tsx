@@ -3,6 +3,7 @@ import {useAuthentication} from "../../providers/authentication";
 import { Navigate, useLocation, Link } from 'react-router-dom';
 import { authService} from "../../services/authService";
 import {isOk} from "../../services/utils";
+import '../../styles/login.css';
 
 type State =
     | {type: 'editing',
@@ -107,17 +108,17 @@ export function Login(){
         : { email: '', password: '' }
 
     return (
-        <div className="container">
-            <h1 className="title">Login</h1>
+        <div className="auth-container">
+            <h1 className="auth-title">Login</h1>
             <form onSubmit={handleSubmit}>
                 <fieldset disabled={state.type === 'submitting' && state.isLoading}>
-                    <div className="input-container">
+                    <div className="auth-form-group">
                         <div>
-                            <label htmlFor="email" className="label">
+                            <label htmlFor="email" className="auth-label">
                                 Email
                             </label>
                             <input
-                                className="input"
+                                className="auth-input"
                                 id="email"
                                 type="email"
                                 name="email"
@@ -129,13 +130,14 @@ export function Login(){
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="label">
+                            <label htmlFor="password" className="auth-label">
                                 Password
                             </label>
-                            <div className="password-container">
+                            <div className="auth-password-container">
                                 <input
-                                    className="input"
+                                    className="auth-input"
                                     id="password"
+                                    type="password"
                                     name="password"
                                     value={inputs.password}
                                     onChange={handleChange}
@@ -145,27 +147,27 @@ export function Login(){
                             </div>
                         </div>
 
-                        <button type="submit" className="submit-button">
+                        <button type="submit" className="auth-submit">
                             Sign In
                         </button>
                     </div>
                 </fieldset>
 
-                <div className="signup-container">
-                    <p className="signup-text">
+                <div className="auth-links">
+                    <p className="auth-text">
                         Don't have an account?{' '}
-                        <Link to="/signup" className="signup-link">
+                        <Link to="/signup" className="auth-link">
                             Sign Up
                         </Link>
                     </p>
                 </div>
 
                 {state.type === 'editing' && state.error && (
-                    <div className="error">{state.error}</div>
+                    <div className="auth-error">{state.error}</div>
                 )}
 
                 {state.type === 'submitting' && (
-                    <div className="loading">Loading...</div>
+                    <div className="auth-loading">Loading...</div>
                 )}
             </form>
         </div>

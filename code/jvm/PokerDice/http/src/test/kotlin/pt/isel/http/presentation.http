@@ -9,17 +9,17 @@ Content-Type: application/json
 
 ### Generate Invite for new user
 POST http://localhost:8080/api/users/invite
-Authorization: Bearer CCXHzSmOUEdDPsnId8rVXZOzIeIkkjHS4J614SXiHGw=
+Authorization: Bearer DalrKASIHCYzgLaBN44gPvqYIRYfTvTQqYgVm8lcgSE=
 
 ### Create New First User
 POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "name": "host",
-  "email": "host@gmail.com",
-  "password": "host",
-  "invite": "vj0foobdnyTZB0Hs1Tn1Fw=="
+  "name": "hosts",
+  "email": "hosts@gmail.com",
+  "password": "hosts",
+  "invite": ""
 }
 
 ### Create New Second User
@@ -38,8 +38,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "host@gmail.com",
-  "password": "host"
+  "email": "hosts@gmail.com",
+  "password": "hosts"
 }
 
 ### Get token of second user
@@ -53,7 +53,7 @@ Content-Type: application/json
 
 ### Create Lobby with First User (host)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+Authorization: Bearer nXMhBzfjqxcVH68TnV5ffKSER8VLlIKEo9ykzy2jjIM=
 Content-Type: application/json
 
 {
