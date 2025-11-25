@@ -1,0 +1,18 @@
+import React from 'react'
+import { useAuthentication } from '../../providers/authentication'
+import { Navigate} from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
+
+export function RequireAuthentication({ children }) {
+    const [username,setUsername] = useAuthentication()
+    const hasCookie = document.cookie.includes('token')
+    const location = useLocation()
+
+
+    if (username && hasCookie) {
+        return children
+    } else {
+        setUsername(null)
+        return <Navigate to="/" state={{ source: location.pathname }} replace={true} />
+    }
+}
