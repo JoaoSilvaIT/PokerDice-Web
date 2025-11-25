@@ -2,6 +2,7 @@ import React, { useReducer} from 'react'
 import { Navigate, useLocation, Link } from 'react-router-dom'
 import {isOk} from "../../services/utils";
 import { authService} from "../../services/authService";
+import {useAuthentication} from "../../providers/authentication";
 
 type State =
     | {
@@ -111,6 +112,7 @@ export function Signup() {
         }
     })
 
+    const [,setUsername] = useAuthentication();
     const location = useLocation()
 
     if (state.type === 'redirect') {
@@ -150,6 +152,8 @@ export function Signup() {
             dispatch({ type: 'submit', inputs: state.inputs })
             const result = await authService.signup(state.inputs)
             if (isOk(result)) {
+                // Use the name from the signup form
+                setUsername(state.inputs.name)
                 dispatch({ type: 'setRedirect' })
             } else {
                 dispatch({ type: 'setError', error: result.error })

@@ -123,3 +123,115 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
+/* Side Menu Overlay */
+.lobby-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Side Menu */
+.lobby-create-menu {
+    position: fixed;
+    top: 30px;
+    right: 0;
+    width: 400px;
+    height: calc(100vh - 30px);
+    background-color: white;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+    padding: 32px;
+    box-sizing: border-box;
+    font-family: 'm6x11', 'Courier New', monospace;
+}
+
+.lobby-create-menu.open {
+    transform: translateX(0);
+}
+
+.lobby-create-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.lobby-create-menu-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f2937;
+    margin: 0;
+}
+
+.lobby-create-menu-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'm6x11', 'Courier New', monospace;
+}
+
+.lobby-create-menu-close:hover {
+    color: #374151;
+}
+
+.lobby-create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.lobby-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.lobby-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.lobby-form-input,
+.lobby-form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    font-family: 'm6x11', 'Courier New', monospace;
+}
+
+.lobby-form-input:focus,
+.lobby-form-textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+
+.lobby-form-textarea {
+    resize: none;
+    line-height: 1.5;
+}
+
+.lobby-form-hint {
+    font-size: 14px;
+    color: #6b7280;
+}

@@ -13,6 +13,6 @@ export function RequireAuthentication({ children }) {
         return children
     } else {
         setUsername(null)
-        return <Navigate to="/" state={{ source: location.pathname }} replace={true} />
+        return <Navigate to="/login" state={{ source: location.pathname }} replace={true} />
     }
 }

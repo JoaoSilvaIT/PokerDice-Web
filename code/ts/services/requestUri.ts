@@ -4,8 +4,6 @@ export const RequestUri = {
     user: {
         login: `${BASE_API_URL}/users/token`,
         signup: `${BASE_API_URL}/users`,
-        logout: `${BASE_API_URL}/logout`,
-        profile: `${BASE_API_URL}/users/profile`,
         stats: `${BASE_API_URL}/users/stats`,
         searchUsers: `${BASE_API_URL}/users/search?query=`,
     },

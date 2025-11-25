@@ -15,6 +15,7 @@ export async function fetchWrapper<T>(
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
+            credentials: 'include',
             ...options,
         });
 

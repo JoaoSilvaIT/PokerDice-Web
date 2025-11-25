@@ -36,3 +36,21 @@
     color: #ffd700;
 }
 
+.navbar-username {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.navbar-logout {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'm6x11', 'Courier New', monospace;
+    transition: color 0.3s;
+}
+
+.navbar-logout:hover {
+    color: #ffd700;
+}
