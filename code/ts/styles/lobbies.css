@@ -13,6 +13,9 @@
 
 .lobbies-header {
     margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .lobbies-title {
@@ -20,6 +23,23 @@
     color: #fff;
     text-align: center;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.create-lobby-button {
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-family: 'm6x11', 'Courier New', monospace;
+}
+
+.create-lobby-button:hover {
+    background-color: #7c3aed;
 }
 
 /* Search Input */

@@ -73,19 +73,6 @@ export function Lobbies() {
                         <button
                             onClick={() => setShowCreateMenu(true)}
                             className="create-lobby-button"
-                            style={{
-                                padding: '10px 20px',
-                                backgroundColor: '#8b5cf6',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'background-color 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8b5cf6'}
                         >
                             + Create Lobby
                         </button>
