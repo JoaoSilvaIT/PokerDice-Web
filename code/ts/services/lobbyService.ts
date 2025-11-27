@@ -11,8 +11,46 @@ interface Lobby {
     createdAt: string;
 }
 
+interface Player {
+    id: number;
+    username: string;
+    joinedAt: string;
+}
+
+interface LobbyDetails {
+    id: number;
+    name: string;
+    description: string;
+    hostName: string;
+    currentPlayers: number;
+    maxPlayers: number;
+    minPlayers: number;
+    status: string;
+    createdAt: string;
+    players: Player[];
+}
+
 interface LobbyListResponse {
     lobbies: Lobby[];
+}
+
+interface CreateLobbyRequest {
+    name: string;
+    description: string;
+    minPlayers: number;
+    maxPlayers: number;
+}
+
+interface CreateLobbyResponse {
+    id: number;
+    name: string;
+    description: string;
+    hostName: string;
+    currentPlayers: number;
+    maxPlayers: number;
+    minPlayers: number;
+    status: string;
+    createdAt: string;
 }
 
 export const lobbyService = {
@@ -26,8 +64,20 @@ export const lobbyService = {
         }
         return { success: true, value: result.value.lobbies };
     },
+
+    async createLobby(data: CreateLobbyRequest): Promise<Result<CreateLobbyResponse>> {
+        return await fetchWrapper<CreateLobbyResponse>(RequestUri.lobby.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+    },
+
+    async getLobbyDetails(lobbyId: number): Promise<Result<LobbyDetails>> {
+        return await fetchWrapper<LobbyDetails>(RequestUri.lobby.details(lobbyId), {
+            method: 'GET',
+        });
+    },
 };
-
-
-
-

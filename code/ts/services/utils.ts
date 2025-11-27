@@ -9,21 +9,54 @@ export async function fetchWrapper<T>(
     options: RequestInit = {}
 ): Promise<Result<T>> {
     try {
-        console.log('fetchWrapper', document.cookie);
+        console.log('fetchWrapper URL:', url);
+        console.log('fetchWrapper cookies:', document.cookie);
+
+        // Get token from localStorage if it exists
+        const token = localStorage.getItem('authToken');
+        console.log('fetchWrapper token:', token ? 'Token exists' : 'No token');
+
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+
+        // Add Authorization header if token exists
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log('fetchWrapper Authorization header added');
+        }
+
         const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
-            credentials: 'include',
             ...options,
+            credentials: 'include',
+            headers,
         });
 
         if (!response.ok) {
-            console.log('fetchWrapper', response.status);
-            console.log('Response headers:', response.headers);
-            const errorData = await response.json();
-            return { success: false, error: errorData.message || 'Request failed' };
+            console.log('fetchWrapper status:', response.status);
+
+            // Clone the response so we can read it multiple times if needed
+            const clonedResponse = response.clone();
+
+            // Try to parse error response
+            let errorMessage = 'Request failed';
+            try {
+                const errorData = await response.json();
+                console.log('Error response data:', errorData);
+                errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+            } catch (e) {
+                // If can't parse JSON, try text from the cloned response
+                try {
+                    const errorText = await clonedResponse.text();
+                    console.log('Error response text:', errorText);
+                    errorMessage = errorText || `HTTP ${response.status}`;
+                } catch (textError) {
+                    errorMessage = `HTTP ${response.status}`;
+                }
+            }
+
+            return { success: false, error: errorMessage };
         }
         if (response.status === 204) {
             return { success: true, value: undefined as T };
@@ -32,6 +65,7 @@ export async function fetchWrapper<T>(
         const data = await response.json();
         return { success: true, value: data as T };
     } catch (error) {
+        console.error('fetchWrapper error:', error);
         return { success: false, error: error.message };
     }
 }

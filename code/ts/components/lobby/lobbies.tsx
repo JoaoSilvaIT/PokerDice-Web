@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { lobbyService } from '../../services/lobbyService';
 import { isOk } from '../../services/utils';
 import '../../styles/lobbies.css';
@@ -14,6 +15,7 @@ interface Lobby {
 }
 
 export function Lobbies() {
+    const navigate = useNavigate();
     const [lobbies, setLobbies] = useState<Lobby[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -25,6 +27,8 @@ export function Lobbies() {
         minPlayers: 2,
         maxPlayers: 4,
     });
+    const [createError, setCreateError] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         fetchLobbies();
@@ -50,6 +54,57 @@ export function Lobbies() {
             ...prev,
             [name]: name === 'minPlayers' || name === 'maxPlayers' ? parseInt(value) || 0 : value,
         }));
+    };
+
+    const handleCreateLobby = async () => {
+        // Validate form
+        if (!createFormData.name.trim()) {
+            setCreateError('Lobby name is required');
+            return;
+        }
+
+        if (createFormData.minPlayers < 2 || createFormData.minPlayers > 10) {
+            setCreateError('Min players must be between 2 and 10');
+            return;
+        }
+
+        if (createFormData.maxPlayers < 2 || createFormData.maxPlayers > 10) {
+            setCreateError('Max players must be between 2 and 10');
+            return;
+        }
+
+        if (createFormData.minPlayers > createFormData.maxPlayers) {
+            setCreateError('Min players cannot be greater than max players');
+            return;
+        }
+
+        setIsCreating(true);
+        setCreateError(null);
+
+        const result = await lobbyService.createLobby(createFormData);
+
+        if (isOk(result)) {
+            // Reset form and close menu
+            setCreateFormData({ name: '', description: '', minPlayers: 2, maxPlayers: 4 });
+            setShowCreateMenu(false);
+            setCreateError(null);
+
+            // Navigate to the lobby details page
+            navigate(`/lobbies/${result.value.id}`);
+        } else {
+            // Check if it's an authentication error
+            if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
+                setCreateError('You must be logged in to create a lobby');
+                // Optionally redirect to login after a delay
+                setTimeout(() => {
+                    navigate('/login', { state: { source: '/lobbies' } });
+                }, 2000);
+            } else {
+                setCreateError(result.error || 'Failed to create lobby. Please try again.');
+            }
+        }
+
+        setIsCreating(false);
     };
 
     const filteredLobbies = lobbies.filter((lobby) =>
@@ -204,6 +259,18 @@ export function Lobbies() {
 
                     <div className="lobby-form-hint">
                         Players must be between 2 and 10
+                    </div>
+
+                    {createError && <div className="lobby-create-error">{createError}</div>}
+
+                    <div className="lobby-create-actions">
+                        <button
+                            onClick={handleCreateLobby}
+                            className="lobby-create-button"
+                            disabled={isCreating}
+                        >
+                            {isCreating ? 'Creating...' : 'Create Lobby'}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -21,6 +21,7 @@ export const RequestUri = {
     lobby: {
         list: `${BASE_API_URL}/lobbies`,
         create: `${BASE_API_URL}/lobbies`,
+        details: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}`,
         join: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/join`,
         leave: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/leave`,
         close: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}`,

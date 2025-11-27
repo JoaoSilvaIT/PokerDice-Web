@@ -22,20 +22,21 @@ interface SignupResponse {
     balance: number;
 }
 
-interface UserMeResponse {
-    id: number;
-    name: string;
-    email: string;
-}
-
 export const authService = {
     async login(credentials: LoginCredentials): Promise<Result<AuthResponse>> {
-        // Backend sets the cookie via Set-Cookie header automatically
-        return await fetchWrapper<AuthResponse>(RequestUri.user.login, {
+        const result = await fetchWrapper<AuthResponse>(RequestUri.user.login, {
             method: 'POST',
             body: JSON.stringify(credentials),
-            credentials: 'include', // Important: allows cookies to be set/sent
+            credentials: 'include',
         });
+
+        // Store the token in localStorage if login was successful
+        if (result.success && result.value.token) {
+            localStorage.setItem('authToken', result.value.token);
+            console.log('Token saved to localStorage');
+        }
+
+        return result;
     },
 
     async signup(credentials: SignupCredentials): Promise<Result<AuthResponse>> {
@@ -56,10 +57,8 @@ export const authService = {
         });
     },
 
-    async logout(): Promise<Result<void>> {
-        return await fetchWrapper<void>(RequestUri.user.logout, {
-            method: 'POST',
-            credentials: 'include',
-        });
-    },
+    logout() {
+        localStorage.removeItem('authToken');
+        console.log('Token removed from localStorage');
+    }
 };

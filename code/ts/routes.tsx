@@ -4,6 +4,7 @@ import { Home } from './components/generic/home';
 import { Login } from './components/auth/login';
 import {Signup} from "./components/auth/signup";
 import { Lobbies } from './components/lobby/lobbies';
+import { LobbyDetails } from './components/lobby/LobbyDetails';
 import { Navbar } from './components/generic/navbar';
 
 // Layout component that includes the navbar
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
             {
                 path: '/lobbies',
                 element: <Lobbies />
+            },
+            {
+                path: '/lobbies/:lobbyId',
+                element: <LobbyDetails />
             }
         ]
     }
