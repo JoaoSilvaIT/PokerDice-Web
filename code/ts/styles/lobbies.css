@@ -4,6 +4,8 @@
     padding: 2rem;
     background: linear-gradient(135deg, #667eea 0%, #eb8934 100%);
     padding-top: 80px; /* Account for navbar */
+    overflow-y: auto;
+    padding-bottom: 2rem;
 }
 
 .lobbies-content {

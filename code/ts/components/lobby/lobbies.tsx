@@ -120,54 +120,56 @@ export function Lobbies() {
     }
 
     return (
-        <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
-            <div className="lobbies-container">
-                <div className="lobbies-content">
-                    <div className="lobbies-header">
-                        <h1 className="lobbies-title">Public Lobbies</h1>
-                        <button
-                            onClick={() => setShowCreateMenu(true)}
-                            className="create-lobby-button"
-                        >
-                            + Create Lobby
-                        </button>
-                    </div>
+        <div className="lobbies-container">
+            <div className="lobbies-content">
+                <div className="lobbies-header">
+                    <h1 className="lobbies-title">Public Lobbies</h1>
+                    <button
+                        onClick={() => setShowCreateMenu(true)}
+                        className="create-lobby-button"
+                    >
+                        + Create Lobby
+                    </button>
+                </div>
 
-                    <div className="lobbies-search">
-                        <input
-                            type="text"
-                            placeholder="Search lobbies..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                    </div>
+                <div className="lobbies-search">
+                    <input
+                        type="text"
+                        placeholder="Search lobbies..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="search-input"
+                    />
+                </div>
 
-                    {error && <div className="lobbies-error">{error}</div>}
+                {error && <div className="lobbies-error">{error}</div>}
 
-                    <div className="lobbies-grid">
-                        {filteredLobbies.length === 0 ? (
-                            <div className="lobbies-empty">No lobbies found.</div>
-                        ) : (
-                            filteredLobbies.map((lobby) => (
-                                <div key={lobby.id} className="lobby-card">
-                                    <div className="lobby-name">{lobby.name}</div>
-                                    <div className="lobby-players">
-                                        {lobby.currentPlayers}/{lobby.maxPlayers}
-                                    </div>
+                <div className="lobbies-grid">
+                    {filteredLobbies.length === 0 ? (
+                        <div className="lobbies-empty">No lobbies found.</div>
+                    ) : (
+                        filteredLobbies.map((lobby) => (
+                            <div
+                                key={lobby.id}
+                                className="lobby-card"
+                                onClick={() => navigate(`/lobbies/${lobby.id}`)}
+                            >
+                                <div className="lobby-name">{lobby.name}</div>
+                                <div className="lobby-players">
+                                    {lobby.currentPlayers}/{lobby.maxPlayers}
                                 </div>
-                            ))
-                        )}
-                    </div>
+                            </div>
+                        ))
+                    )}
+                </div>
 
-                    <div className="lobbies-footer">
-                        <button
-                            onClick={fetchLobbies}
-                            className="refresh-button"
-                        >
-                            Refresh Lobbies
-                        </button>
-                    </div>
+                <div className="lobbies-footer">
+                    <button
+                        onClick={fetchLobbies}
+                        className="refresh-button"
+                    >
+                        Refresh Lobbies
+                    </button>
                 </div>
             </div>
 

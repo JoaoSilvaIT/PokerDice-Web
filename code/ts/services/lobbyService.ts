@@ -13,21 +13,17 @@ interface Lobby {
 
 interface Player {
     id: number;
-    username: string;
-    joinedAt: string;
+    name: string;
 }
 
 interface LobbyDetails {
     id: number;
     name: string;
     description: string;
-    hostName: string;
-    currentPlayers: number;
-    maxPlayers: number;
     minPlayers: number;
-    status: string;
-    createdAt: string;
+    maxPlayers: number;
     players: Player[];
+    hostId: number;
 }
 
 interface LobbyListResponse {

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { SSEProvider } from './providers/SSEContext';
 import './styles/global.css';
 
 const container = document.getElementById('root');
@@ -8,7 +9,9 @@ if (container) {
     const root = createRoot(container);
     root.render(
         <React.StrictMode>
-            <App />
+            <SSEProvider>
+                <App />
+            </SSEProvider>
         </React.StrictMode>
     );
 }

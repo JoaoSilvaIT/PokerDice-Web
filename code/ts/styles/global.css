@@ -13,8 +13,6 @@
 body {
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    height: 100vh;
 }
 
 fieldset {
@@ -32,6 +30,7 @@ fieldset {
     min-height: 100vh;
     padding: 2rem;
     background: linear-gradient(135deg, #667eea 0%, #eb8934 100%);
+    overflow-y: auto;
 }
 
 .auth-title {

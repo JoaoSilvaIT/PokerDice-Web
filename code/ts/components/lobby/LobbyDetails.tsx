@@ -2,23 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lobbyService } from '../../services/lobbyService';
 import { isOk } from '../../services/utils';
+import { useSSE } from '../../providers/SSEContext';
 import '../../styles/lobbyDetails.css';
 
 interface Player {
     id: number;
-    username: string;
+    name: string;
 }
 
 interface LobbyDetails {
     id: number;
     name: string;
     description: string;
-    hostName: string;
-    currentPlayers: number;
-    maxPlayers: number;
     minPlayers: number;
-    createdAt: string;
+    maxPlayers: number;
     players: Player[];
+    hostId: number;
 }
 
 export function LobbyDetails() {
@@ -27,6 +26,8 @@ export function LobbyDetails() {
     const [lobby, setLobby] = useState<LobbyDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const { connectToLobby, disconnect, isConnected, registerLobbyHandler, unregisterHandler } = useSSE();
 
     const fetchLobbyDetails = async () => {
         if (!lobbyId) return;
@@ -44,15 +45,34 @@ export function LobbyDetails() {
     };
 
     useEffect(() => {
+        if (!lobbyId) return;
+
+        const lobbyIdNum = parseInt(lobbyId);
+
         fetchLobbyDetails();
 
-        // Poll for updates every 3 seconds
-        const intervalId = setInterval(() => {
-            fetchLobbyDetails();
-        }, 3000);
+        // Register SSE handlers
+        registerLobbyHandler(
+            lobbyIdNum,
+            (event) => {
+                console.log('Player joined:', event.playerName);
+                fetchLobbyDetails();
+            },
+            // On player left
+            (event) => {
+                console.log('Player left:', event.playerId);
+                fetchLobbyDetails();
+            }
+        );
 
-        // Cleanup interval on component unmount
-        return () => clearInterval(intervalId);
+        connectToLobby(lobbyIdNum).catch((error) => {
+            console.error('Failed to connect to SSE:', error);
+        });
+
+        return () => {
+            unregisterHandler();
+            disconnect();
+        };
     }, [lobbyId]);
 
     const handleStartGame = async () => {
@@ -81,55 +101,36 @@ export function LobbyDetails() {
         );
     }
 
-    const canStartGame = lobby.currentPlayers >= lobby.minPlayers;
+    const canStartGame = lobby.players.length >= lobby.minPlayers;
 
     return (
         <div className="lobby-details-container">
             <div className="lobby-details-content">
                 <div className="lobby-details-header">
                     <h1 className="lobby-title">{lobby.name}</h1>
-                </div>
-
-                {lobby.description && (
-                    <p className="lobby-description">{lobby.description}</p>
-                )}
-
-                <div className="lobby-info">
-                    <div className="info-item">
-                        <span className="info-label">Host:</span>
-                        <span className="info-value">{lobby.hostName}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Players:</span>
-                        <span className="info-value">
-                            {lobby.currentPlayers}/{lobby.maxPlayers}
-                        </span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Min Players:</span>
-                        <span className="info-value">{lobby.minPlayers}</span>
-                    </div>
+                    {lobby.description && (
+                        <p className="lobby-description">{lobby.description}</p>
+                    )}
                 </div>
 
                 <div className="players-section">
-                    <h2 className="players-title">Players ({lobby.currentPlayers})</h2>
+                    <h2 className="players-title">Players ({lobby.players.length}/{lobby.maxPlayers})</h2>
                     <div className="players-list">
                         {lobby.players?.map((player) => (
-                            <div key={player.id} className="player-card">
-                                <div className="player-avatar">
-                                    {player.username?.charAt(0).toUpperCase() || '?'}
-                                </div>
-                                <div className="player-info">
-                                    <div className="player-name">{player.username || 'Unknown'}</div>
-
-                                </div>
+                            <div key={player.id} className="player-bar">
+                                <span className="player-name">
+                                    {player.name || 'Unknown'}
+                                    {player.id === lobby.hostId && ' (Host)'}
+                                </span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 <div className="lobby-footer">
-                    <span className="update-indicator">Auto-updating...</span>
+                    <span className="update-indicator">
+                        {isConnected ? '● Live' : '○ Connecting...'}
+                    </span>
                 </div>
             </div>
         </div>
