@@ -1,6 +1,7 @@
 package pt.isel.model.sse
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import pt.isel.domain.sse.Event
 
 class SseEmitterBasedEventEmitter(
     private val sseEmitter: SseEmitter,

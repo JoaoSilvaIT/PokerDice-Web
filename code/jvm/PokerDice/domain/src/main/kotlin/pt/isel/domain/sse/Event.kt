@@ -1,4 +1,4 @@
-package pt.isel.model.sse
+package pt.isel.domain.sse
 
 import java.time.Instant
 
