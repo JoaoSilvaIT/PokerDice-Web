@@ -1,9 +1,10 @@
-package pt.isel.model.sse
+package pt.isel
 
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import pt.isel.domain.sse.Event
+import pt.isel.domain.sse.EventEmitter
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService

@@ -36,10 +36,15 @@ class UserController(
         @RequestBody input: UserCreateTokenInputModel,
     ): ResponseEntity<*> {
         return when (val result = userService.createToken(input.email, input.password)) {
-            is Either.Success ->
+            is Either.Success -> {
+                val token = result.value.tokenValue
+                val cookieHeader = "token=$token; Path=/; Max-Age=${24 * 60 * 60}; SameSite=Strict"
+
                 ResponseEntity
                     .status(HttpStatus.OK)
+                    .header("Set-Cookie", cookieHeader)
                     .body(UserCreateTokenOutputModel(result.value.tokenValue))
+            }
 
             is Either.Failure -> result.value.toProblemResponse()
         }
@@ -57,10 +62,16 @@ class UserController(
         }
     }
 
-    @PostMapping("/api/logout")
+    @PostMapping("/api/users/logout")
     fun logout(user: AuthenticatedUser): ResponseEntity<Unit> {
         userService.revokeToken(user.token)
-        return ResponseEntity.noContent().build()
+
+        val cookieHeader = "token=; Path=/; Max-Age=0"
+
+        return ResponseEntity
+            .noContent()
+            .header("Set-Cookie", cookieHeader)
+            .build()
     }
 
     @GetMapping("/api/me")

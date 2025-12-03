@@ -8,13 +8,18 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import pt.isel.LobbyService
 import pt.isel.domain.users.AuthenticatedUser
+import pt.isel.LobbyEventService
+import pt.isel.model.sse.SseEmitterBasedEventEmitter
 import pt.isel.utils.Either
+import java.util.concurrent.TimeUnit
 
 @RestController
 class LobbyController(
     private val lobbyService: LobbyService,
+    private val lobbyEventService: LobbyEventService,
 ) {
     @PostMapping("/api/lobbies")
     fun create(
@@ -79,5 +84,38 @@ class LobbyController(
             is Either.Success -> ResponseEntity.noContent().build<Unit>()
             is Either.Failure -> result.value.toProblemResponse()
         }
+    }
+
+    @GetMapping("/api/lobbies/{id}")
+    fun getLobby(
+        @PathVariable id: Int,
+    ): ResponseEntity<*> {
+        return when (val result = lobbyService.getLobby(id)) {
+            is Either.Success ->
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(result.value.toOutputModel())
+
+            is Either.Failure -> result.value.toProblemResponse()
+        }
+    }
+
+    @GetMapping("/api/lobbies/{id}/listen")
+    fun listen(
+        user: AuthenticatedUser,
+        @PathVariable id: Int,
+    ): ResponseEntity<SseEmitter> {
+        val sseEmitter = SseEmitter(TimeUnit.HOURS.toMillis(1))
+        lobbyEventService.addEventEmitter(
+            SseEmitterBasedEventEmitter(sseEmitter),
+            user.user.id,
+            id
+        )
+        return ResponseEntity
+            .status(200)
+            .header("Content-Type", "text/event-stream; charset=utf-8")
+            .header("Connection", "keep-alive")
+            .header("X-Accel-Buffering", "no")
+            .body(sseEmitter)
     }
 }

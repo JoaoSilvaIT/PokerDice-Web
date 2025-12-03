@@ -2,18 +2,20 @@ import * as React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthentication } from '../../providers/authentication';
 import '../../styles/navbar.css';
+import {authService} from "../../services/authService";
 
 export function Navbar() {
     const [username, , clearUsername] = useAuthentication();
     const navigate = useNavigate();
 
-    function handleLogout() {
-        // Clear the token cookie
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        // Clear username from authentication context
-        clearUsername();
-        // Redirect to home
-        navigate('/home');
+    async function handleLogout() {
+        const result = await authService.logout();
+        if (result.success) {
+            clearUsername();
+            navigate('/home');
+        } else {
+            console.error('Logout failed');
+        }
     }
 
     return (

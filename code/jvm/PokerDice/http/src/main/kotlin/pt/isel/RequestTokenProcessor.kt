@@ -1,5 +1,6 @@
 package pt.isel
 
+import jakarta.servlet.http.Cookie
 import org.springframework.stereotype.Component
 import pt.isel.domain.users.AuthenticatedUser
 
@@ -24,6 +25,19 @@ class RequestTokenProcessor(
                 parts[1],
             )
         }
+    }
+
+    fun processCookieToken(cookies: Array<Cookie>?): AuthenticatedUser? {
+        val tokenCookie = cookies?.find { it.name == "token" }
+        tokenCookie?.value?.let { token ->
+            return usersService.getUserByToken(token)?.let {
+                AuthenticatedUser(
+                    it,
+                    token,
+                )
+            }
+        }
+        return null
     }
 
     companion object {

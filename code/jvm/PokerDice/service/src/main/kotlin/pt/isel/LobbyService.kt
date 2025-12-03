@@ -9,10 +9,12 @@ import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
 import pt.isel.utils.failure
 import pt.isel.utils.success
+import java.time.Instant
 
 @Component
 class LobbyService(
     private val trxManager: TransactionManager,
+    private val lobbyEvents: LobbyEventService,
 ) {
     fun createLobby(
         host: User,
@@ -57,6 +59,8 @@ class LobbyService(
             if (lobby.players.any { it.id == user.id }) return@run failure(LobbyError.UserAlreadyInLobby)
             val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name, user.balance))
             repoLobby.save(updated)
+
+            lobbyEvents.notifyPlayerJoined(lobbyId, user.id, user.name)
             success(updated)
         }
 
@@ -68,10 +72,14 @@ class LobbyService(
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
             if (lobby.host.id == user.id) {
                 repoLobby.deleteLobbyByHost(user)
+
+                lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
                 return@run success(true)
             }
             val updated = lobby.copy(players = lobby.players.filter { it.id != user.id }.toSet())
             repoLobby.save(updated)
+
+            lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
             success(false)
         }
 

@@ -2,18 +2,24 @@ package pt.isel.model.sse
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import pt.isel.domain.sse.Event
+import pt.isel.domain.sse.EventEmitter
 
 class SseEmitterBasedEventEmitter(
     private val sseEmitter: SseEmitter,
 ) : EventEmitter {
     override fun emit(event: Event) {
-        val event =
+        val sseEvent =
             when (event) {
-                is Event.Message ->
+                is Event.PlayerJoined ->
                     SseEmitter
                         .event()
-                        .id(event.id.toString())
-                        .name("message")
+                        .name("player-joined")
+                        .data(event)
+
+                is Event.PlayerLeft ->
+                    SseEmitter
+                        .event()
+                        .name("player-left")
                         .data(event)
 
                 is Event.KeepAlive ->
@@ -21,7 +27,7 @@ class SseEmitterBasedEventEmitter(
                         .event()
                         .comment(event.timestamp.epochSecond.toString())
             }
-        sseEmitter.send(event)
+        sseEmitter.send(sseEvent)
     }
 
     override fun onCompletion(callback: () -> Unit) {

@@ -1,4 +1,4 @@
-import { RequestUri } from './requestUri';
+import {RequestUri} from './requestUri';
 import {fetchWrapper, Result} from "./utils";
 
 interface LoginCredentials {
@@ -30,17 +30,10 @@ export const authService = {
             credentials: 'include',
         });
 
-        // Store the token in localStorage if login was successful
-        if (result.success && result.value.token) {
-            localStorage.setItem('authToken', result.value.token);
-            console.log('Token saved to localStorage');
-        }
-
         return result;
     },
 
     async signup(credentials: SignupCredentials): Promise<Result<AuthResponse>> {
-        // Signup endpoint doesn't return a token, so we need to login after
         const signupResult = await fetchWrapper<SignupResponse>(RequestUri.user.signup, {
             method: 'POST',
             body: JSON.stringify(credentials)
@@ -50,15 +43,18 @@ export const authService = {
             return signupResult as Result<AuthResponse>;
         }
 
-        // After successful signup, automatically login to get the token (and cookie)
         return await this.login({
             email: credentials.email,
             password: credentials.password
         });
     },
 
-    logout() {
-        localStorage.removeItem('authToken');
-        console.log('Token removed from localStorage');
+    async logout(): Promise<Result<void>> {
+        const result = await fetchWrapper<void>(RequestUri.user.logout, {
+            method: 'POST',
+            credentials: 'include',
+        });
+
+        return result;
     }
 };

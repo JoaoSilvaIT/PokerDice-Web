@@ -21,9 +21,13 @@ class AuthenticationInterceptor(
                 it.parameterType == AuthenticatedUser::class.java
             }
         ) {
-            // enforce authentication
-            val user =
-                authorizationHeaderProcessor.processAuthorizationHeaderValue(request.getHeader(NAME_AUTHORIZATION_HEADER))
+            val userFromAuthHeader =
+                authorizationHeaderProcessor.processAuthorizationHeaderValue(
+                    request.getHeader(NAME_AUTHORIZATION_HEADER),
+                )
+            val userFromCookie = authorizationHeaderProcessor.processCookieToken(request.cookies)
+
+            val user = userFromAuthHeader ?: userFromCookie
             return if (user == null) {
                 response.status = 401
                 response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
