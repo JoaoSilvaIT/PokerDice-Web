@@ -8,12 +8,19 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import pt.isel.UserAuthService
 import pt.isel.domain.users.AuthenticatedUser
+import pt.isel.domain.users.UserStatistics
 import pt.isel.utils.Either
 
 @RestController
 class UserController(
     private val userService: UserAuthService,
 ) {
+    @GetMapping("/api/users/stats")
+    fun getUserStats(user: AuthenticatedUser): ResponseEntity<UserStatistics> {
+        val stats = userService.getUserStats(user.user.id)
+        return ResponseEntity.ok(stats)
+    }
+
     @PostMapping("/api/users")
     fun createUser(
         @RequestBody userInput: UserInput,

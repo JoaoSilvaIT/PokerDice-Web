@@ -8,6 +8,7 @@ import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenEncoder
 import pt.isel.domain.users.TokenExternalInfo
 import pt.isel.domain.users.User
+import pt.isel.domain.users.UserStatistics
 import pt.isel.domain.users.UsersDomainConfig
 import pt.isel.errors.AuthTokenError
 import pt.isel.repo.TransactionManager
@@ -113,6 +114,12 @@ class UserAuthService(
             } else {
                 null
             }
+        }
+    }
+
+    fun getUserStats(userId: Int): UserStatistics {
+        return trxManager.run {
+            repoUsers.getUserStats(userId)
         }
     }
 

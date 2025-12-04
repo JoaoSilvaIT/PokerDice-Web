@@ -6,7 +6,7 @@ export function Home() {
         <>
             <div className="home-container">
                 <h1>PokerDice!</h1>
-                <img src="https://png.pngtree.com/png-vector/20240912/ourmid/pngtree-card-with-poker-chips-casino-clip-art-png-image_13821324.png" alt="Poker chips" />
+                <img src="/poker-chips.png" alt="Poker chips" />
             </div>
         </>
     );

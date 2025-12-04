@@ -26,9 +26,10 @@ export function Navbar() {
             <div className="navbar-links">
                 <Link to="/">Home</Link>
                 <Link to="/lobbies">Lobbies</Link>
+                <Link to="/about">About</Link>
                 {username ? (
                     <>
-                        <span className="navbar-username">Welcome, {username}</span>
+                        <Link to="/profile" className="navbar-username">Welcome, {username}</Link>
                         <button onClick={handleLogout} className="navbar-logout">Logout</button>
                     </>
                 ) : (

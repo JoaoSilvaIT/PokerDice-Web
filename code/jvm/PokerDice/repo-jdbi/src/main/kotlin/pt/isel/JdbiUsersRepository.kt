@@ -6,6 +6,7 @@ import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
+import pt.isel.domain.users.UserStatistics
 import java.sql.ResultSet
 import java.time.Instant
 
@@ -145,6 +146,11 @@ class JdbiUsersRepository(
             }
             .findOne()
             .orElse(null)
+    }
+
+    override fun getUserStats(userId: Int): UserStatistics {
+        //TODO
+        return UserStatistics(1, 0, 0, 0.0)
     }
 
 

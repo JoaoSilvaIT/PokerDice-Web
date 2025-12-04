@@ -1,0 +1,53 @@
+.about-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #eb8934 100%);
+    color: #ffffff;
+    font-family: 'm6x11', 'Courier New', monospace;
+    overflow-y: auto;
+}
+
+.about-content {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2rem;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 90%;
+    margin-top: 4rem; /* Space for navbar */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.about-content h1 {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.about-content h2 {
+    font-size: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #ffd700; /* Gold color for headings */
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.about-content p, .about-content li {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.about-content ul {
+    list-style-type: none; /* Custom bullets maybe? */
+    padding-left: 1rem;
+}
+
+.about-content li::before {
+    content: "🎲 ";
+    margin-right: 0.5rem;
+}
