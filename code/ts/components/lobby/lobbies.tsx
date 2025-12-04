@@ -29,6 +29,7 @@ export function Lobbies() {
     });
     const [createError, setCreateError] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [joiningLobbyId, setJoiningLobbyId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchLobbies();
@@ -107,6 +108,31 @@ export function Lobbies() {
         setIsCreating(false);
     };
 
+    const handleJoinLobby = async (lobbyId: number, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent navigating to lobby details
+
+        setJoiningLobbyId(lobbyId);
+
+        const result = await lobbyService.joinLobby(lobbyId);
+
+        if (isOk(result)) {
+            // Successfully joined, navigate to lobby details
+            navigate(`/lobbies/${lobbyId}`);
+        } else {
+            // Handle error
+            if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
+                setError('You must be logged in to join a lobby');
+                setTimeout(() => {
+                    navigate('/login', { state: { source: '/lobbies' } });
+                }, 2000);
+            } else {
+                setError(result.error || 'Failed to join lobby. Please try again.');
+            }
+        }
+
+        setJoiningLobbyId(null);
+    };
+
     const filteredLobbies = lobbies.filter((lobby) =>
         lobby.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -154,10 +180,26 @@ export function Lobbies() {
                                 className="lobby-card"
                                 onClick={() => navigate(`/lobbies/${lobby.id}`)}
                             >
-                                <div className="lobby-name">{lobby.name}</div>
-                                <div className="lobby-players">
-                                    {lobby.currentPlayers}/{lobby.maxPlayers}
+                                <div className="lobby-card-content">
+                                    <div className="lobby-name">{lobby.name}</div>
+                                    <div className="lobby-info">
+                                        <div className="lobby-host">Host: {lobby.hostName}</div>
+                                        <div className="lobby-players">
+                                            {lobby.currentPlayers}/{lobby.maxPlayers} Players
+                                        </div>
+                                    </div>
                                 </div>
+                                <button
+                                    className="join-lobby-button"
+                                    onClick={(e) => handleJoinLobby(lobby.id, e)}
+                                    disabled={joiningLobbyId === lobby.id || lobby.currentPlayers >= lobby.maxPlayers}
+                                >
+                                    {joiningLobbyId === lobby.id
+                                        ? 'Joining...'
+                                        : lobby.currentPlayers >= lobby.maxPlayers
+                                            ? 'Full'
+                                            : 'Join'}
+                                </button>
                             </div>
                         ))
                     )}

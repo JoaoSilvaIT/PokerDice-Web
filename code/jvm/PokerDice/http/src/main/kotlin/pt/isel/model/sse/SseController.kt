@@ -22,6 +22,24 @@ class SseEmitterBasedEventEmitter(
                         .name("player-left")
                         .data(event)
 
+                is Event.NewLobby ->
+                    SseEmitter
+                        .event()
+                        .name("new-lobby")
+                        .data(event)
+
+                is Event.LobbyUpdated ->
+                    SseEmitter
+                        .event()
+                        .name("lobby-updated")
+                        .data(event)
+
+                is Event.LobbyClosed ->
+                    SseEmitter
+                        .event()
+                        .name("lobby-closed")
+                        .data(event)
+
                 is Event.KeepAlive ->
                     SseEmitter
                         .event()

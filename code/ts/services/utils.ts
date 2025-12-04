@@ -12,20 +12,10 @@ export async function fetchWrapper<T>(
         console.log('fetchWrapper URL:', url);
         console.log('fetchWrapper cookies:', document.cookie);
 
-        // Get token from localStorage if it exists
-        const token = localStorage.getItem('authToken');
-        console.log('fetchWrapper token:', token ? 'Token exists' : 'No token');
-
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
             ...options.headers,
         };
-
-        // Add Authorization header if token exists
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-            console.log('fetchWrapper Authorization header added');
-        }
 
         const response = await fetch(url, {
             ...options,
@@ -36,17 +26,14 @@ export async function fetchWrapper<T>(
         if (!response.ok) {
             console.log('fetchWrapper status:', response.status);
 
-            // Clone the response so we can read it multiple times if needed
             const clonedResponse = response.clone();
 
-            // Try to parse error response
             let errorMessage = 'Request failed';
             try {
                 const errorData = await response.json();
                 console.log('Error response data:', errorData);
                 errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
             } catch (e) {
-                // If can't parse JSON, try text from the cloned response
                 try {
                     const errorText = await clonedResponse.text();
                     console.log('Error response text:', errorText);

@@ -17,6 +17,12 @@ interface AuthResponse {
     token: string;
 }
 
+interface UserInfo {
+    id: number;
+    name: string;
+    email: string;
+}
+
 interface SignupResponse {
     name: string;
     balance: number;
@@ -24,13 +30,11 @@ interface SignupResponse {
 
 export const authService = {
     async login(credentials: LoginCredentials): Promise<Result<AuthResponse>> {
-        const result = await fetchWrapper<AuthResponse>(RequestUri.user.login, {
+        return await fetchWrapper<AuthResponse>(RequestUri.user.login, {
             method: 'POST',
             body: JSON.stringify(credentials),
             credentials: 'include',
         });
-
-        return result;
     },
 
     async signup(credentials: SignupCredentials): Promise<Result<AuthResponse>> {
@@ -50,11 +54,16 @@ export const authService = {
     },
 
     async logout(): Promise<Result<void>> {
-        const result = await fetchWrapper<void>(RequestUri.user.logout, {
+        return await fetchWrapper<void>(RequestUri.user.logout, {
             method: 'POST',
             credentials: 'include',
         });
+    },
 
-        return result;
-    }
+    async getUserInfo(): Promise<Result<UserInfo>> {
+        return await fetchWrapper<UserInfo>(RequestUri.user.info, {
+            method: 'GET',
+            credentials: 'include',
+        });
+    },
 };

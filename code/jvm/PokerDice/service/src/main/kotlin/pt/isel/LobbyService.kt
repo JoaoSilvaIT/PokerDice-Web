@@ -35,7 +35,10 @@ class LobbyService(
             if (repoLobby.findByName(trimmedName) != null) {
                 return@run failure(LobbyError.NameAlreadyUsed)
             }
-            success(repoLobby.createLobby(trimmedName, trimmedDesc, minPlayers, maxPlayers, host))
+            val lobby = repoLobby.createLobby(trimmedName, trimmedDesc, minPlayers, maxPlayers, host)
+
+            lobbyEvents.notifyNewLobby(lobby.id, lobby.name)
+            success(lobby)
         }
     }
 
@@ -61,6 +64,7 @@ class LobbyService(
             repoLobby.save(updated)
 
             lobbyEvents.notifyPlayerJoined(lobbyId, user.id, user.name)
+            lobbyEvents.notifyLobbyUpdated(lobbyId)
             success(updated)
         }
 
@@ -74,12 +78,14 @@ class LobbyService(
                 repoLobby.deleteLobbyByHost(user)
 
                 lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
+                lobbyEvents.notifyLobbyClosed(lobbyId)
                 return@run success(true)
             }
             val updated = lobby.copy(players = lobby.players.filter { it.id != user.id }.toSet())
             repoLobby.save(updated)
 
             lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
+            lobbyEvents.notifyLobbyUpdated(lobbyId)
             success(false)
         }
 
@@ -91,6 +97,8 @@ class LobbyService(
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
             if (lobby.host.id != host.id) return@run failure(LobbyError.NotHost)
             repoLobby.deleteLobbyById(lobbyId)
+
+            lobbyEvents.notifyLobbyClosed(lobbyId)
             success(Unit)
         }
 

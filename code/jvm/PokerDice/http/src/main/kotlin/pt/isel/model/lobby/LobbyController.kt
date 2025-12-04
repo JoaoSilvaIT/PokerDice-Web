@@ -118,4 +118,21 @@ class LobbyController(
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
     }
+
+    @GetMapping("/api/lobbies/listen")
+    fun listenToAllLobbies(user: AuthenticatedUser): ResponseEntity<SseEmitter> {
+        val sseEmitter = SseEmitter(TimeUnit.HOURS.toMillis(1))
+        lobbyEventService.addEventEmitter(
+            SseEmitterBasedEventEmitter(sseEmitter),
+            user.user.id,
+            null
+        )
+        return ResponseEntity
+            .status(200)
+            .header("Content-Type", "text/event-stream; charset=utf-8")
+            .header("Connection", "keep-alive")
+            .header("X-Accel-Buffering", "no")
+            .body(sseEmitter)
+    }
+
 }

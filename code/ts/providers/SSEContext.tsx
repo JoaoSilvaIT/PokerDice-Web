@@ -14,11 +14,13 @@ interface PlayerLeftEvent {
     timestamp: string;
 }
 
-// You can add more event types here as needed
-// interface GameStartedEvent { ... }
-// interface MessageReceivedEvent { ... }
+interface LobbyCreatedEvent {
+    lobbyId: number;
+    lobbyName: string;
+    timestamp: string;
+}
 
-// Handler types
+
 interface LobbyEventHandler {
     type: 'lobby';
     lobbyId: number;

@@ -76,4 +76,16 @@ export const lobbyService = {
             method: 'GET',
         });
     },
+
+    async joinLobby(lobbyId: number): Promise<Result<void>> {
+        return await fetchWrapper<void>(RequestUri.lobby.join(lobbyId), {
+            method: 'POST',
+        });
+    },
+
+    async leaveLobby(lobbyId: number): Promise<Result<void>> {
+        return await fetchWrapper<void>(RequestUri.lobby.leave(lobbyId), {
+            method: 'POST',
+        });
+    },
 };

@@ -67,9 +67,16 @@
 
 /* Footer */
 .lobby-footer {
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding-top: 1rem;
     border-top: 1px solid #ddd;
+}
+
+.lobby-footer-buttons {
+    display: flex;
+    gap: 0.5rem;
 }
 
 .update-indicator {
@@ -91,6 +98,38 @@
 
 .back-button:hover {
     background-color: #5568d3;
+}
+
+.configure-game-button {
+    padding: 10px 20px;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'm6x11', 'Courier New', monospace;
+    transition: background-color 0.3s ease;
+}
+
+.configure-game-button:hover {
+    background-color: #5568d3;
+}
+
+.leave-lobby-button {
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'm6x11', 'Courier New', monospace;
+    transition: background-color 0.3s ease;
+}
+
+.leave-lobby-button:hover {
+    background-color: #c82333;
 }
 
 /* Loading State */

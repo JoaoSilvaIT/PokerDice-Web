@@ -152,9 +152,18 @@ export function Signup() {
             dispatch({ type: 'submit', inputs: state.inputs })
             const result = await authService.signup(state.inputs)
             if (isOk(result)) {
-                // Use the name from the signup form
-                setUsername(state.inputs.name)
-                dispatch({ type: 'setRedirect' })
+                const userInfoResult = await authService.getUserInfo()
+
+                if (isOk(userInfoResult)) {
+                    const userInfo = userInfoResult.value
+                    localStorage.setItem('userId', userInfo.id.toString())
+                    localStorage.setItem('username', userInfo.name)
+                    localStorage.setItem('userEmail', userInfo.email)
+                    setUsername(userInfo.name)
+                    dispatch({ type: 'setRedirect' })
+                } else {
+                    dispatch({ type: 'setError', error: 'Failed to fetch user information. Please try again.' })
+                }
             } else {
                 dispatch({ type: 'setError', error: result.error })
             }

@@ -6,6 +6,7 @@ import {Signup} from "./components/auth/signup";
 import { Lobbies } from './components/lobby/lobbies';
 import { LobbyDetails } from './components/lobby/LobbyDetails';
 import { Navbar } from './components/generic/navbar';
+import { RequireAuthentication } from './components/auth/requireAuthentication';
 
 // Layout component that includes the navbar
 function Layout() {
@@ -43,11 +44,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: '/lobbies',
-                element: <Lobbies />
+                element: <RequireAuthentication><Lobbies /></RequireAuthentication>
             },
             {
                 path: '/lobbies/:lobbyId',
-                element: <LobbyDetails />
+                element: <RequireAuthentication><LobbyDetails /></RequireAuthentication>
             }
         ]
     }

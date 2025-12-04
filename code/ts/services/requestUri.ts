@@ -6,6 +6,7 @@ export const RequestUri = {
         signup: `${BASE_API_URL}/users`,
         logout: `${BASE_API_URL}/users/logout`,
         stats: `${BASE_API_URL}/users/stats`,
+        info: `${BASE_API_URL}/me`,
     },
     game: {
         create: `${BASE_API_URL}/games/create`,
@@ -26,6 +27,7 @@ export const RequestUri = {
         leave: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/leave`,
         close: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}`,
         listen: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/listen`,
+        listenAll: `${BASE_API_URL}/lobbies/listen`,
     },
     leaderboard: {
         global: `${BASE_API_URL}/leaderboard`,

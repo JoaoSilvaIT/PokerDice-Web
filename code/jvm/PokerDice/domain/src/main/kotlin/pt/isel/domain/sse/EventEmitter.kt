@@ -1,7 +1,5 @@
 package pt.isel.domain.sse
 
-import pt.isel.domain.sse.Event
-
 interface EventEmitter {
     fun emit(event: Event)
 

@@ -26,8 +26,12 @@ export function LobbyDetails() {
     const [lobby, setLobby] = useState<LobbyDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     const { connectToLobby, disconnect, isConnected, registerLobbyHandler, unregisterHandler } = useSSE();
+    const [showGameConfigMenu, setShowGameConfigMenu] = useState(false);
+    const [gameConfig, setGameConfig] = useState({
+        rounds: 5,
+    });
+    const [configError, setConfigError] = useState<string | null>(null);
 
     const fetchLobbyDetails = async () => {
         if (!lobbyId) return;
@@ -51,14 +55,12 @@ export function LobbyDetails() {
 
         fetchLobbyDetails();
 
-        // Register SSE handlers
         registerLobbyHandler(
             lobbyIdNum,
             (event) => {
                 console.log('Player joined:', event.playerName);
                 fetchLobbyDetails();
             },
-            // On player left
             (event) => {
                 console.log('Player left:', event.playerId);
                 fetchLobbyDetails();
@@ -75,9 +77,38 @@ export function LobbyDetails() {
         };
     }, [lobbyId]);
 
+    const handleGameConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setGameConfig(prev => ({
+            ...prev,
+            [name]: name === 'rounds' ? parseInt(value) || 1 : value,
+        }));
+    };
+
     const handleStartGame = async () => {
-        // TODO: Implement game start logic
-        console.log('Starting game...');
+        // Validate configuration
+        if (gameConfig.rounds < 1 || gameConfig.rounds > 20) {
+            setConfigError('Rounds must be between 1 and 20');
+            return;
+        }
+
+        // TODO: Implement game start logic with gameConfig
+        console.log('Starting game with config:', gameConfig);
+        setShowGameConfigMenu(false);
+    };
+
+
+    const handleLeaveLobby = async () => {
+        if (!lobbyId) return;
+
+        const result = await lobbyService.leaveLobby(parseInt(lobbyId));
+
+        if (isOk(result)) {
+            disconnect();
+            navigate('/lobbies');
+        } else {
+            setError(result.error || 'Failed to leave lobby. Please try again.');
+        }
     };
 
     if (loading) {
@@ -102,6 +133,9 @@ export function LobbyDetails() {
     }
 
     const canStartGame = lobby.players.length >= lobby.minPlayers;
+    const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+    const isHost = currentUserId === lobby.hostId;
+
 
     return (
         <div className="lobby-details-container">
@@ -131,6 +165,77 @@ export function LobbyDetails() {
                     <span className="update-indicator">
                         {isConnected ? '● Live' : '○ Connecting...'}
                     </span>
+                    <div className="lobby-footer-buttons">
+                        {isHost && (
+                            <button
+                                onClick={() => setShowGameConfigMenu(true)}
+                                className="configure-game-button"
+                            >
+                                Game Settings
+                            </button>
+                        )}
+                        <button onClick={handleLeaveLobby} className="leave-lobby-button">
+                            Leave Lobby
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Overlay */}
+            {showGameConfigMenu && (
+                <div
+                    className="lobby-menu-overlay"
+                    onClick={() => setShowGameConfigMenu(false)}
+                />
+            )}
+
+            {/* Side Menu for Game Configuration */}
+            <div className={`lobby-create-menu ${showGameConfigMenu ? 'open' : ''}`}>
+                <div className="lobby-create-menu-header">
+                    <h2 className="lobby-create-menu-title">Game Configuration</h2>
+                    <button
+                        onClick={() => {
+                            setShowGameConfigMenu(false);
+                            setConfigError(null);
+                        }}
+                        className="lobby-create-menu-close"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div className="lobby-create-form">
+                    <div className="lobby-form-group">
+                        <label htmlFor="rounds" className="lobby-form-label">
+                            Number of Rounds
+                        </label>
+                        <input
+                            type="number"
+                            id="rounds"
+                            name="rounds"
+                            value={gameConfig.rounds}
+                            onChange={handleGameConfigChange}
+                            min="1"
+                            max="20"
+                            className="lobby-form-input"
+                        />
+                    </div>
+
+                    <div className="lobby-form-hint">
+                        Configure how many rounds the game will have (1-20)
+                    </div>
+
+                    {configError && <div className="lobby-create-error">{configError}</div>}
+
+                    <div className="lobby-create-actions">
+                        <button
+                            onClick={handleStartGame}
+                            className="lobby-create-button"
+                            disabled={!canStartGame}
+                        >
+                            {canStartGame ? 'Start Game' : `Need ${lobby.minPlayers - lobby.players.length} more player(s)`}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
