@@ -1,0 +1,113 @@
+﻿/* Game container */
+.game-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.game-title {
+    font-size: 2.5rem;
+    color: #f4a261;
+    margin-bottom: 1rem;
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    font-size: 1.2rem;
+    color: #e9c46a;
+}
+
+.game-loading,
+.game-error {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+}
+
+.game-error {
+    color: #e76f51;
+}
+
+
+/* Game Controls */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.game-button {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.roll-button {
+    background: #2a9d8f;
+    color: white;
+}
+
+.roll-button:hover {
+    background: #21867a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 157, 143, 0.4);
+}
+
+.hold-button {
+    background: #e9c46a;
+    color: #264653;
+}
+
+.hold-button:hover {
+    background: #d4af37;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(233, 196, 106, 0.4);
+}
+
+.fold-button {
+    background: #e76f51;
+    color: white;
+}
+
+.fold-button:hover {
+    background: #d65a3f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 111, 81, 0.4);
+}
+
+.leave-button,
+.back-to-lobbies-button {
+    background: #264653;
+    color: white;
+}
+
+.leave-button:hover,
+.back-to-lobbies-button:hover {
+    background: #1a3340;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(38, 70, 83, 0.4);
+}
+
+.game-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.game-button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}

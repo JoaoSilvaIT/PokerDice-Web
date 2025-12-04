@@ -26,11 +26,17 @@ interface LobbyClosedEvent {
     lobbyId: number;
 }
 
+interface GameStartedEvent {
+    lobbyId: number;
+    gameId: number;
+}
+
 interface LobbyEventHandler {
     type: 'lobby';
     lobbyId: number;
     onPlayerJoined?: (event: PlayerJoinedEvent) => void;
     onPlayerLeft?: (event: PlayerLeftEvent) => void;
+    onGameStarted?: (event: GameStartedEvent) => void;
 }
 
 interface AllLobbiesEventHandler {
@@ -50,7 +56,8 @@ interface SSEContextType {
     registerLobbyHandler: (
         lobbyId: number,
         onPlayerJoined?: (event: PlayerJoinedEvent) => void,
-        onPlayerLeft?: (event: PlayerLeftEvent) => void
+        onPlayerLeft?: (event: PlayerLeftEvent) => void,
+        onGameStarted?: (event: GameStartedEvent) => void
     ) => void;
     registerAllLobbiesHandler: (
         onLobbyCreated?: (event: LobbyCreatedEvent) => void,
@@ -137,16 +144,32 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    const handleGameStarted = useCallback((event: MessageEvent) => {
+        try {
+            const data: GameStartedEvent = JSON.parse(event.data);
+            console.log('Game started event:', data);
+
+            const currentHandler = handler.current;
+            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
+                currentHandler.onGameStarted?.(data);
+            }
+        } catch (e) {
+            console.error('Error parsing game-started event:', e);
+        }
+    }, []);
+
     const registerLobbyHandler = useCallback((
         lobbyId: number,
         onPlayerJoined?: (event: PlayerJoinedEvent) => void,
-        onPlayerLeft?: (event: PlayerLeftEvent) => void
+        onPlayerLeft?: (event: PlayerLeftEvent) => void,
+        onGameStarted?: (event: GameStartedEvent) => void
     ) => {
         handler.current = {
             type: 'lobby',
             lobbyId,
             onPlayerJoined,
-            onPlayerLeft
+            onPlayerLeft,
+            onGameStarted
         };
         console.log('Lobby handler registered for lobby:', lobbyId);
     }, []);
@@ -204,8 +227,9 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
 
             emitterRef.current.addEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.addEventListener('player-left', handlePlayerLeft);
+            emitterRef.current.addEventListener('game-started', handleGameStarted);
         });
-    }, [handlePlayerJoined, handlePlayerLeft]);
+    }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted]);
 
     const connectToAllLobbies = useCallback(() => {
         return new Promise<void>((resolve, reject) => {
@@ -253,6 +277,7 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
 
             emitterRef.current.removeEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.removeEventListener('player-left', handlePlayerLeft);
+            emitterRef.current.removeEventListener('game-started', handleGameStarted);
             emitterRef.current.removeEventListener('new-lobby', handleLobbyCreated);
             emitterRef.current.removeEventListener('lobby-updated', handleLobbyUpdated);
             emitterRef.current.removeEventListener('lobby-closed', handleLobbyClosed);
@@ -264,7 +289,7 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
             emitterRef.current = null;
             setIsConnected(false);
         }
-    }, [handlePlayerJoined, handlePlayerLeft, handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed]);
+    }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted, handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed]);
 
     return (
         <SSEContext.Provider value={{

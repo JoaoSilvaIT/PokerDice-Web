@@ -9,7 +9,7 @@ export const RequestUri = {
         info: `${BASE_API_URL}/me`,
     },
     game: {
-        create: `${BASE_API_URL}/games/create`,
+        create: `${BASE_API_URL}/games`,
         list: `${BASE_API_URL}/games`,
         join: (gameId: number) => `${BASE_API_URL}/games/${gameId}/join`,
         leave: (gameId: number) => `${BASE_API_URL}/games/${gameId}/leave`,

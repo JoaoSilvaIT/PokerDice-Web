@@ -40,6 +40,48 @@ class SseEmitterBasedEventEmitter(
                         .name("lobby-closed")
                         .data(event)
 
+                is Event.GameStarted ->
+                    SseEmitter
+                        .event()
+                        .name("game-started")
+                        .data(event)
+
+                is Event.TurnChanged ->
+                    SseEmitter
+                        .event()
+                        .name("turn-changed")
+                        .data(event)
+
+                is Event.DiceRolled ->
+                    SseEmitter
+                        .event()
+                        .name("dice-rolled")
+                        .data(event)
+
+                is Event.RoundUpdate ->
+                    SseEmitter
+                        .event()
+                        .name("round-update")
+                        .data(event)
+
+                is Event.RoundEnded ->
+                    SseEmitter
+                        .event()
+                        .name("round-ended")
+                        .data(event)
+
+                is Event.GameUpdated ->
+                    SseEmitter
+                        .event()
+                        .name("game-updated")
+                        .data(event)
+
+                is Event.GameEnded ->
+                    SseEmitter
+                        .event()
+                        .name("game-ended")
+                        .data(event)
+
                 is Event.KeepAlive ->
                     SseEmitter
                         .event()

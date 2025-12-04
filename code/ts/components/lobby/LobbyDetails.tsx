@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lobbyService } from '../../services/lobbyService';
+import { gameService } from '../../services/gameService';
 import { isOk } from '../../services/utils';
 import { useSSE } from '../../providers/SSEContext';
 import '../../styles/lobbyDetails.css';
@@ -64,6 +65,11 @@ export function LobbyDetails() {
             (event) => {
                 console.log('Player left:', event.playerId);
                 fetchLobbyDetails();
+            },
+            (event) => {
+                console.log('Game started:', event.gameId);
+                disconnect();
+                navigate(`/games/${event.gameId}`);
             }
         );
 
@@ -84,17 +90,33 @@ export function LobbyDetails() {
             [name]: name === 'rounds' ? parseInt(value) || 1 : value,
         }));
     };
-
     const handleStartGame = async () => {
+        if (!lobbyId) return;
+
         // Validate configuration
         if (gameConfig.rounds < 1 || gameConfig.rounds > 20) {
             setConfigError('Rounds must be between 1 and 20');
             return;
         }
 
-        // TODO: Implement game start logic with gameConfig
-        console.log('Starting game with config:', gameConfig);
-        setShowGameConfigMenu(false);
+        setConfigError(null);
+
+        // Call the backend to create the game
+        const result = await gameService.createGame({
+            lobbyId: parseInt(lobbyId),
+            numberOfRounds: gameConfig.rounds,
+        });
+
+        if (isOk(result)) {
+            // Game created successfully, navigate to the game page
+            console.log('Game created with ID:', result.value.id);
+            setShowGameConfigMenu(false);
+            disconnect(); // Disconnect from lobby SSE
+            navigate(`/games/${result.value.id}`);
+        } else {
+            // Handle error
+            setConfigError(result.error || 'Failed to create game. Please try again.');
+        }
     };
 
 

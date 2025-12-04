@@ -1,17 +1,17 @@
 import { RequestUri } from './requestUri';
 import { fetchWrapper, Result } from './utils';
 
-interface Lobby {
+export interface Lobby {
     id: number;
     name: string;
-    hostName: string;
-    currentPlayers: number;
+    description?: string;
+    minPlayers: number;
     maxPlayers: number;
-    status: string;
-    createdAt: string;
+    players: Player[];
+    hostId: number;
 }
 
-interface Player {
+export interface Player {
     id: number;
     name: string;
 }

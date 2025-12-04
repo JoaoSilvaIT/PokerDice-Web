@@ -1,19 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { lobbyService } from '../../services/lobbyService';
+import { lobbyService, Lobby } from '../../services/lobbyService';
 import { isOk } from '../../services/utils';
 import { useSSE } from '../../providers/SSEContext';
 import '../../styles/lobbies.css';
-
-interface Lobby {
-    id: number;
-    name: string;
-    hostName: string;
-    currentPlayers: number;
-    maxPlayers: number;
-    status: string;
-    createdAt: string;
-}
 
 export function Lobbies() {
     const navigate = useNavigate();
@@ -38,7 +28,7 @@ export function Lobbies() {
         const result = await lobbyService.getAvailableLobbies();
 
         if (isOk(result)) {
-            setLobbies(result.value);
+            setLobbies(result.value as Lobby[]);
             setError(null);
         } else {
             setError(result.error || 'Could not load lobbies. Please try again.');
@@ -119,7 +109,6 @@ export function Lobbies() {
         const result = await lobbyService.createLobby(createFormData);
 
         if (isOk(result)) {
-            // Reset form and close menu
             setCreateFormData({ name: '', description: '', minPlayers: 2, maxPlayers: 4 });
             setShowCreateMenu(false);
             setCreateError(null);
@@ -140,7 +129,7 @@ export function Lobbies() {
     };
 
     const handleJoinLobby = async (lobbyId: number, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent navigating to lobby details
+        e.stopPropagation();
 
         setJoiningLobbyId(lobbyId);
 
@@ -212,20 +201,20 @@ export function Lobbies() {
                                 <div className="lobby-card-content">
                                     <div className="lobby-name">{lobby.name}</div>
                                     <div className="lobby-info">
-                                        <div className="lobby-host">Host: {lobby.hostName}</div>
+                                        <div className="lobby-host">Host: {lobby.players.find(p => p.id === lobby.hostId)?.name}</div>
                                         <div className="lobby-players">
-                                            {lobby.currentPlayers}/{lobby.maxPlayers} Players
+                                            {lobby.players.length}/{lobby.maxPlayers} Players
                                         </div>
                                     </div>
                                 </div>
                                 <button
                                     className="join-lobby-button"
                                     onClick={(e) => handleJoinLobby(lobby.id, e)}
-                                    disabled={joiningLobbyId === lobby.id || lobby.currentPlayers >= lobby.maxPlayers}
+                                    disabled={joiningLobbyId === lobby.id || lobby.players.length >= lobby.maxPlayers}
                                 >
                                     {joiningLobbyId === lobby.id
                                         ? 'Joining...'
-                                        : lobby.currentPlayers >= lobby.maxPlayers
+                                        : lobby.players.length >= lobby.maxPlayers
                                             ? 'Full'
                                             : 'Join'}
                                 </button>
@@ -235,7 +224,6 @@ export function Lobbies() {
                 </div>
             </div>
 
-            {/* Overlay */}
             {showCreateMenu && (
                 <div
                     className="lobby-menu-overlay"
@@ -243,7 +231,6 @@ export function Lobbies() {
                 />
             )}
 
-            {/* Side Menu */}
             <div className={`lobby-create-menu ${showCreateMenu ? 'open' : ''}`}>
                 <div className="lobby-create-menu-header">
                     <h2 className="lobby-create-menu-title">Create New Lobby</h2>

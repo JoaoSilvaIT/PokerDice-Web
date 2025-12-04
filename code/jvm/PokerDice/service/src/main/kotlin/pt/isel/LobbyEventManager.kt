@@ -100,6 +100,15 @@ class LobbyEventService {
             sendEventToAll(event)
         }
 
+    fun notifyGameCreated(
+        lobbyId: Int,
+        gameId: Int,
+    ) = lock.withLock {
+        logger.info("notifying game created: lobbyId={}, gameId={}", lobbyId, gameId)
+        val event = Event.GameStarted(lobbyId, gameId)
+        sendEventToLobby(event, lobbyId)
+    }
+
     fun getListener(userId: Int): EventEmitter? =
         lock.withLock {
             listeners.find { it.userId == userId }?.eventEmitter

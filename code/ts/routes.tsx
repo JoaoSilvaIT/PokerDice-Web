@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { Home } from './components/generic/home';
-import { About } from './components/generic/about';
 import { Login } from './components/auth/login';
 import {Signup} from "./components/auth/signup";
 import { Lobbies } from './components/lobby/lobbies';
 import { LobbyDetails } from './components/lobby/LobbyDetails';
-import { Profile } from './components/users/profile';
 import { Navbar } from './components/generic/navbar';
 import { RequireAuthentication } from './components/auth/requireAuthentication';
 
@@ -37,10 +35,6 @@ export const router = createBrowserRouter([
                 element: <Home />,
             },
             {
-                path: '/about',
-                element: <About />,
-            },
-            {
                 path: '/login',
                 element: <Login />,
             },
@@ -55,10 +49,6 @@ export const router = createBrowserRouter([
             {
                 path: '/lobbies/:lobbyId',
                 element: <RequireAuthentication><LobbyDetails /></RequireAuthentication>
-            },
-            {
-                path: '/profile',
-                element: <RequireAuthentication><Profile /></RequireAuthentication>
             }
         ]
     }

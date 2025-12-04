@@ -18,6 +18,8 @@ import pt.isel.utils.success
 @Component
 class GameService(
     private val trxManager: TransactionManager,
+    private val lobbyEventService: LobbyEventService,
+    private val gameEventService: GameEventService
 ) {
     fun createGame(
         startedAt: Long,
@@ -30,7 +32,11 @@ class GameService(
         return trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
             if (lobby.host.id != creatorId) return@run failure(GameError.UserNotLobbyHost)
-            success(repoGame.createGame(startedAt, lobby, numberOfRounds))
+            val game = repoGame.createGame(startedAt, lobby, numberOfRounds)
+
+            lobbyEventService.notifyGameCreated(lobbyId, game.id)
+
+            success(game)
         }
     }
 
@@ -55,6 +61,7 @@ class GameService(
 
             val newGame = game.copy(state = State.RUNNING)
             repoGame.save(newGame)
+
             success(newGame)
         }
     }
@@ -69,6 +76,7 @@ class GameService(
             if (game.endedAt != null) return@run failure(GameError.GameAlreadyEnded)
             val endedGame = game.copy(endedAt = endedAt, state = State.FINISHED)
             repoGame.save(endedGame)
+            gameEventService.notifyGameEnded(gameId)
             success(endedGame)
         }
 
@@ -81,6 +89,7 @@ class GameService(
                 if (round.winners.isEmpty() && round.number != 0) return@run failure(GameError.RoundWinnerNotDecided)
             }
             val newGame = repoGame.startNewRound(game)
+
             success(newGame)
         }
 
@@ -98,6 +107,7 @@ class GameService(
             val newRound = repoGame.setAnte(ante, round)
             val updatedGame = game.copy(currentRound = newRound)
             repoGame.save(updatedGame)
+
             success(updatedGame)
         }
 
@@ -113,6 +123,8 @@ class GameService(
             val newRound = repoGame.nextTurn(round)
             val updatedGame = game.copy(currentRound = newRound)
             repoGame.save(updatedGame)
+
+            gameEventService.notifyTurnChanged(gameId, newRound.turn.player.id, newRound.number)
             success(updatedGame)
         }
 
@@ -125,6 +137,7 @@ class GameService(
             val updatedRound = repoGame.payAnte(round)
             val newGame = game.copy(currentRound = updatedRound)
             repoGame.save(newGame)
+
             success(newGame)
         }
 
@@ -142,6 +155,8 @@ class GameService(
             val updatedRound = repoGame.updateTurn(chosenDice, round)
             val newGame = game.copy(currentRound = updatedRound)
             repoGame.save(newGame)
+
+            gameEventService.notifyDiceRolled(gameId, updatedRound.turn.player.id, updatedRound.turn.currentDice.map { it.face.name })
             success(newGame)
         }
 
@@ -170,6 +185,8 @@ class GameService(
             val winners = decideRoundWinner(round.copy(playerHands = hands))
             val newRound = round.copy(winners = winners)
             repoGame.save(game.copy(currentRound = newRound))
+
+            gameEventService.notifyRoundEnded(gameId, round.number, winners.first().id)
             success(winners)
         }
     }

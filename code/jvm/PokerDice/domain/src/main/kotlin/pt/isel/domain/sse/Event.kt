@@ -28,6 +28,42 @@ sealed interface Event {
         val lobbyId: Int,
     ) : Event
 
+    data class GameStarted(
+        val lobbyId: Int,
+        val gameId: Int,
+    ) : Event
+
+    data class RoundUpdate(
+        val gameId: Int,
+        val roundNumber: Int,
+    ) : Event
+
+    data class RoundEnded(
+        val gameId: Int,
+        val roundNumber: Int,
+        val winnerId: Int,
+    ) : Event
+
+    data class TurnChanged(
+        val gameId: Int,
+        val turnUserId: Int,
+        val roundNumber: Int,
+    ) : Event
+
+    data class DiceRolled(
+        val gameId: Int,
+        val userId: Int,
+        val dice: List<String>,
+    ) : Event
+
+    data class GameUpdated(
+        val gameId: Int,
+    ) : Event
+
+    data class GameEnded(
+        val gameId: Int
+    ) : Event
+
     data class KeepAlive(
         val timestamp: Instant,
     ) : Event
