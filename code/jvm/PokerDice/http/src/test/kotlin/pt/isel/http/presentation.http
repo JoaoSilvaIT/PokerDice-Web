@@ -53,7 +53,7 @@ Content-Type: application/json
 
 ### Create Lobby with First User (host)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer eSQ1KmEfW5lEeNI9CDGkXlKNfQPYvQ_LOoUthDRl-SY=
+Authorization: Bearer 7ICF6NzpmSp2YL9b-wGWPudqT7c3soG4P6z5Hqpd2zE=
 Content-Type: application/json
 
 {
@@ -203,4 +203,4 @@ Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### Listen
 GET http://localhost:8080/api/lobbies/listen
-Authorization: Bearer hWxTkDpS_3kQkMDPg8pkS88THEOXv_CbOFuB0agmWK4=
+Authorization: Bearer b9RTD7N95yjq7QF19pXXfPv8qcAxA46JvxOtgjTlSUI=
