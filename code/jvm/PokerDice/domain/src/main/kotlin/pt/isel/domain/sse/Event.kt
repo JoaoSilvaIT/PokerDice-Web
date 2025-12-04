@@ -12,7 +12,7 @@ sealed interface Event {
     data class PlayerLeft(
         val lobbyId: Int,
         val playerId: Int,
-        val timestamp: String
+        val timestamp: String,
     ) : Event
 
     data class NewLobby(

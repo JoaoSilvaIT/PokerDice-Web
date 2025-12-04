@@ -22,3 +22,13 @@ services:
       DB_URL: "jdbc:postgresql://pokerdice-postgres:5432/db?user=pokerdice&password=password"
     ports:
       - 8080:8080
+
+  pokerdice-ts:
+    container_name: pokerdice-ts
+    image: pokerdice-ts
+    environment:
+      - VITE_API_TARGET=http://pokerdice-jvm:8080
+    volumes:
+      - ../../ts:/app
+    ports:
+      - 5173:5173

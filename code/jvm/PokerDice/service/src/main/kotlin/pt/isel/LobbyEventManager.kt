@@ -86,21 +86,19 @@ class LobbyEventService {
         sendEventToAll(event)
     }
 
-    fun notifyLobbyClosed(
-        lobbyId: Int,
-    ) = lock.withLock {
-        logger.info("notifying lobby closed: lobbyId={}", lobbyId)
-        val event = Event.LobbyClosed(lobbyId)
-        sendEventToAll(event)
-    }
+    fun notifyLobbyClosed(lobbyId: Int) =
+        lock.withLock {
+            logger.info("notifying lobby closed: lobbyId={}", lobbyId)
+            val event = Event.LobbyClosed(lobbyId)
+            sendEventToAll(event)
+        }
 
-    fun notifyLobbyUpdated(
-        lobbyId: Int,
-    ) = lock.withLock {
-        logger.info("notifying lobby updated: lobbyId={}", lobbyId)
-        val event = Event.LobbyUpdated(lobbyId)
-        sendEventToAll(event)
-    }
+    fun notifyLobbyUpdated(lobbyId: Int) =
+        lock.withLock {
+            logger.info("notifying lobby updated: lobbyId={}", lobbyId)
+            val event = Event.LobbyUpdated(lobbyId)
+            sendEventToAll(event)
+        }
 
     fun getListener(userId: Int): EventEmitter? =
         lock.withLock {

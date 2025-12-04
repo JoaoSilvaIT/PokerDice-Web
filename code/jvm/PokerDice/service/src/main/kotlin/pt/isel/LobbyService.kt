@@ -107,6 +107,4 @@ class LobbyService(
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
             success(lobby)
         }
-
 }
-

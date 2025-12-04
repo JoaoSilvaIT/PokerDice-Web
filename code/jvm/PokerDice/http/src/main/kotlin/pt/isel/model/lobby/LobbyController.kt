@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import pt.isel.LobbyEventService
 import pt.isel.LobbyService
 import pt.isel.domain.users.AuthenticatedUser
-import pt.isel.LobbyEventService
 import pt.isel.model.sse.SseEmitterBasedEventEmitter
 import pt.isel.utils.Either
 import java.util.concurrent.TimeUnit
@@ -109,7 +109,7 @@ class LobbyController(
         lobbyEventService.addEventEmitter(
             SseEmitterBasedEventEmitter(sseEmitter),
             user.user.id,
-            id
+            id,
         )
         return ResponseEntity
             .status(200)
@@ -125,7 +125,7 @@ class LobbyController(
         lobbyEventService.addEventEmitter(
             SseEmitterBasedEventEmitter(sseEmitter),
             user.user.id,
-            null
+            null,
         )
         return ResponseEntity
             .status(200)
@@ -134,5 +134,4 @@ class LobbyController(
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
     }
-
 }
