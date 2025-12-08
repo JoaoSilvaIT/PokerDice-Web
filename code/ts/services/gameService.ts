@@ -16,6 +16,13 @@ export interface GameRound {
     turnUserId: number;
 }
 
+export interface PlayerInGame {
+    id: number;
+    name: string;
+    currentBalance: number;
+    moneyWon: number;
+}
+
 export interface GameDetails {
     id: number;
     startedAt: number;
@@ -24,6 +31,7 @@ export interface GameDetails {
     numberOfRounds: number;
     state: string;
     currentRound: GameRound | null;
+    players: PlayerInGame[];
 }
 
 export const gameService = {
@@ -42,4 +50,10 @@ export const gameService = {
             method: 'GET',
         });
     },
+
+    async startGame(gameId: number): Promise<Result<GameDetails>> {
+        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/start`, {
+            method: 'POST',
+        });
+    }
 }

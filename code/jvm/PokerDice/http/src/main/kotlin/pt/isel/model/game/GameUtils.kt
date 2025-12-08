@@ -45,4 +45,12 @@ fun Game.toOutputModel() =
                     turnUserId = round.turn.player.id,
                 )
             },
+        players = players.map { player ->
+            PlayerInGameOutputModel(
+                id = player.id,
+                name = player.name,
+                currentBalance = player.currentBalance,
+                moneyWon = player.moneyWon,
+            )
+        },
     )

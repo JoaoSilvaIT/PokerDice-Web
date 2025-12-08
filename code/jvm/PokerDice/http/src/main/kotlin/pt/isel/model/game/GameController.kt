@@ -7,16 +7,21 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import pt.isel.GameEventService
 import pt.isel.GameService
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.utils.charToFace
 import pt.isel.domain.users.AuthenticatedUser
 import pt.isel.model.Problem
+import pt.isel.model.sse.SseEmitterBasedEventEmitter
 import pt.isel.utils.Either
+import java.util.concurrent.TimeUnit
 
 @RestController
 class GameController(
     private val gameService: GameService,
+    private val gameEventService: GameEventService,
 ) {
     @PostMapping("/api/games")
     fun create(
@@ -218,5 +223,24 @@ class GameController(
                 result.value.toProblemResponse()
             }
         }
+    }
+
+    @GetMapping("/api/games/{id}/listen")
+    fun listen(
+        user: AuthenticatedUser,
+        @PathVariable id: Int,
+    ): ResponseEntity<SseEmitter> {
+        val sseEmitter = SseEmitter(TimeUnit.HOURS.toMillis(1))
+        gameEventService.addEventEmitter(
+            SseEmitterBasedEventEmitter(sseEmitter),
+            user.user.id,
+            id,
+        )
+        return ResponseEntity
+            .status(200)
+            .header("Content-Type", "text/event-stream; charset=utf-8")
+            .header("Connection", "keep-alive")
+            .header("X-Accel-Buffering", "no")
+            .body(sseEmitter)
     }
 }

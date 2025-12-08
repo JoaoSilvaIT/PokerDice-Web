@@ -6,6 +6,7 @@ import pt.isel.domain.users.Token
 import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
+import pt.isel.domain.users.UserStatistics
 import java.time.Instant
 
 class RepositoryUserInMem : RepositoryUser {
@@ -35,6 +36,10 @@ class RepositoryUserInMem : RepositoryUser {
                 balance = user.balance,
             )
         }
+    }
+
+    override fun getUserStats(userId: Int): UserStatistics {
+        TODO("Not yet implemented")
     }
 
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? =

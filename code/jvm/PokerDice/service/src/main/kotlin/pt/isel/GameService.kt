@@ -199,6 +199,8 @@ class GameService(
 
             val updatedRound = repoGame.distributeWinnings(round)
             repoGame.save(game.copy(currentRound = updatedRound))
+
+            gameEventService.notifyGameUpdated(gameId)
             success(updatedRound.players)
         }
     }

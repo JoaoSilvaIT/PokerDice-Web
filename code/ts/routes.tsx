@@ -7,6 +7,9 @@ import { Lobbies } from './components/lobby/lobbies';
 import { LobbyDetails } from './components/lobby/LobbyDetails';
 import { Navbar } from './components/generic/navbar';
 import { RequireAuthentication } from './components/auth/requireAuthentication';
+import { About } from './components/generic/about';
+import { Profile } from './components/users/profile';
+import { Game } from './components/game/gameCreated';
 
 // Layout component that includes the navbar
 function Layout() {
@@ -43,12 +46,24 @@ export const router = createBrowserRouter([
                 element: <Signup />
             },
             {
+                path: '/about',
+                element: <About />
+            },
+            {
+                path: '/profile',
+                element: <RequireAuthentication><Profile /></RequireAuthentication>
+            },
+            {
                 path: '/lobbies',
                 element: <RequireAuthentication><Lobbies /></RequireAuthentication>
             },
             {
                 path: '/lobbies/:lobbyId',
                 element: <RequireAuthentication><LobbyDetails /></RequireAuthentication>
+            },
+            {
+                path: '/games/:gameId',
+                element: <RequireAuthentication><Game /></RequireAuthentication>
             }
         ]
     }
