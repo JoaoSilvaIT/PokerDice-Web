@@ -1,7 +1,7 @@
 import { RequestUri } from './requestUri';
 import { fetchWrapper, Result } from './utils';
 
-export interface UserStatistics {
+export interface UserStats {
     gamesPlayed: number;
     wins: number;
     losses: number;
@@ -9,8 +9,8 @@ export interface UserStatistics {
 }
 
 export const userService = {
-    async getUserStats(): Promise<Result<UserStatistics>> {
-        return await fetchWrapper<UserStatistics>(RequestUri.user.stats, {
+    async getUserStats(): Promise<Result<UserStats>> {
+        return await fetchWrapper<UserStats>(RequestUri.user.stats, {
             method: 'GET',
             credentials: 'include',
         });

@@ -15,7 +15,6 @@ import java.time.Instant
 fun Jdbi.configureWithAppRequirements(): Jdbi {
     installPlugin(KotlinPlugin())
     installPlugin(PostgresPlugin())
-    registerRowMapper(ConstructorMapper.factory(User::class.java))
     registerColumnMapper(PasswordValidationInfo::class.java, PasswordValidationInfoMapper())
     registerColumnMapper(TokenValidationInfo::class.java, TokenValidationInfoMapper())
     registerColumnMapper(Instant::class.java, InstantMapper())

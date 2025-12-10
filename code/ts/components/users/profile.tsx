@@ -27,14 +27,13 @@ export function Profile() {
                 if (!infoResult.success) {
                     throw new Error(infoResult.error.message || 'Failed to load user info');
                 }
-                setUserInfo(infoResult.data);
+                setUserInfo(infoResult.data as UserInfo);
 
                 const statsResult = await userService.getUserStats();
                 if (statsResult.success) {
                     setStats(statsResult.data);
                 } else {
                     console.warn('Failed to load stats:', statsResult.error);
-                    // We continue even if stats fail, just showing defaults or hiding them
                 }
             } catch (err: any) {
                 setError(err.message);

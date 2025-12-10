@@ -16,6 +16,8 @@ export function AuthenticationProvider({children}) {
     const clearUsername = () => {
         setUsername(undefined)
         localStorage.removeItem('username')
+        localStorage.removeItem('userId')
+        localStorage.removeItem('userEmail')
     }
 
     const value = {

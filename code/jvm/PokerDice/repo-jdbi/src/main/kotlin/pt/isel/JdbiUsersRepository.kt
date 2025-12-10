@@ -61,7 +61,6 @@ class JdbiUsersRepository(
         handle.createUpdate("DELETE FROM dbo.USERS").execute()
     }
 
-    // kotlin
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? {
         return handle
             .createQuery(
@@ -149,10 +148,8 @@ class JdbiUsersRepository(
     }
 
     override fun getUserStats(userId: Int): UserStatistics {
-        //TODO
         return UserStatistics(1, 0, 0, 0.0)
     }
-
 
     override fun createToken(
         token: Token,
