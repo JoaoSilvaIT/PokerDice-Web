@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { RouterProvider } from 'react-router-dom';
+import {RouterProvider} from 'react-router-dom';
 import router from './routes';
-import { AuthenticationProvider } from './providers/authentication';
+import {AuthenticationProvider} from './providers/authentication';
 
 function App() {
     return (
         <AuthenticationProvider>
-            <RouterProvider router={router} />
+            <RouterProvider router={router}/>
         </AuthenticationProvider>
     );
 }

@@ -43,14 +43,17 @@ fun Game.toOutputModel() =
                     number = round.number,
                     ante = round.ante,
                     turnUserId = round.turn.player.id,
+                    rollsLeft = round.turn.rollsRemaining,
+                    currentDice = round.turn.currentDice.map { it.face.name },
                 )
             },
-        players = players.map { player ->
-            PlayerInGameOutputModel(
-                id = player.id,
-                name = player.name,
-                currentBalance = player.currentBalance,
-                moneyWon = player.moneyWon,
-            )
-        },
+        players =
+            players.map { player ->
+                PlayerInGameOutputModel(
+                    id = player.id,
+                    name = player.name,
+                    currentBalance = player.currentBalance,
+                    moneyWon = player.moneyWon,
+                )
+            },
     )

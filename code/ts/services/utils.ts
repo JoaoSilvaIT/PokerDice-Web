@@ -9,9 +9,6 @@ export async function fetchWrapper<T>(
     options: RequestInit = {}
 ): Promise<Result<T>> {
     try {
-        console.log('fetchWrapper URL:', url);
-        console.log('fetchWrapper cookies:', document.cookie);
-
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
             ...options.headers,
@@ -24,35 +21,43 @@ export async function fetchWrapper<T>(
         });
 
         if (!response.ok) {
-            console.log('fetchWrapper status:', response.status);
+            // Auto-logout on invalid session (401)
+            if (response.status === 401) {
+                if (!window.location.pathname.endsWith('/login')) {
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('userEmail');
+                    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    window.location.href = '/login';
+                    return {success: false, error: 'Session expired'};
+                }
+            }
 
             const clonedResponse = response.clone();
 
             let errorMessage = 'Request failed';
             try {
                 const errorData = await response.json();
-                console.log('Error response data:', errorData);
                 errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
             } catch (e) {
                 try {
                     const errorText = await clonedResponse.text();
-                    console.log('Error response text:', errorText);
                     errorMessage = errorText || `HTTP ${response.status}`;
                 } catch (textError) {
                     errorMessage = `HTTP ${response.status}`;
                 }
             }
 
-            return { success: false, error: errorMessage };
+            return {success: false, error: errorMessage};
         }
         if (response.status === 204) {
-            return { success: true, value: undefined as T };
+            return {success: true, value: undefined as T};
         }
 
         const data = await response.json();
-        return { success: true, value: data as T };
+        return {success: true, value: data as T};
     } catch (error) {
         console.error('fetchWrapper error:', error);
-        return { success: false, error: error.message };
+        return {success: false, error: error.message};
     }
 }

@@ -1,9 +1,4 @@
 services:
-  ubuntu:
-    container_name: ubuntu
-    image: pokerdice-ubuntu
-    tty: true
-
   pokerdice-postgres:
     container_name: pokerdice-postgres
     image: pokerdice-postgres

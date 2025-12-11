@@ -39,6 +39,8 @@ interface RepositoryGame : Repository<Game> {
 
     fun nextTurn(round: Round): Round
 
+    fun fold(round: Round): Round
+
     fun updateTurn(
         chosenDice: Dice,
         round: Round,

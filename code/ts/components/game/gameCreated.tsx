@@ -1,20 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { gameService, GameDetails } from '../../services/gameService';
-import { lobbyService } from '../../services/lobbyService';
-import { isOk } from '../../services/utils';
-import { useSSE } from '../../providers/SSEContext';
+import React, {useEffect, useState} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
+import {gameService, GameDetails} from '../../services/gameService';
+import {lobbyService} from '../../services/lobbyService';
+import {isOk} from '../../services/utils';
+import {useSSE} from '../../providers/SSEContext';
 import '../../styles/game.css';
 
 export function Game() {
-    const { gameId } = useParams<{ gameId: string }>();
+    const {gameId} = useParams<{ gameId: string }>();
     const navigate = useNavigate();
     const [game, setGame] = useState<GameDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hostId, setHostId] = useState<number | null>(null);
     const currentUserId = parseInt(localStorage.getItem('userId') || '0');
-    const { connectToGame, disconnect, isConnected, registerGameHandler, unregisterHandler } = useSSE();
+    const {connectToGame, disconnect, registerGameHandler, unregisterHandler} = useSSE();
+
+    // New state for game controls
+    const [rolledDice, setRolledDice] = useState<string[]>([]);
+    const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+    const [roundStarting, setRoundStarting] = useState(false);
 
     useEffect(() => {
         if (!gameId) {
@@ -51,28 +56,27 @@ export function Game() {
             gameIdNum,
             // onTurnChanged
             (event) => {
-                console.log('Turn changed:', event);
-                fetchGame(); // Refresh game state
+                fetchGame();
+                setRolledDice([]);
+                setSelectedIndices([]);
             },
             // onDiceRolled
             (event) => {
-                console.log('Dice rolled:', event);
-                fetchGame(); // Refresh game state
+                fetchGame();
             },
             // onRoundEnded
             (event) => {
-                console.log('Round ended:', event);
-                fetchGame(); // Refresh game state
+                fetchGame();
+                setRolledDice([]);
+                setSelectedIndices([]);
             },
             // onGameUpdated
             (event) => {
-                console.log('Game updated:', event);
-                fetchGame(); // Refresh game state
+                fetchGame();
             },
             // onGameEnded
             (event) => {
-                console.log('Game ended:', event);
-                fetchGame(); // Refresh game state
+                fetchGame();
             }
         );
 
@@ -94,9 +98,109 @@ export function Game() {
 
         if (isOk(result)) {
             setGame(result.value); // Update game state to RUNNING
+            // After starting the game, automatically start the first round
+            await initializeRound(parseInt(gameId));
         } else {
             setError(result.error || 'Failed to start game');
         }
+    };
+
+    const initializeRound = async (gId: number) => {
+        if (roundStarting) return;
+        setRoundStarting(true);
+
+        try {
+            // Start the round
+            await gameService.startRound(gId);
+
+            // Set ante (minimum is 10)
+            await gameService.setAnte(gId, 10);
+
+            // Pay ante for all players
+            await gameService.payAnte(gId);
+
+            // Refresh game state
+            const gameRes = await gameService.getGame(gId);
+            if (isOk(gameRes)) {
+                setGame(gameRes.value);
+            }
+        } finally {
+            setRoundStarting(false);
+        }
+    };
+
+    // Effect to automatically initialize round when game is RUNNING but no round
+    useEffect(() => {
+        if (game && game.state === 'RUNNING' && !game.currentRound && hostId === currentUserId && !roundStarting) {
+            initializeRound(parseInt(gameId!));
+        }
+    }, [game, hostId, currentUserId, gameId, roundStarting]);
+
+    const handleRollDice = async () => {
+        if (!gameId) return;
+        setRolledDice([]);
+        setSelectedIndices([]);
+
+        const result = await gameService.rollDices(parseInt(gameId));
+        if (isOk(result)) {
+            setRolledDice(result.value.dice);
+            // Refresh game to show updated roll count
+            const gameRes = await gameService.getGame(parseInt(gameId));
+            if (isOk(gameRes)) setGame(gameRes.value);
+        } else {
+            setError(result.error || 'Failed to roll dice');
+        }
+    };
+
+    const handleToggleSelect = (index: number) => {
+        if (selectedIndices.includes(index)) {
+            setSelectedIndices(prev => prev.filter(i => i !== index));
+        } else {
+            setSelectedIndices(prev => [...prev, index]);
+        }
+    };
+
+    const handleHoldSelected = async () => {
+        if (!gameId || selectedIndices.length === 0) return;
+
+        const diceToKeep = selectedIndices.map(i => rolledDice[i]);
+
+        // Sequential update (since backend limitation)
+        for (const die of diceToKeep) {
+            const result = await gameService.updateTurn(parseInt(gameId), die);
+            if (!isOk(result)) {
+                setError(result.error || 'Failed to hold die');
+                return;
+            }
+        }
+
+        setRolledDice([]);
+        setSelectedIndices([]);
+
+        const gameRes = await gameService.getGame(parseInt(gameId));
+        if (isOk(gameRes)) setGame(gameRes.value);
+    };
+
+    const handleFinishTurn = async () => {
+        if (!gameId) return;
+        await gameService.nextTurn(parseInt(gameId));
+        setRolledDice([]);
+        setSelectedIndices([]);
+        const gameRes = await gameService.getGame(parseInt(gameId));
+        if (isOk(gameRes)) setGame(gameRes.value);
+    };
+
+    const handleFold = async () => {
+        if (!gameId) return;
+        await gameService.fold(parseInt(gameId));
+        setRolledDice([]);
+        setSelectedIndices([]);
+        const gameRes = await gameService.getGame(parseInt(gameId));
+        if (isOk(gameRes)) setGame(gameRes.value);
+    };
+
+    const handleLeaveGame = async () => {
+        navigate('/lobbies');
     };
 
     if (loading) {
@@ -172,11 +276,31 @@ export function Game() {
         );
     }
 
+    // Show loading state when game is RUNNING but round not initialized
+    if (game.state === 'RUNNING' && !game.currentRound) {
+        return (
+            <div className="game-container">
+                <div className="waiting-overlay">
+                    <div className="waiting-content">
+                        <h1>⏳ A INICIALIZAR RONDA...</h1>
+                        <div className="waiting-info">
+                            <p>Game #{gameId}</p>
+                            <p>A preparar a primeira ronda...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const currentRoundNumber = game.currentRound?.number || 0;
     const players = game.players;
     const pot = game.currentRound?.ante ? game.currentRound.ante * players.length : 0;
     const ante = game.currentRound?.ante || 0;
     const currentPlayerId = game.currentRound?.turnUserId;
+    const isMyTurn = currentPlayerId === currentUserId;
+    const rollsLeft = game.currentRound?.rollsLeft ?? 3;
+    const keptDice = game.currentRound?.currentDice || [];
 
     return (
         <div className="game-container">
@@ -192,17 +316,33 @@ export function Game() {
 
             {/* Poker Table */}
             <div className="poker-table">
+                {/* Current Turn Banner */}
+                {game.currentRound && (
+                    <div className={`turn-banner ${isMyTurn ? 'your-turn' : ''}`}>
+                        {isMyTurn ? (
+                            <span>🎲 É A TUA VEZ! 🎲</span>
+                        ) : (
+                            <span>⏳ Vez de: {players.find(p => p.id === currentPlayerId)?.name}</span>
+                        )}
+                    </div>
+                )}
+
                 {/* Players */}
                 {players.map((player) => (
                     <div
                         key={player.id}
-                        className={`player-seat ${currentPlayerId === player.id ? 'active-turn' : ''}`}
+                        className={`player-seat ${currentPlayerId === player.id ? 'active-turn' : ''} ${player.id === currentUserId ? 'current-user' : ''}`}
                     >
                         <div className="player-avatar">{player.name.charAt(0).toUpperCase()}</div>
-                        <div className="player-name">{player.name}</div>
+                        <div className="player-name">
+                            {player.name}
+                            {player.id === currentUserId && ' (Tu)'}
+                        </div>
                         <div className="player-chips">💰 {player.currentBalance}</div>
                         {currentPlayerId === player.id && (
-                            <div className="turn-indicator">Your Turn</div>
+                            <div className="turn-indicator">
+                                {player.id === currentUserId ? '🎲 Tua Vez!' : '⏳ A Jogar...'}
+                            </div>
                         )}
                     </div>
                 ))}
@@ -216,36 +356,85 @@ export function Game() {
                     </div>
 
                     <div className="dice-area">
-                        {/* Placeholder for dice - will be dynamic later */}
-                        <div className="dice-placeholder">
-                            <div className="dice">🎲</div>
-                            <div className="dice">🎲</div>
-                            <div className="dice">🎲</div>
-                            <div className="dice">🎲</div>
-                            <div className="dice">🎲</div>
+                        {/* KEPT DICE (Persisted) */}
+                        <div className="kept-dice-container">
+                            <h4>Kept Dice:</h4>
+                            <div className="dice-row">
+                                {keptDice.map((die, i) => (
+                                    <div key={`kept-${i}`} className="dice kept">{die}</div>
+                                ))}
+                                {keptDice.length === 0 && <span className="no-dice">No dice kept</span>}
+                            </div>
                         </div>
-                        <div className="dice-info">Rolls left: 3</div>
+
+                        {/* ROLLED DICE (Transient) */}
+                        {rolledDice.length > 0 && (
+                            <div className="rolled-dice-container">
+                                <h4>Rolled (Select to Keep):</h4>
+                                <div className="dice-row">
+                                    {rolledDice.map((die, i) => (
+                                        <div
+                                            key={`rolled-${i}`}
+                                            className={`dice selectable ${selectedIndices.includes(i) ? 'selected' : ''}`}
+                                            onClick={() => handleToggleSelect(i)}
+                                        >
+                                            {die}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {!isMyTurn && currentPlayerId && (
+                            <div className="waiting-turn">
+                                ⏳ A esperar pela jogada
+                                de {players.find(p => p.id === currentPlayerId)?.name || 'outro jogador'}...
+                            </div>
+                        )}
+
+                        {isMyTurn && (
+                            <div className="dice-info">
+                                🎲 Lançamentos restantes: {rollsLeft} | Dados guardados: {keptDice.length}/5
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Game Controls */}
             <div className="game-controls">
-                <button className="game-button roll-button">
+                <button
+                    className="game-button roll-button"
+                    onClick={handleRollDice}
+                    disabled={!isMyTurn || rollsLeft <= 0 || rolledDice.length > 0 || keptDice.length >= 5}
+                >
                     🎲 Roll Dice
                 </button>
-                <button className="game-button hold-button">
+                <button
+                    className="game-button hold-button"
+                    onClick={handleHoldSelected}
+                    disabled={!isMyTurn || selectedIndices.length === 0}
+                >
                     ✋ Hold Selected
                 </button>
-                <button className="game-button fold-button">
-                    ❌ Fold
+                <button
+                    className="game-button finish-turn-button"
+                    onClick={handleFinishTurn}
+                    disabled={!isMyTurn || keptDice.length < 5}
+                >
+                    ✅ Finish Turn
                 </button>
-                <button onClick={() => navigate('/lobbies')} className="game-button leave-button">
+                <button
+                    className="game-button fold-button"
+                    onClick={handleFold}
+                    disabled={!isMyTurn}
+                >
+                    🏳️ Fold
+                </button>
+                <button onClick={handleLeaveGame} className="game-button leave-button">
                     🚪 Leave Game
                 </button>
             </div>
         </div>
     );
 }
-
-

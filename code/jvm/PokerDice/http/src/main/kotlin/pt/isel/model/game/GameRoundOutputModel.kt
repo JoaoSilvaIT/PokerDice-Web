@@ -7,4 +7,6 @@ data class GameRoundOutputModel(
     val number: Int,
     val ante: Int,
     val turnUserId: Int,
+    val rollsLeft: Int,
+    val currentDice: List<String>,
 )

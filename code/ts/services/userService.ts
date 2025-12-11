@@ -1,5 +1,5 @@
-import { RequestUri } from './requestUri';
-import { fetchWrapper, Result } from './utils';
+import {RequestUri} from './requestUri';
+import {fetchWrapper, Result} from './utils';
 
 export interface UserStats {
     gamesPlayed: number;

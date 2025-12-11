@@ -5,7 +5,8 @@ const AuthenticationContext = createContext({
     username: undefined,
     setUsername: (_: string) => {
     },
-    clearUsername: () => {}
+    clearUsername: () => {
+    }
 })
 
 export function AuthenticationProvider({children}) {

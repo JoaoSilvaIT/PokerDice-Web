@@ -1,9 +1,9 @@
 import React from 'react'
-import { useAuthentication } from '../../providers/authentication'
-import { Navigate} from 'react-router-dom'
-import { useLocation } from 'react-router-dom'
+import {useAuthentication} from '../../providers/authentication'
+import {Navigate} from 'react-router-dom'
+import {useLocation} from 'react-router-dom'
 
-export function RequireAuthentication({ children }) {
+export function RequireAuthentication({children}) {
     const [username] = useAuthentication()
     const hasCookie = document.cookie.includes('token')
     const location = useLocation()
@@ -12,5 +12,5 @@ export function RequireAuthentication({ children }) {
         return children
     }
 
-    return <Navigate to="/login" state={{ source: location.pathname }} replace={true} />
+    return <Navigate to="/login" state={{source: location.pathname}} replace={true}/>
 }

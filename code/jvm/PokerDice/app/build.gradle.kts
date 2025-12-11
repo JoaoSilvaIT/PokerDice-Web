@@ -101,10 +101,6 @@ tasks.register<Exec>("buildImagePostgres") {
     )
 }
 
-tasks.register<Exec>("buildImageUbuntu") {
-    commandLine(dockerExe, "build", "-t", dockerImageUbuntu, "-f", "../docker/Dockerfile-ubuntu", "..")
-}
-
 tasks.register<Exec>("buildImageTs") {
     commandLine(dockerExe, "build", "-t", dockerImageTs, "-f", "../docker/Dockerfile-ts", "../../../ts")
 }
@@ -112,7 +108,6 @@ tasks.register<Exec>("buildImageTs") {
 tasks.register("buildImageAll") {
     dependsOn("buildImageJvm")
     dependsOn("buildImagePostgres")
-    dependsOn("buildImageUbuntu")
     dependsOn("buildImageTs")
 }
 

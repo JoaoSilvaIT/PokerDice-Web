@@ -133,7 +133,7 @@ class JdbiGamesRepository(
 
     override fun startNewRound(game: Game): Game {
         val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
-        val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
+        val firstPlayerIndex = 0
         val firstPlayer = game.players[firstPlayerIndex]
 
         val newRound = Round(
@@ -182,15 +182,73 @@ class JdbiGamesRepository(
         return updatedRound
     }
 
-    override fun nextTurn(round: Round): Round {
-        val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
-        val nextPlayerIndex = (currentPlayerIndex + 1) % round.players.size
-        val nextPlayer = round.players[nextPlayerIndex]
-
-        val updatedRound = round.copy(
-            turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList())
+    override fun fold(round: Round): Round {
+        handle.createUpdate(
+            """
+            INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
+            VALUES (:game_id, :round_number, :user_id, '{}', -1)
+            ON CONFLICT (game_id, round_number, user_id)
+            DO UPDATE SET rolls_left = -1
+            """
         )
-        return updatedRound
+            .bind("game_id", round.gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", round.turn.player.id)
+            .execute()
+
+        val updatedFoldedPlayers = round.foldedPlayers + round.turn.player
+        val updatedRound = round.copy(foldedPlayers = updatedFoldedPlayers)
+        
+        return nextTurn(updatedRound)
+    }
+
+    override fun nextTurn(round: Round): Round {
+        // Always rotate clockwise from current player, starting from player after current
+        val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
+
+        // Start checking from the next player in clockwise order
+        for (offset in 1..round.players.size) {
+            val nextPlayerIndex = (currentPlayerIndex + offset) % round.players.size
+            val candidate = round.players[nextPlayerIndex]
+
+            // Skip if this is the current player (we've gone full circle)
+            if (candidate.id == round.turn.player.id) {
+                break
+            }
+
+            val isFolded = round.foldedPlayers.any { it.id == candidate.id }
+
+            // Check if player has already played this round (has 5 dice saved)
+            val existingTurn = handle.createQuery(
+                """
+                SELECT dice_values, rolls_left FROM dbo.TURN
+                WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
+                """
+            )
+                .bind("game_id", round.gameId)
+                .bind("round_number", round.number)
+                .bind("user_id", candidate.id)
+                .mapToMap()
+                .findOne()
+                .orElse(null)
+
+            val diceCount = existingTurn?.get("dice_values")?.toString()
+                ?.removeSurrounding("{", "}")
+                ?.split(",")
+                ?.filter { it.isNotBlank() }
+                ?.size ?: 0
+
+            val hasAlreadyPlayed = diceCount >= 5
+
+            if (!isFolded && !hasAlreadyPlayed) {
+                return round.copy(
+                    turn = Turn(candidate, rollsRemaining = 3, currentDice = emptyList(), isFolded = false)
+                )
+            }
+        }
+        
+        // All players have played or folded - return current round unchanged (round is complete)
+        return round
     }
 
     override fun distributeWinnings(round: Round): Round {
@@ -411,29 +469,8 @@ class JdbiGamesRepository(
     }
 
     private fun calculatePlayerMoneyWon(gameId: Int, userId: Int): Int {
-        println("=== DEBUG calculatePlayerMoneyWon START ===")
-        println("gameId=$gameId, userId=$userId")
-
-        // First, let's see what rows exist in ROUND_WINNER for this game and user
-        val winnerRows = handle.createQuery(
-            """
-            SELECT game_id, round_number, user_id, winnings_amount 
-            FROM dbo.ROUND_WINNER
-            WHERE game_id = :game_id AND user_id = :user_id
-            """
-        )
-            .bind("game_id", gameId)
-            .bind("user_id", userId)
-            .mapToMap()
-            .list()
-
-        println("Found ${winnerRows.size} winner rows for this user:")
-        winnerRows.forEach { row ->
-            println("  Round ${row["round_number"]}: winnings_amount = ${row["winnings_amount"]}")
-        }
-
         // Simply sum up the winnings_amount from ROUND_WINNER table
-        val totalWinnings = handle.createQuery(
+        return handle.createQuery(
             """
             SELECT COALESCE(SUM(winnings_amount), 0) as total
             FROM dbo.ROUND_WINNER
@@ -445,11 +482,6 @@ class JdbiGamesRepository(
             .mapTo(Int::class.java)
             .findOne()
             .orElse(0)
-
-        println("Total winnings calculated: $totalWinnings")
-        println("=== DEBUG calculatePlayerMoneyWon END ===")
-
-        return totalWinnings
     }
 
     private fun loadRound(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Round? {
@@ -488,6 +520,7 @@ class JdbiGamesRepository(
             ?.map { Dice(charToFace(it[0])) } ?: emptyList()
 
         val rollsLeft = turnData?.get("rolls_left") as? Int ?: 3
+        val isFolded = rollsLeft == -1
 
         // Carregar winners
         val winnerIds = handle.createQuery(
@@ -503,16 +536,31 @@ class JdbiGamesRepository(
 
         val winners = players.filter { it.id in winnerIds }
 
+        // Load folded players
+        val foldedPlayerIds = handle.createQuery(
+            """
+            SELECT user_id FROM dbo.TURN
+            WHERE game_id = :game_id AND round_number = :round_number AND rolls_left = -1
+            """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .mapTo(Int::class.java)
+            .list()
+
+        val foldedPlayers = players.filter { it.id in foldedPlayerIds }
+
         return Round(
             number = roundNumber,
             firstPlayerIdx = roundData["first_player_idx"] as Int,
-            turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
+            turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice, isFolded = isFolded),
             players = players,
             playerHands = emptyMap(),
             gameId = gameId,
             ante = roundData["ante"] as Int,
             pot = roundData["pot"] as Int,
-            winners = winners
+            winners = winners,
+            foldedPlayers = foldedPlayers
         )
     }
 

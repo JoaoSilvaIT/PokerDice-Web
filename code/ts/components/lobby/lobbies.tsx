@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { lobbyService, Lobby } from '../../services/lobbyService';
-import { isOk } from '../../services/utils';
-import { useSSE } from '../../providers/SSEContext';
+import React, {useEffect, useState, useCallback} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {lobbyService, Lobby} from '../../services/lobbyService';
+import {isOk} from '../../services/utils';
+import {useSSE} from '../../providers/SSEContext';
 import '../../styles/lobbies.css';
 
 export function Lobbies() {
     const navigate = useNavigate();
-    const { connectToAllLobbies, registerAllLobbiesHandler, disconnect } = useSSE();
+    const {connectToAllLobbies, registerAllLobbiesHandler, disconnect} = useSSE();
     const [lobbies, setLobbies] = useState<Lobby[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -42,25 +42,19 @@ export function Lobbies() {
 
         const setupSSE = async () => {
             try {
-                console.log('[Lobbies] Registering all lobbies handlers...');
                 registerAllLobbiesHandler(
                     (event) => {
-                        console.log('[Lobbies] Lobby created event received:', event);
                         fetchLobbies();
                     },
                     (event) => {
-                        console.log('[Lobbies] Lobby updated event received:', event);
                         fetchLobbies();
                     },
                     (event) => {
-                        console.log('[Lobbies] Lobby closed event received:', event);
                         fetchLobbies();
                     }
                 );
 
-                console.log('[Lobbies] Connecting to all lobbies SSE...');
                 await connectToAllLobbies();
-                console.log('[Lobbies] Successfully connected to SSE');
             } catch (error) {
                 console.error('[Lobbies] Failed to connect to SSE:', error);
             }
@@ -69,13 +63,12 @@ export function Lobbies() {
         setupSSE();
 
         return () => {
-            console.log('[Lobbies] Component unmounting, disconnecting SSE...');
             disconnect();
         };
     }, [fetchLobbies, connectToAllLobbies, registerAllLobbiesHandler, disconnect]);
 
     const handleCreateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setCreateFormData(prev => ({
             ...prev,
             [name]: name === 'minPlayers' || name === 'maxPlayers' ? parseInt(value) || 0 : value,
@@ -109,7 +102,7 @@ export function Lobbies() {
         const result = await lobbyService.createLobby(createFormData);
 
         if (isOk(result)) {
-            setCreateFormData({ name: '', description: '', minPlayers: 2, maxPlayers: 4 });
+            setCreateFormData({name: '', description: '', minPlayers: 2, maxPlayers: 4});
             setShowCreateMenu(false);
             setCreateError(null);
 
@@ -118,7 +111,7 @@ export function Lobbies() {
             if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
                 setCreateError('You must be logged in to create a lobby');
                 setTimeout(() => {
-                    navigate('/login', { state: { source: '/lobbies' } });
+                    navigate('/login', {state: {source: '/lobbies'}});
                 }, 2000);
             } else {
                 setCreateError(result.error || 'Failed to create lobby. Please try again.');
@@ -141,7 +134,7 @@ export function Lobbies() {
             if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
                 setError('You must be logged in to join a lobby');
                 setTimeout(() => {
-                    navigate('/login', { state: { source: '/lobbies' } });
+                    navigate('/login', {state: {source: '/lobbies'}});
                 }, 2000);
             } else {
                 setError(result.error || 'Failed to join lobby. Please try again.');
@@ -201,7 +194,8 @@ export function Lobbies() {
                                 <div className="lobby-card-content">
                                     <div className="lobby-name">{lobby.name}</div>
                                     <div className="lobby-info">
-                                        <div className="lobby-host">Host: {lobby.players.find(p => p.id === lobby.hostId)?.name}</div>
+                                        <div
+                                            className="lobby-host">Host: {lobby.players.find(p => p.id === lobby.hostId)?.name}</div>
                                         <div className="lobby-players">
                                             {lobby.players.length}/{lobby.maxPlayers} Players
                                         </div>
@@ -237,7 +231,7 @@ export function Lobbies() {
                     <button
                         onClick={() => {
                             setShowCreateMenu(false);
-                            setCreateFormData({ name: '', description: '', minPlayers: 2, maxPlayers: 4 });
+                            setCreateFormData({name: '', description: '', minPlayers: 2, maxPlayers: 4});
                         }}
                         className="lobby-create-menu-close"
                     >

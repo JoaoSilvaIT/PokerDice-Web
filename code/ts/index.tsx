@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { createRoot } from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 import App from './App';
-import { SSEProvider } from './providers/SSEContext';
+import {SSEProvider} from './providers/SSEContext';
 import './styles/global.css';
 
 const container = document.getElementById('root');
@@ -10,7 +10,7 @@ if (container) {
     root.render(
         <React.StrictMode>
             <SSEProvider>
-                <App />
+                <App/>
             </SSEProvider>
         </React.StrictMode>
     );

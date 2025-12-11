@@ -1,4 +1,4 @@
-﻿/* Game container */
+﻿﻿ /* Game container */
 .game-container {
     padding: 2rem;
     max-width: 1600px;
@@ -51,9 +51,8 @@
     background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #1b5e20 100%);
     border-radius: 200px;
     padding: 3rem 2rem;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 2px 8px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 2px 8px rgba(255, 255, 255, 0.1);
     border: 12px solid #8b4513;
     margin-bottom: 2rem;
     min-height: 600px;
@@ -100,9 +99,8 @@
 
 .player-seat.active-turn {
     border-color: #2a9d8f;
-    box-shadow:
-        0 0 20px rgba(42, 157, 143, 0.6),
-        0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 20px rgba(42, 157, 143, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.3);
     animation: pulse 2s infinite;
 }
 
@@ -183,9 +181,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow:
-        0 4px 20px rgba(244, 162, 97, 0.4),
-        inset 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(244, 162, 97, 0.4),
+    inset 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .pot-label {
@@ -293,6 +290,17 @@
     background: #d4af37;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(233, 196, 106, 0.4);
+}
+
+.finish-turn-button {
+    background: #43a047;
+    color: white;
+}
+
+.finish-turn-button:hover {
+    background: #2e7d32;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.4);
 }
 
 .fold-button {
@@ -453,3 +461,62 @@
     margin-top: 1.5rem;
     font-style: italic;
 }
+
+/* Turn Banner */
+.turn-banner {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(38, 70, 83, 0.95);
+    border: 3px solid #e9c46a;
+    border-radius: 12px;
+    padding: 0.75rem 2rem;
+    z-index: 100;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #e9c46a;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.turn-banner.your-turn {
+    background: linear-gradient(135deg, #2a9d8f, #21867a);
+    border-color: #2a9d8f;
+    color: white;
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(42, 157, 143, 0.6);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(42, 157, 143, 1);
+    }
+}
+
+/* Current User Seat */
+.player-seat.current-user {
+    border-color: #2a9d8f;
+    border-width: 3px;
+}
+
+.player-seat.current-user .player-name {
+    color: #2a9d8f;
+}
+
+/* Waiting Turn Message */
+.waiting-turn {
+    background: rgba(233, 196, 106, 0.2);
+    border: 2px solid #e9c46a;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    color: #e9c46a;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+}
+

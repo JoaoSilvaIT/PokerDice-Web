@@ -1,13 +1,13 @@
-import React, { useReducer} from 'react'
-import { Navigate, useLocation, Link } from 'react-router-dom'
+import React, {useReducer} from 'react'
+import {Navigate, useLocation, Link} from 'react-router-dom'
 import {isOk} from "../../services/utils";
-import { authService} from "../../services/authService";
+import {authService} from "../../services/authService";
 import {useAuthentication} from "../../providers/authentication";
 
 type State =
     | {
     type: 'editing';
-    inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string};
+    inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string };
     showPassword: boolean;
     error: string | null;
     shouldRedirect: boolean;
@@ -16,10 +16,10 @@ type State =
         maxLength: boolean;
     };
 }
-    | {type: 'redirect'}
+    | { type: 'redirect' }
     | {
     type: 'submitting';
-    inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string};
+    inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string };
     showPassword: boolean;
     error: string | null;
     isLoading: boolean;
@@ -32,11 +32,15 @@ type State =
 
 type Action =
     | { type: 'edit'; inputName: string; inputValue: string }
-    | { type: 'submit'; inputs: {name: string; email: string; password: string; confirmPassword: string; invite: string} }
+    | {
+    type: 'submit';
+    inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string }
+}
     | { type: 'togglePassword' }
     | { type: 'setError'; error: string | null }
     | { type: 'setRedirect' }
-    | { type: 'updatePasswordCriteria'; criteria: {
+    | {
+    type: 'updatePasswordCriteria'; criteria: {
         blank: boolean;
         maxLength: boolean;
     }
@@ -49,9 +53,9 @@ function logUnexpectedAction(state: State, action: Action) {
 function reduce(state: State, action: Action): State {
     switch (state.type) {
         case 'editing':
-            switch(action.type) {
+            switch (action.type) {
                 case 'edit':
-                    const newInputs = { ...state.inputs, [action.inputName]: action.inputValue }
+                    const newInputs = {...state.inputs, [action.inputName]: action.inputValue}
                     return {
                         ...state,
                         inputs: newInputs,
@@ -67,28 +71,29 @@ function reduce(state: State, action: Action): State {
                         passwordCriteria: state.passwordCriteria
                     }
                 case 'togglePassword':
-                    return { ...state, showPassword: !state.showPassword }
+                    return {...state, showPassword: !state.showPassword}
                 case 'updatePasswordCriteria':
-                    return { ...state, passwordCriteria: action.criteria }
+                    return {...state, passwordCriteria: action.criteria}
                 default:
                     logUnexpectedAction(state, action)
                     return state
             }
         case 'submitting':
-            switch(action.type) {
+            switch (action.type) {
                 case 'setError':
                     return {
                         type: 'editing',
-                        inputs: { ...state.inputs, password: '', confirmPassword: '' },
+                        inputs: {...state.inputs, password: '', confirmPassword: ''},
                         showPassword: false,
                         error: action.error,
                         shouldRedirect: false,
                         passwordCriteria: {
                             blank: false,
-                            maxLength: false                        }
+                            maxLength: false
+                        }
                     }
                 case 'setRedirect':
-                    return { type: 'redirect' }
+                    return {type: 'redirect'}
                 default:
                     logUnexpectedAction(state, action)
                     return state
@@ -102,7 +107,7 @@ function reduce(state: State, action: Action): State {
 export function Signup() {
     const [state, dispatch] = useReducer(reduce, {
         type: 'editing',
-        inputs: { name: '', email: '', password: '', confirmPassword: '', invite: '' },
+        inputs: {name: '', email: '', password: '', confirmPassword: '', invite: ''},
         showPassword: false,
         error: null,
         shouldRedirect: false,
@@ -112,11 +117,11 @@ export function Signup() {
         }
     })
 
-    const [,setUsername] = useAuthentication();
+    const [, setUsername] = useAuthentication();
     const location = useLocation()
 
     if (state.type === 'redirect') {
-        return <Navigate to={location.state?.source || '/'} replace={true} />
+        return <Navigate to={location.state?.source || '/'} replace={true}/>
     }
 
     function validatePassword(password: string) {
@@ -124,12 +129,12 @@ export function Signup() {
             blank: password.length > 0,
             maxLength: password.length <= 30
         }
-        dispatch({ type: 'updatePasswordCriteria', criteria })
+        dispatch({type: 'updatePasswordCriteria', criteria})
         return criteria
     }
 
     function handleChange(ev: React.ChangeEvent<HTMLInputElement>) {
-        dispatch({ type: 'edit', inputName: ev.target.name, inputValue: ev.target.value })
+        dispatch({type: 'edit', inputName: ev.target.name, inputValue: ev.target.value})
 
         if (ev.target.name === 'password') {
             validatePassword(ev.target.value)
@@ -139,17 +144,17 @@ export function Signup() {
     async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
         ev.preventDefault()
         if (state.type === 'editing') {
-            const { password, confirmPassword } = state.inputs
+            const {password, confirmPassword} = state.inputs
             if (password !== confirmPassword) {
-                dispatch({ type: 'setError', error: 'Passwords do not match' })
+                dispatch({type: 'setError', error: 'Passwords do not match'})
                 return
             }
             const criteria = validatePassword(password)
             if (!Object.values(criteria).every(Boolean)) {
-                dispatch({ type: 'setError', error: 'Password does not meet all requirements' })
+                dispatch({type: 'setError', error: 'Password does not meet all requirements'})
                 return
             }
-            dispatch({ type: 'submit', inputs: state.inputs })
+            dispatch({type: 'submit', inputs: state.inputs})
             const result = await authService.signup(state.inputs)
             if (isOk(result)) {
                 const userInfoResult = await authService.getUserInfo()
@@ -160,19 +165,19 @@ export function Signup() {
                     localStorage.setItem('username', userInfo.name)
                     localStorage.setItem('userEmail', userInfo.email)
                     setUsername(userInfo.name)
-                    dispatch({ type: 'setRedirect' })
+                    dispatch({type: 'setRedirect'})
                 } else {
-                    dispatch({ type: 'setError', error: 'Failed to fetch user information. Please try again.' })
+                    dispatch({type: 'setError', error: 'Failed to fetch user information. Please try again.'})
                 }
             } else {
-                dispatch({ type: 'setError', error: result.error })
+                dispatch({type: 'setError', error: result.error})
             }
         }
     }
 
     const inputs = state.type === 'editing' || state.type === 'submitting'
         ? state.inputs
-        : { name: '', email: '', password: '', confirmPassword: '', invite: '' }
+        : {name: '', email: '', password: '', confirmPassword: '', invite: ''}
 
     return (
         <div className="auth-container">
@@ -227,7 +232,7 @@ export function Signup() {
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => dispatch({ type: 'togglePassword' })}
+                                    onClick={() => dispatch({type: 'togglePassword'})}
                                     className="auth-toggle-password"
                                 >
                                     {state.showPassword ? '♣️' : '♦️️'}
@@ -235,11 +240,12 @@ export function Signup() {
                             </div>
                             <ul className="auth-criteria-list">
                                 {Object.entries(state.passwordCriteria).map(([key, value]) => (
-                                    <li key={key} className={`auth-criteria-item ${value ? 'auth-criteria-success' : 'auth-criteria-error'}`}>
+                                    <li key={key}
+                                        className={`auth-criteria-item ${value ? 'auth-criteria-success' : 'auth-criteria-error'}`}>
                                         {value ? '✓' : '×'} {
                                         key === 'maxLength' ? 'Less than 30 characters' :
                                             key === 'blank' ? 'Password must not be blank' :
-                                                    'Password is not blank'}
+                                                'Password is not blank'}
                                     </li>
                                 ))}
                             </ul>

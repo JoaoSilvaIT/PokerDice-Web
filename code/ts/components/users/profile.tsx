@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
-import { userService, UserStats } from '../../services/userService';
-import { useAuthentication } from '../../providers/authentication';
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {authService} from '../../services/authService';
+import {userService, UserStats} from '../../services/userService';
+import {useAuthentication} from '../../providers/authentication';
 import '../../styles/profile.css';
 
 interface UserInfo {

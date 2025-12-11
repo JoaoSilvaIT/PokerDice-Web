@@ -7,4 +7,5 @@ data class Turn(
     val rollsRemaining: Int,
     val currentDice: List<Dice> = emptyList(),
     val finalHand: Hand = Hand(emptyList()),
+    val isFolded: Boolean = false,
 )

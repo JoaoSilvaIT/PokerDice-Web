@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { lobbyService } from '../../services/lobbyService';
-import { gameService } from '../../services/gameService';
-import { isOk } from '../../services/utils';
-import { useSSE } from '../../providers/SSEContext';
+import React, {useEffect, useState} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
+import {lobbyService} from '../../services/lobbyService';
+import {gameService} from '../../services/gameService';
+import {isOk} from '../../services/utils';
+import {useSSE} from '../../providers/SSEContext';
 import '../../styles/lobbyDetails.css';
 
 interface Player {
@@ -22,12 +22,12 @@ interface LobbyDetails {
 }
 
 export function LobbyDetails() {
-    const { lobbyId } = useParams<{ lobbyId: string }>();
+    const {lobbyId} = useParams<{ lobbyId: string }>();
     const navigate = useNavigate();
     const [lobby, setLobby] = useState<LobbyDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { connectToLobby, disconnect, isConnected, registerLobbyHandler, unregisterHandler } = useSSE();
+    const {connectToLobby, disconnect, isConnected, registerLobbyHandler, unregisterHandler} = useSSE();
     const [showGameConfigMenu, setShowGameConfigMenu] = useState(false);
     const [gameConfig, setGameConfig] = useState({
         rounds: 5,
@@ -59,15 +59,12 @@ export function LobbyDetails() {
         registerLobbyHandler(
             lobbyIdNum,
             (event) => {
-                console.log('Player joined:', event.playerName);
                 fetchLobbyDetails();
             },
             (event) => {
-                console.log('Player left:', event.playerId);
                 fetchLobbyDetails();
             },
             (event) => {
-                console.log('Game started:', event.gameId);
                 disconnect();
                 navigate(`/games/${event.gameId}`);
             }
@@ -84,7 +81,7 @@ export function LobbyDetails() {
     }, [lobbyId]);
 
     const handleGameConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setGameConfig(prev => ({
             ...prev,
             [name]: name === 'rounds' ? parseInt(value) || 1 : value,
@@ -109,7 +106,6 @@ export function LobbyDetails() {
 
         if (isOk(result)) {
             // Game created successfully, navigate to the game page
-            console.log('Game created with ID:', result.value.id);
             setShowGameConfigMenu(false);
             disconnect(); // Disconnect from lobby SSE
             navigate(`/games/${result.value.id}`);

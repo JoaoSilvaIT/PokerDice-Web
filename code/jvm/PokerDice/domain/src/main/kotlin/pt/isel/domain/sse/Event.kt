@@ -61,7 +61,7 @@ sealed interface Event {
     ) : Event
 
     data class GameEnded(
-        val gameId: Int
+        val gameId: Int,
     ) : Event
 
     data class KeepAlive(

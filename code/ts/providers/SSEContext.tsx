@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useCallback, useRef } from 'react';
-import { RequestUri } from '../services/requestUri';
+import React, {createContext, useCallback, useContext, useRef} from 'react';
+import {RequestUri} from '../services/requestUri';
 
 interface PlayerJoinedEvent {
     lobbyId: number;
@@ -114,7 +114,7 @@ interface SSEContextType {
 
 const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
-export function SSEProvider({ children }: { children: React.ReactNode }) {
+export function SSEProvider({children}: { children: React.ReactNode }) {
     const emitterRef = useRef<EventSource | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
     const handler = useRef<EventHandler | null>(null);
@@ -122,7 +122,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handlePlayerJoined = useCallback((event: MessageEvent) => {
         try {
             const data: PlayerJoinedEvent = JSON.parse(event.data);
-            console.log('Player joined event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
@@ -136,7 +135,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handlePlayerLeft = useCallback((event: MessageEvent) => {
         try {
             const data: PlayerLeftEvent = JSON.parse(event.data);
-            console.log('Player left event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
@@ -150,7 +148,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleLobbyCreated = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyCreatedEvent = JSON.parse(event.data);
-            console.log('Lobby created event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
@@ -164,7 +161,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleLobbyUpdated = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyUpdatedEvent = JSON.parse(event.data);
-            console.log('Lobby updated event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
@@ -178,7 +174,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleLobbyClosed = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyClosedEvent = JSON.parse(event.data);
-            console.log('Lobby closed event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
@@ -192,8 +187,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleGameStarted = useCallback((event: MessageEvent) => {
         try {
             const data: GameStartedEvent = JSON.parse(event.data);
-            console.log('Game started event:', data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
                 currentHandler.onGameStarted?.(data);
@@ -206,7 +199,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleTurnChanged = useCallback((event: MessageEvent) => {
         try {
             const data: TurnChangedEvent = JSON.parse(event.data);
-            console.log('Turn changed event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
@@ -220,7 +212,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleDiceRolled = useCallback((event: MessageEvent) => {
         try {
             const data: DiceRolledEvent = JSON.parse(event.data);
-            console.log('Dice rolled event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
@@ -234,7 +225,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleRoundEnded = useCallback((event: MessageEvent) => {
         try {
             const data: RoundEndedEvent = JSON.parse(event.data);
-            console.log('Round ended event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
@@ -248,7 +238,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleGameUpdated = useCallback((event: MessageEvent) => {
         try {
             const data: GameUpdatedEvent = JSON.parse(event.data);
-            console.log('Game updated event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
@@ -262,7 +251,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const handleGameEnded = useCallback((event: MessageEvent) => {
         try {
             const data: GameEndedEvent = JSON.parse(event.data);
-            console.log('Game ended event:', data);
 
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
@@ -286,7 +274,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
             onPlayerLeft,
             onGameStarted
         };
-        console.log('Lobby handler registered for lobby:', lobbyId);
     }, []);
 
     const registerAllLobbiesHandler = useCallback((
@@ -300,7 +287,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
             onLobbyUpdated,
             onLobbyClosed
         };
-        console.log('All lobbies handler registered');
     }, []);
 
     const registerGameHandler = useCallback((
@@ -320,30 +306,25 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
             onGameUpdated,
             onGameEnded
         };
-        console.log('Game handler registered for game:', gameId);
     }, []);
 
     const unregisterHandler = useCallback(() => {
         handler.current = null;
-        console.log('Handler unregistered');
     }, []);
 
     const connectToLobby = useCallback((lobbyId: number) => {
         return new Promise<void>((resolve, reject) => {
             if (emitterRef.current) {
-                console.log('Already connected to SSE');
                 resolve();
                 return;
             }
 
-            console.log('Connecting to lobby SSE for lobby:', lobbyId);
 
             emitterRef.current = new EventSource(RequestUri.lobby.listen(lobbyId), {
                 withCredentials: true
             });
 
             emitterRef.current.onopen = () => {
-                console.log('SSE Connected to lobby:', lobbyId);
                 setIsConnected(true);
                 resolve();
             };
@@ -369,19 +350,15 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     const connectToAllLobbies = useCallback(() => {
         return new Promise<void>((resolve, reject) => {
             if (emitterRef.current) {
-                console.log('Already connected to SSE');
                 resolve();
                 return;
             }
-
-            console.log('Connecting to all lobbies SSE');
 
             emitterRef.current = new EventSource(RequestUri.lobby.listenAll, {
                 withCredentials: true
             });
 
             emitterRef.current.onopen = () => {
-                console.log('SSE Connected to all lobbies');
                 setIsConnected(true);
                 resolve();
             };
@@ -406,23 +383,23 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
 
     const connectToGame = useCallback((gameId: number) => {
         return new Promise<void>((resolve, reject) => {
+            // Force disconnect any existing connection before connecting to game
             if (emitterRef.current) {
-                console.log('Already connected to SSE');
-                resolve();
-                return;
+                emitterRef.current.close();
+                emitterRef.current = null;
+                setIsConnected(false);
             }
 
-            console.log('Connecting to game SSE for game:', gameId);
 
             emitterRef.current = new EventSource(`/api/games/${gameId}/listen`, {
                 withCredentials: true
             });
 
             emitterRef.current.onopen = () => {
-                console.log('SSE Connected to game:', gameId);
                 setIsConnected(true);
                 resolve();
             };
+
 
             emitterRef.current.onerror = (error) => {
                 console.error('SSE Error:', error);
@@ -447,7 +424,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
 
     const disconnect = useCallback(() => {
         if (emitterRef.current) {
-            console.log('Disconnecting from SSE');
 
             emitterRef.current.removeEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.removeEventListener('player-left', handlePlayerLeft);

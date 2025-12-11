@@ -1,32 +1,34 @@
 import React, {useReducer} from 'react';
 import {useAuthentication} from "../../providers/authentication";
-import { Navigate, useLocation, Link } from 'react-router-dom';
-import { authService} from "../../services/authService";
+import {Navigate, useLocation, Link} from 'react-router-dom';
+import {authService} from "../../services/authService";
 import {isOk} from "../../services/utils";
 import '../../styles/login.css';
 
 type State =
-    | {type: 'editing',
-    inputs: {email: string; password: string},
+    | {
+    type: 'editing',
+    inputs: { email: string; password: string },
     error: string | null,
     redirect: boolean
 }
-    | {type: 'redirecting'}
-    | {type: 'submitting',
-    inputs: {email: string; password: string},
+    | { type: 'redirecting' }
+    | {
+    type: 'submitting',
+    inputs: { email: string; password: string },
     error: string | null,
     isLoading: boolean,
     redirect: boolean
 }
 
 type Action =
-    | {type: 'edit'; inputName: string; value: string}
-    | {type: 'submit'; inputs: {email: string; password: string}}
-    | {type: 'setError'; error: string | null}
-    | {type: 'setRedirect';}
-    | {type: 'setLoading'; isLoading: boolean}
+    | { type: 'edit'; inputName: string; value: string }
+    | { type: 'submit'; inputs: { email: string; password: string } }
+    | { type: 'setError'; error: string | null }
+    | { type: 'setRedirect'; }
+    | { type: 'setLoading'; isLoading: boolean }
 
-function unexpectedAction(action: Action, state: State){
+function unexpectedAction(action: Action, state: State) {
     console.log(`Unauthorized action: ${action.type} in state: ${state.type}`);
     return state
 }
@@ -46,13 +48,13 @@ function reduce(state: State, action: Action): State {
                         redirect: false
                     }
                 default:
-                    unexpectedAction(action,state)
+                    unexpectedAction(action, state)
                     return state
             }
         case 'submitting':
             switch (action.type) {
                 case 'setError':
-                    return{
+                    return {
                         type: 'editing',
                         inputs: {...state.inputs, password: ''},
                         error: action.error,
@@ -61,37 +63,37 @@ function reduce(state: State, action: Action): State {
                 case 'setRedirect':
                     return {type: 'redirecting'}
                 default:
-                    unexpectedAction(action,state)
+                    unexpectedAction(action, state)
                     return state
             }
         default:
-            unexpectedAction(action,state)
+            unexpectedAction(action, state)
             return state
     }
 }
 
-export function Login(){
+export function Login() {
     const [state, dispatch] = useReducer(reduce, {
         type: 'editing',
         inputs: {email: '', password: ''},
         error: null,
         redirect: false
     })
-    const [,setUsername] = useAuthentication();
+    const [, setUsername] = useAuthentication();
     const location = useLocation()
 
     if (state.type === 'redirecting') {
-        return <Navigate to={location.state?.source || '/home'} replace={true} />
+        return <Navigate to={location.state?.source || '/home'} replace={true}/>
     }
 
     function handleChange(ev: React.ChangeEvent<HTMLInputElement>) {
-        dispatch({ type: 'edit', inputName: ev.target.name, value: ev.target.value })
+        dispatch({type: 'edit', inputName: ev.target.name, value: ev.target.value})
     }
 
     async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
         ev.preventDefault()
         if (state.type === 'editing') {
-            dispatch({ type: 'submit', inputs: state.inputs })
+            dispatch({type: 'submit', inputs: state.inputs})
             const result = await authService.login(state.inputs)
 
             if (isOk(result)) {
@@ -103,19 +105,19 @@ export function Login(){
                     localStorage.setItem('username', userInfo.name)
                     localStorage.setItem('userEmail', userInfo.email)
                     setUsername(userInfo.name)
-                    dispatch({ type: 'setRedirect'})
+                    dispatch({type: 'setRedirect'})
                 } else {
-                    dispatch({ type: 'setError', error: 'Failed to fetch user information. Please try again.' })
+                    dispatch({type: 'setError', error: 'Failed to fetch user information. Please try again.'})
                 }
             } else {
-                dispatch({ type: 'setError', error: result.error })
+                dispatch({type: 'setError', error: result.error})
             }
         }
     }
 
     const inputs = state.type === 'editing' || state.type === 'submitting'
         ? state.inputs
-        : { email: '', password: '' }
+        : {email: '', password: ''}
 
     return (
         <div className="auth-container">

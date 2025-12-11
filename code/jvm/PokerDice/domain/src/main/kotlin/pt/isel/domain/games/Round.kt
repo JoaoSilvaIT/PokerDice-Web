@@ -12,5 +12,6 @@ data class Round(
     val ante: Int = MIN_ANTE,
     val pot: Int = 0,
     val winners: List<PlayerInGame> = emptyList(),
+    val foldedPlayers: List<PlayerInGame> = emptyList(),
     val gameId: Int,
 )

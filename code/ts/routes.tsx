@@ -1,22 +1,22 @@
 import * as React from 'react';
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
-import { Home } from './components/generic/home';
-import { Login } from './components/auth/login';
+import {createBrowserRouter, Navigate, Outlet} from 'react-router-dom';
+import {Home} from './components/generic/home';
+import {Login} from './components/auth/login';
 import {Signup} from "./components/auth/signup";
-import { Lobbies } from './components/lobby/lobbies';
-import { LobbyDetails } from './components/lobby/LobbyDetails';
-import { Navbar } from './components/generic/navbar';
-import { RequireAuthentication } from './components/auth/requireAuthentication';
-import { About } from './components/generic/about';
-import { Profile } from './components/users/profile';
-import { Game } from './components/game/gameCreated';
+import {Lobbies} from './components/lobby/lobbies';
+import {LobbyDetails} from './components/lobby/LobbyDetails';
+import {Navbar} from './components/generic/navbar';
+import {RequireAuthentication} from './components/auth/requireAuthentication';
+import {About} from './components/generic/about';
+import {Profile} from './components/users/profile';
+import {Game} from './components/game/gameCreated';
 
 // Layout component that includes the navbar
 function Layout() {
     return (
         <>
-            <Navbar />
-            <Outlet />
+            <Navbar/>
+            <Outlet/>
         </>
     );
 }
@@ -27,43 +27,43 @@ function Layout() {
  */
 export const router = createBrowserRouter([
     {
-        element: <Layout />,
+        element: <Layout/>,
         children: [
             {
                 path: '/',
-                element: <Navigate to="/home" replace />,
+                element: <Navigate to="/home" replace/>,
             },
             {
                 path: '/home',
-                element: <Home />,
+                element: <Home/>,
             },
             {
                 path: '/login',
-                element: <Login />,
+                element: <Login/>,
             },
             {
                 path: '/signup',
-                element: <Signup />
+                element: <Signup/>
             },
             {
                 path: '/about',
-                element: <About />
+                element: <About/>
             },
             {
                 path: '/profile',
-                element: <RequireAuthentication><Profile /></RequireAuthentication>
+                element: <RequireAuthentication><Profile/></RequireAuthentication>
             },
             {
                 path: '/lobbies',
-                element: <RequireAuthentication><Lobbies /></RequireAuthentication>
+                element: <RequireAuthentication><Lobbies/></RequireAuthentication>
             },
             {
                 path: '/lobbies/:lobbyId',
-                element: <RequireAuthentication><LobbyDetails /></RequireAuthentication>
+                element: <RequireAuthentication><LobbyDetails/></RequireAuthentication>
             },
             {
                 path: '/games/:gameId',
-                element: <RequireAuthentication><Game /></RequireAuthentication>
+                element: <RequireAuthentication><Game/></RequireAuthentication>
             }
         ]
     }

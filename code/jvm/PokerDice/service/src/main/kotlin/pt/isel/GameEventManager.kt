@@ -75,13 +75,12 @@ class GameEventService {
         sendEventToGame(event, gameId)
     }
 
-    fun notifyGameEnded(
-        gameId: Int,
-    ) = lock.withLock {
-        logger.info("notifying game ended: gameId={}", gameId)
-        val event = Event.GameEnded(gameId)
-        sendEventToGame(event, gameId)
-    }
+    fun notifyGameEnded(gameId: Int) =
+        lock.withLock {
+            logger.info("notifying game ended: gameId={}", gameId)
+            val event = Event.GameEnded(gameId)
+            sendEventToGame(event, gameId)
+        }
 
     fun notifyRoundEnded(
         gameId: Int,
@@ -93,13 +92,12 @@ class GameEventService {
         sendEventToGame(event, gameId)
     }
 
-    fun notifyGameUpdated(
-        gameId: Int,
-    ) = lock.withLock {
-        logger.info("notifying game updated: gameId={}", gameId)
-        val event = Event.GameUpdated(gameId)
-        sendEventToGame(event, gameId)
-    }
+    fun notifyGameUpdated(gameId: Int) =
+        lock.withLock {
+            logger.info("notifying game updated: gameId={}", gameId)
+            val event = Event.GameUpdated(gameId)
+            sendEventToGame(event, gameId)
+        }
 
     private fun removeListener(listener: EventEmitter) =
         lock.withLock {
@@ -137,4 +135,3 @@ class GameEventService {
             }
     }
 }
-
