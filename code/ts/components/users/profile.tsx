@@ -25,15 +25,16 @@ export function Profile() {
             try {
                 const infoResult = await authService.getUserInfo();
                 if (!infoResult.success) {
-                    throw new Error(infoResult.error.message || 'Failed to load user info');
+                    setError((infoResult as { success: false; error: string }).error ?? 'Failed to load user info');
+                    return;
                 }
-                setUserInfo(infoResult.data as UserInfo);
+                setUserInfo(infoResult.value as UserInfo);
 
                 const statsResult = await userService.getUserStats();
                 if (statsResult.success) {
-                    setStats(statsResult.data);
+                    setStats(statsResult.value);
                 } else {
-                    console.warn('Failed to load stats:', statsResult.error);
+                    console.warn('Failed to load stats:', (statsResult as { success: false; error: string }).error);
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -41,7 +42,6 @@ export function Profile() {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, []);
 

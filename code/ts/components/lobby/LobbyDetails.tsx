@@ -65,7 +65,7 @@ export function LobbyDetails() {
                 fetchLobbyDetails();
             },
             (event) => {
-                disconnect();
+                disconnect('lobby');
                 navigate(`/games/${event.gameId}`);
             }
         );
@@ -76,7 +76,7 @@ export function LobbyDetails() {
 
         return () => {
             unregisterHandler();
-            disconnect();
+            disconnect('lobby');
         };
     }, [lobbyId]);
 
@@ -107,7 +107,7 @@ export function LobbyDetails() {
         if (isOk(result)) {
             // Game created successfully, navigate to the game page
             setShowGameConfigMenu(false);
-            disconnect(); // Disconnect from lobby SSE
+            disconnect('lobby'); // Disconnect from lobby SSE
             navigate(`/games/${result.value.id}`);
         } else {
             // Handle error
@@ -122,7 +122,7 @@ export function LobbyDetails() {
         const result = await lobbyService.leaveLobby(parseInt(lobbyId));
 
         if (isOk(result)) {
-            disconnect();
+            disconnect('lobby');
             navigate('/lobbies');
         } else {
             setError(result.error || 'Failed to leave lobby. Please try again.');

@@ -44,7 +44,7 @@ fun Game.toOutputModel() =
                     ante = round.ante,
                     turnUserId = round.turn.player.id,
                     rollsLeft = round.turn.rollsRemaining,
-                    currentDice = round.turn.currentDice.map { it.face.name },
+                    currentDice = round.turn.currentDice.map { it.face.abbreviation },
                 )
             },
         players =

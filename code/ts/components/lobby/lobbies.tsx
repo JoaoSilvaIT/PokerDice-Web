@@ -63,7 +63,7 @@ export function Lobbies() {
         setupSSE();
 
         return () => {
-            disconnect();
+            disconnect('all-lobbies');
         };
     }, [fetchLobbies, connectToAllLobbies, registerAllLobbiesHandler, disconnect]);
 

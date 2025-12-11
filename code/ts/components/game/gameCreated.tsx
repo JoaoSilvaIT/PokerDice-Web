@@ -87,7 +87,7 @@ export function Game() {
 
         return () => {
             unregisterHandler();
-            disconnect();
+            disconnect('game');
         };
     }, [gameId]);
 

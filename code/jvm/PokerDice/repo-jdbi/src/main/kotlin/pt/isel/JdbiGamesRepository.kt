@@ -133,7 +133,7 @@ class JdbiGamesRepository(
 
     override fun startNewRound(game: Game): Game {
         val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
-        val firstPlayerIndex = 0
+        val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
         val firstPlayer = game.players[firstPlayerIndex]
 
         val newRound = Round(
@@ -188,7 +188,7 @@ class JdbiGamesRepository(
             INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
             VALUES (:game_id, :round_number, :user_id, '{}', -1)
             ON CONFLICT (game_id, round_number, user_id)
-            DO UPDATE SET rolls_left = -1
+            DO UPDATE SET rolls_left = -1, dice_values = '{}'
             """
         )
             .bind("game_id", round.gameId)
@@ -198,56 +198,52 @@ class JdbiGamesRepository(
 
         val updatedFoldedPlayers = round.foldedPlayers + round.turn.player
         val updatedRound = round.copy(foldedPlayers = updatedFoldedPlayers)
-        
+
         return nextTurn(updatedRound)
     }
 
     override fun nextTurn(round: Round): Round {
-        // Always rotate clockwise from current player, starting from player after current
         val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
 
-        // Start checking from the next player in clockwise order
-        for (offset in 1..round.players.size) {
-            val nextPlayerIndex = (currentPlayerIndex + offset) % round.players.size
-            val candidate = round.players[nextPlayerIndex]
+        // Find next non-folded player
+        for (i in 1..round.players.size) {
+            val nextPlayerIndex = (currentPlayerIndex + i) % round.players.size
+            val nextPlayer = round.players[nextPlayerIndex]
 
-            // Skip if this is the current player (we've gone full circle)
-            if (candidate.id == round.turn.player.id) {
-                break
-            }
-
-            val isFolded = round.foldedPlayers.any { it.id == candidate.id }
+            // Check if player has folded
+            val isFolded = round.foldedPlayers.any { it.id == nextPlayer.id }
 
             // Check if player has already played this round (has 5 dice saved)
+            // This is crucial to detect when the round is complete (all players played)
             val existingTurn = handle.createQuery(
                 """
-                SELECT dice_values, rolls_left FROM dbo.TURN
+                SELECT dice_values FROM dbo.TURN
                 WHERE game_id = :game_id AND round_number = :round_number AND user_id = :user_id
                 """
             )
                 .bind("game_id", round.gameId)
                 .bind("round_number", round.number)
-                .bind("user_id", candidate.id)
+                .bind("user_id", nextPlayer.id)
                 .mapToMap()
                 .findOne()
                 .orElse(null)
 
-            val diceCount = existingTurn?.get("dice_values")?.toString()
-                ?.removeSurrounding("{", "}")
-                ?.split(",")
-                ?.filter { it.isNotBlank() }
-                ?.size ?: 0
+            val diceValuesObj = existingTurn?.get("dice_values")
+            val diceCount = if (diceValuesObj is java.sql.Array) {
+                (diceValuesObj.array as? Array<*>)?.size ?: 0
+            } else {
+                0
+            }
 
             val hasAlreadyPlayed = diceCount >= 5
 
             if (!isFolded && !hasAlreadyPlayed) {
                 return round.copy(
-                    turn = Turn(candidate, rollsRemaining = 3, currentDice = emptyList(), isFolded = false)
+                    turn = Turn(nextPlayer, rollsRemaining = 3, currentDice = emptyList())
                 )
             }
         }
-        
-        // All players have played or folded - return current round unchanged (round is complete)
+
         return round
     }
 
@@ -340,6 +336,7 @@ class JdbiGamesRepository(
         VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
         ON CONFLICT (game_id, round_number, user_id)
         DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
+        WHERE dbo.TURN.rolls_left <> -1
         """
         )
             .bind("game_id", gameId)
@@ -394,6 +391,7 @@ class JdbiGamesRepository(
         VALUES (:game_id, :round_number, :user_id, :dice_values, :rolls_left)
         ON CONFLICT (game_id, round_number, user_id)
         DO UPDATE SET dice_values = :dice_values, rolls_left = :rolls_left
+        WHERE dbo.TURN.rolls_left <> -1
         """
         )
             .bind("game_id", round.gameId)
@@ -520,7 +518,6 @@ class JdbiGamesRepository(
             ?.map { Dice(charToFace(it[0])) } ?: emptyList()
 
         val rollsLeft = turnData?.get("rolls_left") as? Int ?: 3
-        val isFolded = rollsLeft == -1
 
         // Carregar winners
         val winnerIds = handle.createQuery(
@@ -553,7 +550,7 @@ class JdbiGamesRepository(
         return Round(
             number = roundNumber,
             firstPlayerIdx = roundData["first_player_idx"] as Int,
-            turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice, isFolded = isFolded),
+            turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
             players = players,
             playerHands = emptyMap(),
             gameId = gameId,

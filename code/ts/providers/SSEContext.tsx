@@ -88,7 +88,7 @@ interface SSEContextType {
     connectToLobby: (lobbyId: number) => Promise<void>;
     connectToAllLobbies: () => Promise<void>;
     connectToGame: (gameId: number) => Promise<void>;
-    disconnect: () => void;
+    disconnect: (type?: 'lobby' | 'all-lobbies' | 'game') => void;
     isConnected: boolean;
     registerLobbyHandler: (
         lobbyId: number,
@@ -116,13 +116,14 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export function SSEProvider({children}: { children: React.ReactNode }) {
     const emitterRef = useRef<EventSource | null>(null);
+    const connectionType = useRef<'lobby' | 'all-lobbies' | 'game' | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
     const handler = useRef<EventHandler | null>(null);
 
+    // ... (handlers remain the same) ...
     const handlePlayerJoined = useCallback((event: MessageEvent) => {
         try {
             const data: PlayerJoinedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
                 currentHandler.onPlayerJoined?.(data);
@@ -135,7 +136,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handlePlayerLeft = useCallback((event: MessageEvent) => {
         try {
             const data: PlayerLeftEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
                 currentHandler.onPlayerLeft?.(data);
@@ -148,7 +148,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleLobbyCreated = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyCreatedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
                 currentHandler.onLobbyCreated?.(data);
@@ -161,7 +160,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleLobbyUpdated = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyUpdatedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
                 currentHandler.onLobbyUpdated?.(data);
@@ -174,7 +172,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleLobbyClosed = useCallback((event: MessageEvent) => {
         try {
             const data: LobbyClosedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'all-lobbies') {
                 currentHandler.onLobbyClosed?.(data);
@@ -199,7 +196,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleTurnChanged = useCallback((event: MessageEvent) => {
         try {
             const data: TurnChangedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
                 currentHandler.onTurnChanged?.(data);
@@ -212,7 +208,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleDiceRolled = useCallback((event: MessageEvent) => {
         try {
             const data: DiceRolledEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
                 currentHandler.onDiceRolled?.(data);
@@ -225,7 +220,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleRoundEnded = useCallback((event: MessageEvent) => {
         try {
             const data: RoundEndedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
                 currentHandler.onRoundEnded?.(data);
@@ -238,7 +232,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleGameUpdated = useCallback((event: MessageEvent) => {
         try {
             const data: GameUpdatedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
                 currentHandler.onGameUpdated?.(data);
@@ -251,7 +244,6 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const handleGameEnded = useCallback((event: MessageEvent) => {
         try {
             const data: GameEndedEvent = JSON.parse(event.data);
-
             const currentHandler = handler.current;
             if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
                 currentHandler.onGameEnded?.(data);
@@ -260,6 +252,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             console.error('Error parsing game-ended event:', e);
         }
     }, []);
+    // ... (end handlers)
 
     const registerLobbyHandler = useCallback((
         lobbyId: number,
@@ -315,14 +308,17 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const connectToLobby = useCallback((lobbyId: number) => {
         return new Promise<void>((resolve, reject) => {
             if (emitterRef.current) {
-                resolve();
-                return;
+                if (connectionType.current === 'lobby') {
+                   resolve();
+                   return;
+                }
+                emitterRef.current.close();
             }
-
 
             emitterRef.current = new EventSource(RequestUri.lobby.listen(lobbyId), {
                 withCredentials: true
             });
+            connectionType.current = 'lobby';
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
@@ -332,12 +328,11 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.onerror = (error) => {
                 console.error('SSE Error:', error);
                 setIsConnected(false);
-
                 if (emitterRef.current) {
                     emitterRef.current.close();
                     emitterRef.current = null;
+                    connectionType.current = null;
                 }
-
                 reject(error);
             };
 
@@ -350,13 +345,17 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const connectToAllLobbies = useCallback(() => {
         return new Promise<void>((resolve, reject) => {
             if (emitterRef.current) {
-                resolve();
-                return;
+                 if (connectionType.current === 'all-lobbies') {
+                   resolve();
+                   return;
+                }
+                emitterRef.current.close();
             }
 
             emitterRef.current = new EventSource(RequestUri.lobby.listenAll, {
                 withCredentials: true
             });
+            connectionType.current = 'all-lobbies';
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
@@ -366,12 +365,11 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.onerror = (error) => {
                 console.error('SSE Error:', error);
                 setIsConnected(false);
-
                 if (emitterRef.current) {
                     emitterRef.current.close();
                     emitterRef.current = null;
+                    connectionType.current = null;
                 }
-
                 reject(error);
             };
 
@@ -383,33 +381,30 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
 
     const connectToGame = useCallback((gameId: number) => {
         return new Promise<void>((resolve, reject) => {
-            // Force disconnect any existing connection before connecting to game
             if (emitterRef.current) {
                 emitterRef.current.close();
                 emitterRef.current = null;
                 setIsConnected(false);
             }
 
-
             emitterRef.current = new EventSource(`/api/games/${gameId}/listen`, {
                 withCredentials: true
             });
+            connectionType.current = 'game';
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
                 resolve();
             };
 
-
             emitterRef.current.onerror = (error) => {
                 console.error('SSE Error:', error);
                 setIsConnected(false);
-
                 if (emitterRef.current) {
                     emitterRef.current.close();
                     emitterRef.current = null;
+                    connectionType.current = null;
                 }
-
                 reject(error);
             };
 
@@ -422,9 +417,13 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     }, [handleTurnChanged, handleDiceRolled, handleRoundEnded, handleGameUpdated, handleGameEnded]);
 
 
-    const disconnect = useCallback(() => {
-        if (emitterRef.current) {
+    const disconnect = useCallback((type?: 'lobby' | 'all-lobbies' | 'game') => {
+        // If type is specified, only disconnect if the current connection matches the type
+        if (type && connectionType.current !== type) {
+            return;
+        }
 
+        if (emitterRef.current) {
             emitterRef.current.removeEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.removeEventListener('player-left', handlePlayerLeft);
             emitterRef.current.removeEventListener('game-started', handleGameStarted);
@@ -437,11 +436,9 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.removeEventListener('game-updated', handleGameUpdated);
             emitterRef.current.removeEventListener('game-ended', handleGameEnded);
 
-            emitterRef.current.onopen = null;
-            emitterRef.current.onerror = null;
-
             emitterRef.current.close();
             emitterRef.current = null;
+            connectionType.current = null;
             setIsConnected(false);
         }
     }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted, handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed,
