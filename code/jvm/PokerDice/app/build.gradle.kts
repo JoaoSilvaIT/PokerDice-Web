@@ -58,7 +58,7 @@ kotlin {
 val dockerImageJvm = "pokerdice-jvm"
 val dockerImagePostgres = "pokerdice-postgres"
 val dockerImageUbuntu = "pokerdice-ubuntu"
-val dockerImageTs = "pokerdice-ts"
+val dockerImageNginx = "pokerdice-nginx"
 val dockerExe =
     when (
         org.gradle.internal.os.OperatingSystem
@@ -101,14 +101,14 @@ tasks.register<Exec>("buildImagePostgres") {
     )
 }
 
-tasks.register<Exec>("buildImageTs") {
-    commandLine(dockerExe, "build", "-t", dockerImageTs, "-f", "../docker/Dockerfile-ts", "../../../ts")
+tasks.register<Exec>("buildImageNginx") {
+    commandLine(dockerExe, "build", "-t", dockerImageNginx, "-f", "../docker/Dockerfile-nginx", "../../..")
 }
 
 tasks.register("buildImageAll") {
     dependsOn("buildImageJvm")
     dependsOn("buildImagePostgres")
-    dependsOn("buildImageTs")
+    dependsOn("buildImageNginx")
 }
 
 tasks.register<Exec>("allUp") {
