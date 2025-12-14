@@ -239,6 +239,7 @@ class GameController(
         return ResponseEntity
             .status(200)
             .header("Content-Type", "text/event-stream; charset=utf-8")
+            .header("Cache-Control", "no-cache")
             .header("Connection", "keep-alive")
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
