@@ -172,4 +172,146 @@ class UserAuthServiceTest {
         val retrievedUser = serviceUser.getUserByToken(token)
         kotlin.test.assertNull(retrievedUser)
     }
+
+    @Test
+    fun `revokeToken returns true even for invalid token`() {
+        val revoked = serviceUser.revokeToken("nonexistenttoken")
+
+        assertTrue(revoked)
+    }
+
+    @Test
+    fun `createUser fails with blank name`() {
+        val invite = createValidInvite()
+
+        val result = serviceUser.createUser(" ", "test@example.com", "password123", invite)
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.BlankName, result.value)
+    }
+
+    @Test
+    fun `createUser fails with blank email`() {
+        val invite = createValidInvite()
+
+        val result = serviceUser.createUser("John", " ", "password123", invite)
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.BlankEmail, result.value)
+    }
+
+    @Test
+    fun `createUser fails with blank password`() {
+        val invite = createValidInvite()
+
+        val result = serviceUser.createUser("John", "john@example.com", " ", invite)
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.BlankPassword, result.value)
+    }
+
+    @Test
+    fun `createUser fails with invalid invite`() {
+        val result = serviceUser.createUser("John", "john@example.com", "password123", "invalidinvite")
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.InvalidInvite, result.value)
+    }
+
+    @Test
+    fun `createToken trims email input`() {
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "mypassword", invite)
+
+        val result = serviceUser.createToken(" john@doe.com ", "mypassword")
+
+        assertIs<Either.Success<TokenExternalInfo>>(result)
+        assertNotNull(result.value.tokenValue)
+    }
+
+    @Test
+    fun `multiple tokens can exist for the same user`() {
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "password", invite)
+
+        val token1Result = serviceUser.createToken("john@doe.com", "password")
+        val token2Result = serviceUser.createToken("john@doe.com", "password")
+
+        assertIs<Either.Success<TokenExternalInfo>>(token1Result)
+        assertIs<Either.Success<TokenExternalInfo>>(token2Result)
+
+        val user1 = serviceUser.getUserByToken(token1Result.value.tokenValue)
+        val user2 = serviceUser.getUserByToken(token2Result.value.tokenValue)
+
+        assertNotNull(user1)
+        assertNotNull(user2)
+        assertEquals(user1.id, user2.id)
+    }
+
+    @Test
+    fun `getUserByToken with empty string returns null`() {
+        val user = serviceUser.getUserByToken("")
+
+        kotlin.test.assertNull(user)
+    }
+
+    @Test
+    fun `revoking one token does not affect other tokens of the same user`() {
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "password", invite)
+        val token1Result = serviceUser.createToken("john@doe.com", "password")
+        val token2Result = serviceUser.createToken("john@doe.com", "password")
+        assertIs<Either.Success<TokenExternalInfo>>(token1Result)
+        assertIs<Either.Success<TokenExternalInfo>>(token2Result)
+        val token1 = token1Result.value.tokenValue
+        val token2 = token2Result.value.tokenValue
+
+        serviceUser.revokeToken(token1)
+
+        kotlin.test.assertNull(serviceUser.getUserByToken(token1))
+        assertNotNull(serviceUser.getUserByToken(token2))
+    }
+
+    @Test
+    fun `createUser with valid invite succeeds`() {
+        val invite = createValidInvite()
+
+        val result = serviceUser.createUser("Alice", "alice@example.com", "pass123", invite)
+
+        assertIs<Either.Success<User>>(result)
+        assertNotNull(result.value)
+    }
+
+    @Test
+    fun `user can have multiple failed login attempts`() {
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "correctpassword", invite)
+
+        val result1 = serviceUser.createToken("john@doe.com", "wrongpassword")
+        val result2 = serviceUser.createToken("john@doe.com", "wrongpassword2")
+        val result3 = serviceUser.createToken("john@doe.com", "correctpassword")
+
+        assertIs<Either.Failure<AuthTokenError>>(result1)
+        assertIs<Either.Failure<AuthTokenError>>(result2)
+        assertIs<Either.Success<TokenExternalInfo>>(result3)
+    }
+
+    @Test
+    fun `createUser fails with blank invite`() {
+        val result = serviceUser.createUser("John", "john@example.com", "password123", " ")
+
+        assertIs<Either.Failure<AuthTokenError>>(result)
+        assertEquals(AuthTokenError.BlankInvite, result.value)
+    }
+
+    @Test
+    fun `createToken with correct credentials after failed attempts succeeds`() {
+        val invite = createValidInvite()
+        serviceUser.createUser("John", "john@doe.com", "correctpassword", invite)
+
+        serviceUser.createToken("john@doe.com", "wrongpassword")
+        val result = serviceUser.createToken("john@doe.com", "correctpassword")
+
+        assertIs<Either.Success<TokenExternalInfo>>(result)
+    }
 }

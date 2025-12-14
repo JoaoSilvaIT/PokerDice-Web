@@ -320,4 +320,183 @@ class LobbyServiceTest {
         assertIs<Either.Failure<LobbyError>>(result)
         assertEquals(LobbyError.NotHost, result.value)
     }
+
+    @Test
+    fun `joinLobby fails when lobby does not exist`() {
+        val invite = createValidInvite()
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
+
+        val result = serviceLobby.joinLobby(999, player)
+
+        assertIs<Either.Failure<LobbyError>>(result)
+        assertEquals(LobbyError.LobbyNotFound, result.value)
+    }
+
+    @Test
+    fun `leaveLobby fails when lobby does not exist`() {
+        val invite = createValidInvite()
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
+
+        val result = serviceLobby.leaveLobby(999, player)
+
+        assertIs<Either.Failure<LobbyError>>(result)
+        assertEquals(LobbyError.LobbyNotFound, result.value)
+    }
+
+    @Test
+    fun `leaveLobby succeeds even when user is not in the lobby`() {
+        val invite1 = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite1)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val invite2 = createValidInvite()
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123", invite2)
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
+
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+
+        // Player was never in the lobby, but leave should still succeed (no-op)
+        val result = serviceLobby.leaveLobby(lobbyResult.value.id, player)
+
+        assertIs<Either.Success<Boolean>>(result)
+        assertEquals(false, result.value)
+    }
+
+    @Test
+    fun `closeLobby fails when lobby does not exist`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+
+        val result = serviceLobby.closeLobby(999, host)
+
+        assertIs<Either.Failure<LobbyError>>(result)
+        assertEquals(LobbyError.LobbyNotFound, result.value)
+    }
+
+    @Test
+    fun `findLobbyById returns null when lobby does not exist`() {
+        val lobby = serviceLobby.findLobbyById(999)
+
+        kotlin.test.assertNull(lobby)
+    }
+
+    @Test
+    fun `findLobbyById returns correct lobby`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+
+        val lobby = serviceLobby.findLobbyById(lobbyResult.value.id)
+
+        assertNotNull(lobby)
+        assertEquals(lobbyResult.value.id, lobby.id)
+        assertEquals("Poker Room", lobby.name)
+    }
+
+    @Test
+    fun `listVisibleLobbies returns empty list when no lobbies exist`() {
+        val lobbies = serviceLobby.listVisibleLobbies()
+
+        assertTrue(lobbies.isEmpty())
+    }
+
+    @Test
+    fun `createLobby with maximum players should succeed`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+
+        val result = serviceLobby.createLobby(host, "Max Lobby", "desc", 2, 10)
+
+        assertIs<Either.Success<Lobby>>(result)
+        assertEquals(10, result.value.settings.maxPlayers)
+    }
+
+    @Test
+    fun `createLobby with minimum players should succeed`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+
+        val result = serviceLobby.createLobby(host, "Min Lobby", "desc", 2, 2)
+
+        assertIs<Either.Success<Lobby>>(result)
+        assertEquals(2, result.value.settings.minPlayers)
+    }
+
+    @Test
+    fun `joinLobby should preserve player order`() {
+        val invite1 = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite1)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val invite2 = createValidInvite()
+        val player1Result = serviceUser.createUser("Player1", "player1@example.com", "password123", invite2)
+        assertIs<Either.Success<User>>(player1Result)
+        val player1 = player1Result.value
+        val invite3 = createValidInvite()
+        val player2Result = serviceUser.createUser("Player2", "player2@example.com", "password123", invite3)
+        assertIs<Either.Success<User>>(player2Result)
+        val player2 = player2Result.value
+
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        serviceLobby.joinLobby(lobbyResult.value.id, player1)
+        serviceLobby.joinLobby(lobbyResult.value.id, player2)
+
+        val lobby = serviceLobby.findLobbyById(lobbyResult.value.id)
+        assertNotNull(lobby)
+        assertEquals(3, lobby.players.size)
+        assertTrue(lobby.players.any { it.id == host.id })
+        assertTrue(lobby.players.any { it.id == player1.id })
+        assertTrue(lobby.players.any { it.id == player2.id })
+    }
+
+    @Test
+    fun `multiple lobbies can exist simultaneously`() {
+        val invite1 = createValidInvite()
+        val host1Result = serviceUser.createUser("Host1", "host1@example.com", "password123", invite1)
+        assertIs<Either.Success<User>>(host1Result)
+        val host1 = host1Result.value
+        val invite2 = createValidInvite()
+        val host2Result = serviceUser.createUser("Host2", "host2@example.com", "password123", invite2)
+        assertIs<Either.Success<User>>(host2Result)
+        val host2 = host2Result.value
+
+        val lobby1Result = serviceLobby.createLobby(host1, "Lobby 1", "desc 1", 2, 4)
+        val lobby2Result = serviceLobby.createLobby(host2, "Lobby 2", "desc 2", 2, 4)
+
+        assertIs<Either.Success<Lobby>>(lobby1Result)
+        assertIs<Either.Success<Lobby>>(lobby2Result)
+
+        val lobbies = serviceLobby.listVisibleLobbies()
+        assertEquals(2, lobbies.size)
+    }
+
+    @Test
+    fun `host is automatically added to players list`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+
+        val result = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+
+        assertIs<Either.Success<Lobby>>(result)
+        assertEquals(1, result.value.players.size)
+        assertTrue(result.value.players.any { it.id == host.id })
+    }
 }

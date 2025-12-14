@@ -232,4 +232,124 @@ class GameServiceTest {
         assertIs<Either.Failure<GameError>>(result)
         assertEquals(GameError.GameNotFound, result.value)
     }
+
+    @Test
+    fun `getGame should return all game details correctly`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        val startTime = System.currentTimeMillis()
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
+        assertIs<Either.Success<Game>>(gameResult)
+
+        val game = serviceGame.getGame(gameResult.value.id)
+
+        assertNotNull(game)
+        assertEquals(gameResult.value.id, game.id)
+        assertEquals(5, game.numberOfRounds)
+        assertEquals(lobbyResult.value.id, game.lobbyId)
+        kotlin.test.assertNull(game.endedAt)
+    }
+
+    @Test
+    fun `createGame should set correct timestamps`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        val startTime = System.currentTimeMillis()
+
+        val result = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
+
+        assertIs<Either.Success<Game>>(result)
+        assertEquals(startTime, result.value.startedAt)
+        kotlin.test.assertNull(result.value.endedAt)
+    }
+
+    @Test
+    fun `endGame should set correct end timestamp`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        val startTime = System.currentTimeMillis()
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
+        assertIs<Either.Success<Game>>(gameResult)
+        val endTime = startTime + 5000
+
+        val result = serviceGame.endGame(gameResult.value.id, endTime)
+
+        assertIs<Either.Success<Game>>(result)
+        assertEquals(endTime, result.value.endedAt)
+    }
+
+    @Test
+    fun `createGame should accept maximum valid number of rounds`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 100, host.id)
+
+        assertIs<Either.Success<Game>>(result)
+        assertEquals(100, result.value.numberOfRounds)
+    }
+
+    @Test
+    fun `createGame should accept minimum valid number of rounds`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 1, host.id)
+
+        assertIs<Either.Success<Game>>(result)
+        assertEquals(1, result.value.numberOfRounds)
+    }
+
+    @Test
+    fun `createGame fails with negative number of rounds`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+
+        val result = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, -5, host.id)
+
+        assertIs<Either.Failure<GameError>>(result)
+        assertEquals(GameError.InvalidNumberOfRounds, result.value)
+    }
+
+    @Test
+    fun `endGame with same timestamp as start time should succeed`() {
+        val invite = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        val startTime = System.currentTimeMillis()
+        val gameResult = serviceGame.createGame(startTime, lobbyResult.value.id, 5, host.id)
+        assertIs<Either.Success<Game>>(gameResult)
+
+        val result = serviceGame.endGame(gameResult.value.id, startTime)
+
+        assertIs<Either.Success<Game>>(result)
+        assertEquals(startTime, result.value.endedAt)
+    }
 }
