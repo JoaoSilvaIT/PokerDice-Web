@@ -20,6 +20,17 @@ export function Game() {
     const [rolledDice, setRolledDice] = useState<string[]>([]);
     const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
     const [roundStarting, setRoundStarting] = useState(false);
+    const [betAmount, setBetAmount] = useState<number>(10);
+    const [lastRoundWinnerId, setLastRoundWinnerId] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (lastRoundWinnerId) {
+            const timer = setTimeout(() => {
+                setLastRoundWinnerId(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [lastRoundWinnerId]);
 
     useEffect(() => {
         if (!gameId) {
@@ -69,6 +80,7 @@ export function Game() {
                 fetchGame();
                 setRolledDice([]);
                 setSelectedIndices([]);
+                setLastRoundWinnerId(event.winnerId);
             },
             // onGameUpdated
             (event) => {
@@ -112,13 +124,6 @@ export function Game() {
         try {
             // Start the round
             await gameService.startRound(gId);
-
-            // Set ante (minimum is 10)
-            await gameService.setAnte(gId, 10);
-
-            // Pay ante for all players
-            await gameService.payAnte(gId);
-
             // Refresh game state
             const gameRes = await gameService.getGame(gId);
             if (isOk(gameRes)) {
@@ -190,11 +195,28 @@ export function Game() {
         if (isOk(gameRes)) setGame(gameRes.value);
     };
 
-    const handleFold = async () => {
+    const handlePlaceBet = async () => {
         if (!gameId) return;
-        await gameService.fold(parseInt(gameId));
-        setRolledDice([]);
-        setSelectedIndices([]);
+        
+        if (betAmount < 10) {
+            setError("Minimum bet is 10");
+            return;
+        }
+
+        // Set ante
+        const anteResult = await gameService.setAnte(parseInt(gameId), betAmount);
+        if (!isOk(anteResult)) {
+             setError(anteResult.error || 'Failed to set ante');
+             return;
+        }
+
+        // Pay ante
+        const payResult = await gameService.payAnte(parseInt(gameId));
+        if (!isOk(payResult)) {
+            setError(payResult.error || 'Failed to pay ante');
+            return;
+        }
+
         const gameRes = await gameService.getGame(parseInt(gameId));
         if (isOk(gameRes)) setGame(gameRes.value);
     };
@@ -276,6 +298,48 @@ export function Game() {
         );
     }
 
+    if (game.state === 'FINISHED') {
+         // Sort players by money won
+        const winners = [...game.players].sort((a, b) => b.moneyWon - a.moneyWon);
+        const winner = winners[0];
+
+        return (
+            <div className="game-container">
+                <div className="waiting-overlay">
+                    <div className="waiting-content">
+                        <h1>🏆 GAME OVER 🏆</h1>
+                        <div className="winner-display">
+                            <h2>Winner: {winner.name}</h2>
+                            <p className="winner-money">Total Won: 💰 {winner.moneyWon}</p>
+                        </div>
+                        <div className="waiting-players">
+                            <h3>Results</h3>
+                            <div className="waiting-players-list">
+                                {winners.map((player, index) => (
+                                    <div key={player.id} className="waiting-player">
+                                        <span className="rank">#{index + 1}</span>
+                                        <span className="waiting-player-avatar">
+                                            {player.name.charAt(0).toUpperCase()}
+                                        </span>
+                                        <span className="waiting-player-name">
+                                            {player.name}
+                                        </span>
+                                        <span className="player-money">
+                                            💰 {player.moneyWon}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <button onClick={handleLeaveGame} className="leave-button">
+                            Return to Lobby List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Show loading state when game is RUNNING but round not initialized
     if (game.state === 'RUNNING' && !game.currentRound) {
         return (
@@ -295,12 +359,18 @@ export function Game() {
 
     const currentRoundNumber = game.currentRound?.number || 0;
     const players = game.players;
-    const pot = game.currentRound?.ante ? game.currentRound.ante * players.length : 0;
+    // Use pot from backend if available, otherwise calculate fallback
+    const pot = (game.currentRound?.pot !== undefined) 
+        ? game.currentRound.pot 
+        : (game.currentRound?.ante ? game.currentRound.ante * players.length : 0);
     const ante = game.currentRound?.ante || 0;
     const currentPlayerId = game.currentRound?.turnUserId;
     const isMyTurn = currentPlayerId === currentUserId;
     const rollsLeft = game.currentRound?.rollsLeft ?? 3;
     const keptDice = game.currentRound?.currentDice || [];
+    
+    // Betting phase is when pot is 0
+    const isBettingPhase = pot === 0;
 
     return (
         <div className="game-container">
@@ -316,6 +386,13 @@ export function Game() {
 
             {/* Poker Table */}
             <div className="poker-table">
+                {/* Round Winner Banner */}
+                {lastRoundWinnerId && (
+                    <div className="winner-banner">
+                        🏆 Round Winner: {players.find(p => p.id === lastRoundWinnerId)?.name} 🏆
+                    </div>
+                )}
+
                 {/* Current Turn Banner */}
                 {game.currentRound && (
                     <div className={`turn-banner ${isMyTurn ? 'your-turn' : ''}`}>
@@ -354,87 +431,105 @@ export function Game() {
                         <div className="pot-amount">💰 {pot}</div>
                         {ante > 0 && <div className="ante-info">Ante: {ante}</div>}
                     </div>
-
-                    <div className="dice-area">
-                        {/* KEPT DICE (Persisted) */}
-                        <div className="kept-dice-container">
-                            <h4>Kept Dice:</h4>
-                            <div className="dice-row">
-                                {keptDice.map((die, i) => (
-                                    <div key={`kept-${i}`} className="dice kept">{die}</div>
-                                ))}
-                                {keptDice.length === 0 && <span className="no-dice">No dice kept</span>}
-                            </div>
+                    
+                    {/* BETTING INTERFACE */}
+                    {isBettingPhase ? (
+                        <div className="betting-interface">
+                            <h3>Place Your Bet</h3>
+                            {isMyTurn ? (
+                                <div className="bet-controls">
+                                    <input 
+                                        type="number" 
+                                        min="10" 
+                                        step="10"
+                                        value={betAmount} 
+                                        onChange={(e) => setBetAmount(parseInt(e.target.value))}
+                                        className="bet-input"
+                                    />
+                                    <button onClick={handlePlaceBet} className="bet-button">
+                                        💰 Place Bet
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="waiting-bet">
+                                    ⏳ Waiting for {players.find(p => p.id === currentPlayerId)?.name} to place bet...
+                                </div>
+                            )}
                         </div>
-
-                        {/* ROLLED DICE (Transient) */}
-                        {rolledDice.length > 0 && (
-                            <div className="rolled-dice-container">
-                                <h4>Rolled (Select to Keep):</h4>
+                    ) : (
+                        <div className="dice-area">
+                            {/* KEPT DICE (Persisted) */}
+                            <div className="kept-dice-container">
+                                <h4>Kept Dice:</h4>
                                 <div className="dice-row">
-                                    {rolledDice.map((die, i) => (
-                                        <div
-                                            key={`rolled-${i}`}
-                                            className={`dice selectable ${selectedIndices.includes(i) ? 'selected' : ''}`}
-                                            onClick={() => handleToggleSelect(i)}
-                                        >
-                                            {die}
-                                        </div>
+                                    {keptDice.map((die, i) => (
+                                        <div key={`kept-${i}`} className="dice kept">{die}</div>
                                     ))}
+                                    {keptDice.length === 0 && <span className="no-dice">No dice kept</span>}
                                 </div>
                             </div>
-                        )}
 
-                        {!isMyTurn && currentPlayerId && (
-                            <div className="waiting-turn">
-                                ⏳ A esperar pela jogada
-                                de {players.find(p => p.id === currentPlayerId)?.name || 'outro jogador'}...
-                            </div>
-                        )}
+                            {/* ROLLED DICE (Transient) */}
+                            {rolledDice.length > 0 && (
+                                <div className="rolled-dice-container">
+                                    <h4>Rolled (Select to Keep):</h4>
+                                    <div className="dice-row">
+                                        {rolledDice.map((die, i) => (
+                                            <div
+                                                key={`rolled-${i}`}
+                                                className={`dice selectable ${selectedIndices.includes(i) ? 'selected' : ''}`}
+                                                onClick={() => handleToggleSelect(i)}
+                                            >
+                                                {die}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
-                        {isMyTurn && (
-                            <div className="dice-info">
-                                🎲 Lançamentos restantes: {rollsLeft} | Dados guardados: {keptDice.length}/5
-                            </div>
-                        )}
-                    </div>
+                            {!isMyTurn && currentPlayerId && (
+                                <div className="waiting-turn">
+                                    ⏳ A esperar pela jogada
+                                    de {players.find(p => p.id === currentPlayerId)?.name || 'outro jogador'}...
+                                </div>
+                            )}
+
+                            {isMyTurn && (
+                                <div className="dice-info">
+                                    🎲 Lançamentos restantes: {rollsLeft} | Dados guardados: {keptDice.length}/5
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Game Controls */}
-            <div className="game-controls">
-                <button
-                    className="game-button roll-button"
-                    onClick={handleRollDice}
-                    disabled={!isMyTurn || rollsLeft <= 0 || rolledDice.length > 0 || keptDice.length >= 5}
-                >
-                    🎲 Roll Dice
-                </button>
-                <button
-                    className="game-button hold-button"
-                    onClick={handleHoldSelected}
-                    disabled={!isMyTurn || selectedIndices.length === 0}
-                >
-                    ✋ Hold Selected
-                </button>
-                <button
-                    className="game-button finish-turn-button"
-                    onClick={handleFinishTurn}
-                    disabled={!isMyTurn || keptDice.length < 5}
-                >
-                    ✅ Finish Turn
-                </button>
-                <button
-                    className="game-button fold-button"
-                    onClick={handleFold}
-                    disabled={!isMyTurn}
-                >
-                    🏳️ Fold
-                </button>
-                <button onClick={handleLeaveGame} className="game-button leave-button">
-                    🚪 Leave Game
-                </button>
-            </div>
+            {!isBettingPhase && (
+                <div className="game-controls">
+                    <button
+                        className="game-button roll-button"
+                        onClick={handleRollDice}
+                        disabled={!isMyTurn || rollsLeft <= 0 || rolledDice.length > 0 || keptDice.length >= 5}
+                    >
+                        🎲 Roll Dice
+                    </button>
+                    <button
+                        className="game-button hold-button"
+                        onClick={handleHoldSelected}
+                        disabled={!isMyTurn || selectedIndices.length === 0}
+                    >
+                        ✋ Hold Selected
+                    </button>
+                    <button
+                        className="game-button finish-turn-button"
+                        onClick={handleFinishTurn}
+                        disabled={!isMyTurn || keptDice.length < 5}
+                    >
+                        ✅ Finish Turn
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

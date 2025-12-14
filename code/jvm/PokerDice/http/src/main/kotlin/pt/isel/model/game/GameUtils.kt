@@ -45,6 +45,16 @@ fun Game.toOutputModel() =
                     turnUserId = round.turn.player.id,
                     rollsLeft = round.turn.rollsRemaining,
                     currentDice = round.turn.currentDice.map { it.face.abbreviation },
+                    pot = round.pot,
+                    winners =
+                        round.winners.map { player ->
+                            PlayerInGameOutputModel(
+                                id = player.id,
+                                name = player.name,
+                                currentBalance = player.currentBalance,
+                                moneyWon = player.moneyWon,
+                            )
+                        }.takeIf { it.isNotEmpty() },
                 )
             },
         players =

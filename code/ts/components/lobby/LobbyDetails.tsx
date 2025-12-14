@@ -105,45 +105,8 @@ export function LobbyDetails() {
         }));
     };
     const handleStartGame = async () => {
-        if (!lobbyId) return;
-
-        // Validate configuration
-        if (gameConfig.rounds < 1 || gameConfig.rounds > 20) {
-            setConfigError('Rounds must be between 1 and 20');
-            return;
-        }
-
-        setConfigError(null);
-
-        // Call the backend to create the game
-        const result = await gameService.createGame({
-            lobbyId: parseInt(lobbyId),
-            numberOfRounds: gameConfig.rounds,
-        });
-
-        if (isOk(result)) {
-            // Game created successfully, navigate to the game page
-            setShowGameConfigMenu(false);
-            disconnect('lobby'); // Disconnect from lobby SSE
-            navigate(`/games/${result.value.id}`);
-        } else {
-            // Handle error
-            setConfigError(result.error || 'Failed to create game. Please try again.');
-        }
-    };
-
-
-    const handleLeaveLobby = async () => {
-        if (!lobbyId) return;
-
-        const result = await lobbyService.leaveLobby(parseInt(lobbyId));
-
-        if (isOk(result)) {
-            disconnect('lobby');
-            navigate('/lobbies');
-        } else {
-            setError(result.error || 'Failed to leave lobby. Please try again.');
-        }
+        // Logic to start game would go here
+        // For now, we assume game creation happens elsewhere or is triggered by host
     };
 
     if (loading) {
@@ -215,9 +178,6 @@ export function LobbyDetails() {
                                 Game Settings
                             </button>
                         )}
-                        <button onClick={handleLeaveLobby} className="leave-lobby-button">
-                            Leave Lobby
-                        </button>
                     </div>
                 </div>
             </div>

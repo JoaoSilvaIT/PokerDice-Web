@@ -29,9 +29,10 @@ fun calculateFullHandValue(handIt: Pair<Hand, HandRank>): Int {
 
 fun decideRoundWinner(round: Round): List<PlayerInGame> {
     // Filter out folded players from consideration
-    val activeHands = round.playerHands.filterKeys { player ->
-        !round.foldedPlayers.any { it.id == player.id }
-    }
+    val activeHands =
+        round.playerHands.filterKeys { player ->
+            !round.foldedPlayers.any { it.id == player.id }
+        }
 
     if (activeHands.isEmpty()) {
         // Fallback if everyone folded (should be handled by fold logic, but for safety)

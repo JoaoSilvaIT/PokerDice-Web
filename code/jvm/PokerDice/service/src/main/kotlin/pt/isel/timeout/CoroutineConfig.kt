@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class CoroutineConfig {
-
     @Bean
-    fun lobbyScope(): CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    fun lobbyScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 }
