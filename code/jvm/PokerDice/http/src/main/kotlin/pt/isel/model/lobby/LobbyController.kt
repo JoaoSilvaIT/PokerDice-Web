@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import pt.isel.LobbyEventService
 import pt.isel.LobbyService
+import pt.isel.domain.sse.Event
 import pt.isel.domain.users.AuthenticatedUser
 import pt.isel.model.sse.SseEmitterBasedEventEmitter
+import pt.isel.timeout.LobbyTimeoutManager
 import pt.isel.utils.Either
 import java.util.concurrent.TimeUnit
 
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit
 class LobbyController(
     private val lobbyService: LobbyService,
     private val lobbyEventService: LobbyEventService,
+    private val lobbyTimeouts: LobbyTimeoutManager,
 ) {
     @PostMapping("/api/lobbies")
     fun create(
@@ -111,6 +114,14 @@ class LobbyController(
             user.user.id,
             id,
         )
+
+        lobbyTimeouts.getExpiration(id)?.let { expiresAt ->
+            lobbyEventService.sendEventToUser(
+                Event.CountdownStarted(id, expiresAt),
+                user.user.id
+            )
+        }
+
         return ResponseEntity
             .status(200)
             .header("Content-Type", "text/event-stream; charset=utf-8")
