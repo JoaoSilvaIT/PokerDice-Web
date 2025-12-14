@@ -384,7 +384,7 @@ class JdbiGamesRepository(
         return round.copy(turn = updatedTurn)
     }
 
-   override fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand> {
+    override fun loadPlayerHands(gameId: Int, roundNumber: Int, players: List<PlayerInGame>): Map<PlayerInGame, Hand> {
         return handle.createQuery(
             """
         SELECT user_id, dice_values FROM dbo.TURN

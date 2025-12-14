@@ -197,7 +197,7 @@ export function Game() {
 
     const handlePlaceBet = async () => {
         if (!gameId) return;
-        
+
         if (betAmount < 10) {
             setError("Minimum bet is 10");
             return;
@@ -206,8 +206,8 @@ export function Game() {
         // Set ante
         const anteResult = await gameService.setAnte(parseInt(gameId), betAmount);
         if (!isOk(anteResult)) {
-             setError(anteResult.error || 'Failed to set ante');
-             return;
+            setError(anteResult.error || 'Failed to set ante');
+            return;
         }
 
         // Pay ante
@@ -299,7 +299,7 @@ export function Game() {
     }
 
     if (game.state === 'FINISHED') {
-         // Sort players by money won
+        // Sort players by money won
         const winners = [...game.players].sort((a, b) => b.moneyWon - a.moneyWon);
         const winner = winners[0];
 
@@ -360,15 +360,15 @@ export function Game() {
     const currentRoundNumber = game.currentRound?.number || 0;
     const players = game.players;
     // Use pot from backend if available, otherwise calculate fallback
-    const pot = (game.currentRound?.pot !== undefined) 
-        ? game.currentRound.pot 
+    const pot = (game.currentRound?.pot !== undefined)
+        ? game.currentRound.pot
         : (game.currentRound?.ante ? game.currentRound.ante * players.length : 0);
     const ante = game.currentRound?.ante || 0;
     const currentPlayerId = game.currentRound?.turnUserId;
     const isMyTurn = currentPlayerId === currentUserId;
     const rollsLeft = game.currentRound?.rollsLeft ?? 3;
     const keptDice = game.currentRound?.currentDice || [];
-    
+
     // Betting phase is when pot is 0
     const isBettingPhase = pot === 0;
 
@@ -431,18 +431,18 @@ export function Game() {
                         <div className="pot-amount">💰 {pot}</div>
                         {ante > 0 && <div className="ante-info">Ante: {ante}</div>}
                     </div>
-                    
+
                     {/* BETTING INTERFACE */}
                     {isBettingPhase ? (
                         <div className="betting-interface">
                             <h3>Place Your Bet</h3>
                             {isMyTurn ? (
                                 <div className="bet-controls">
-                                    <input 
-                                        type="number" 
-                                        min="10" 
+                                    <input
+                                        type="number"
+                                        min="10"
                                         step="10"
-                                        value={betAmount} 
+                                        value={betAmount}
                                         onChange={(e) => setBetAmount(parseInt(e.target.value))}
                                         className="bet-input"
                                     />

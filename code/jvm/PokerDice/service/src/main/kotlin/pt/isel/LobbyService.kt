@@ -1,11 +1,9 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
-import pt.isel.domain.games.Game
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
-import pt.isel.errors.GameError
 import pt.isel.errors.LobbyError
 import pt.isel.repo.TransactionManager
 import pt.isel.timeout.LobbyTimeoutManager
@@ -21,16 +19,17 @@ class LobbyService(
     private val lobbyTimeouts: LobbyTimeoutManager,
     private val gameService: GameService,
 ) {
-
     init {
         lobbyTimeouts.registerStartHandler { lobbyId ->
             trxManager.run {
                 val lobby = repoLobby.findById(lobbyId) ?: return@run
-                val game = gameService.createGame(System.currentTimeMillis(),
-                   lobby.id,
-                    lobby.players.size,
-                    lobby.host.id
-                )
+                val game =
+                    gameService.createGame(
+                        System.currentTimeMillis(),
+                        lobby.id,
+                        lobby.players.size,
+                        lobby.host.id,
+                    )
 
                 when (game) {
                     is Either.Failure -> {
@@ -40,7 +39,7 @@ class LobbyService(
                         val game = game.value
                         lobbyEvents.notifyGameCreated(
                             lobbyId = lobby.id,
-                            gameId = game.id
+                            gameId = game.id,
                         )
                     }
                 }
@@ -95,17 +94,16 @@ class LobbyService(
             val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name, user.balance))
             repoLobby.save(updated)
 
-
             lobbyEvents.notifyPlayerJoined(lobbyId, user.id, user.name)
             lobbyEvents.notifyLobbyUpdated(lobbyId)
-            if(updated.players.size >= updated.settings.minPlayers) {
+            if (updated.players.size >= updated.settings.minPlayers) {
                 lobbyTimeouts.startCountdown(
                     lobbyId = lobbyId,
-                    seconds = updated.timeout
+                    seconds = updated.timeout,
                 )
                 lobbyEvents.notifyCountdownStarted(
                     lobbyId,
-                    Instant.now().plusSeconds(updated.timeout).toEpochMilli()
+                    Instant.now().plusSeconds(updated.timeout).toEpochMilli(),
                 )
             }
             success(updated)
@@ -130,7 +128,7 @@ class LobbyService(
 
             if (updated.players.size < updated.settings.minPlayers) {
                 lobbyTimeouts.cancelCountdown(lobbyId)
-                if(lobby.host.id == user.id){
+                if (lobby.host.id == user.id) {
                     val newLobby = lobby.copy(host = updated.players.first(), players = updated.players)
                     repoLobby.save(newLobby)
                 }
@@ -150,7 +148,7 @@ class LobbyService(
             repoLobby.deleteLobbyById(lobbyId)
 
             lobbyTimeouts.cancelCountdown(lobbyId)
-            //lobbyEvents.notifyCountdownCancelled(lobbyId)
+            // lobbyEvents.notifyCountdownCancelled(lobbyId)
             lobbyEvents.notifyLobbyClosed(lobbyId)
             success(Unit)
         }

@@ -9,7 +9,7 @@ import {Navbar} from './components/generic/navbar';
 import {RequireAuthentication} from './components/auth/requireAuthentication';
 import {About} from './components/generic/about';
 import {Profile} from './components/users/profile';
-import {Game} from './components/game/gameCreated';
+import {Game} from './components/game/Game';
 
 // Layout component that includes the navbar
 function Layout() {
