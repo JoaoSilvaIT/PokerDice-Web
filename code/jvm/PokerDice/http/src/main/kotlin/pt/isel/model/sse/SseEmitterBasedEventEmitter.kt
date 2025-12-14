@@ -86,6 +86,11 @@ class SseEmitterBasedEventEmitter(
                     SseEmitter
                         .event()
                         .comment(event.timestamp.epochSecond.toString())
+                is Event.CountdownStarted ->
+                    SseEmitter
+                        .event()
+                        .name("countdown-started")
+                        .data(event)
             }
         sseEmitter.send(sseEvent)
     }

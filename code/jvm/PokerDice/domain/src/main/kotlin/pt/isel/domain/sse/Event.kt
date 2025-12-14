@@ -67,4 +67,9 @@ sealed interface Event {
     data class KeepAlive(
         val timestamp: Instant,
     ) : Event
+
+    data class CountdownStarted(
+        val lobbyId: Int,
+        val expiresAt: Long,
+    ) : Event
 }

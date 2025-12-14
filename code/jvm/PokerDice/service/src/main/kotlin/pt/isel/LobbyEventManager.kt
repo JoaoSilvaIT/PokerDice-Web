@@ -93,6 +93,15 @@ class LobbyEventService {
             sendEventToAll(event)
         }
 
+    fun notifyCountdownStarted(
+        lobbyId: Int,
+        expiresAt: Long,
+    ) = lock.withLock {
+        logger.info("notifying countdown started: lobbyId={}, expiresAt={}", lobbyId, expiresAt)
+        val event = Event.CountdownStarted(lobbyId, expiresAt)
+        sendEventToLobby(event, lobbyId)
+    }
+
     fun notifyLobbyUpdated(lobbyId: Int) =
         lock.withLock {
             logger.info("notifying lobby updated: lobbyId={}", lobbyId)
@@ -174,4 +183,6 @@ class LobbyEventService {
                 }
             }
     }
+
+
 }

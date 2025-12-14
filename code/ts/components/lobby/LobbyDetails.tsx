@@ -33,6 +33,17 @@ export function LobbyDetails() {
         rounds: 5,
     });
     const [configError, setConfigError] = useState<string | null>(null);
+    const [countdownEnd, setCountdownEnd] = useState<number | null>(null);
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    useEffect(() => {
+        if (!countdownEnd) return;
+        const interval = setInterval(() => {
+            const remaining = countdownEnd - Date.now();
+            setTimeLeft(remaining > 0 ? remaining : 0);
+        }, 200);
+        return () => clearInterval(interval);
+    }, [countdownEnd]);
 
     const fetchLobbyDetails = async () => {
         if (!lobbyId) return;
@@ -67,6 +78,12 @@ export function LobbyDetails() {
             (event) => {
                 disconnect('lobby');
                 navigate(`/games/${event.gameId}`);
+            },
+            (event) => {                             // onCountdownStarted
+                setCountdownEnd(event.expiresAt);
+            },
+            (event) => {                             // onCountdownCancelled
+                setCountdownEnd(null);
             }
         );
 
@@ -183,6 +200,12 @@ export function LobbyDetails() {
                     <span className="update-indicator">
                         {isConnected ? '● Live' : '○ Connecting...'}
                     </span>
+
+                    {timeLeft > 0 && (
+                        <span className="lobby-countdown">
+                        Jogo começa em {Math.ceil(timeLeft / 1000)}s
+                        </span>
+                    )}
                     <div className="lobby-footer-buttons">
                         {isHost && (
                             <button

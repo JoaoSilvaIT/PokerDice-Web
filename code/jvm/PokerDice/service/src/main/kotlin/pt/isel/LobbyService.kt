@@ -1,11 +1,14 @@
 package pt.isel
 
 import org.springframework.stereotype.Component
+import pt.isel.domain.games.Game
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
+import pt.isel.errors.GameError
 import pt.isel.errors.LobbyError
 import pt.isel.repo.TransactionManager
+import pt.isel.timeout.LobbyTimeoutManager
 import pt.isel.utils.Either
 import pt.isel.utils.failure
 import pt.isel.utils.success
@@ -15,7 +18,36 @@ import java.time.Instant
 class LobbyService(
     private val trxManager: TransactionManager,
     private val lobbyEvents: LobbyEventService,
+    private val lobbyTimeouts: LobbyTimeoutManager,
+    private val gameService: GameService,
 ) {
+
+    init {
+        lobbyTimeouts.registerStartHandler { lobbyId ->
+            trxManager.run {
+                val lobby = repoLobby.findById(lobbyId) ?: return@run
+                val game = gameService.createGame(System.currentTimeMillis(),
+                   lobby.id,
+                    lobby.players.size,
+                    lobby.host.id
+                )
+
+                when (game) {
+                    is Either.Failure -> {
+                        return@run
+                    }
+                    is Either.Success -> {
+                        val game = game.value
+                        lobbyEvents.notifyGameCreated(
+                            lobbyId = lobby.id,
+                            gameId = game.id
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun createLobby(
         host: User,
         name: String,
@@ -63,8 +95,19 @@ class LobbyService(
             val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name, user.balance))
             repoLobby.save(updated)
 
+
             lobbyEvents.notifyPlayerJoined(lobbyId, user.id, user.name)
             lobbyEvents.notifyLobbyUpdated(lobbyId)
+            if(updated.players.size >= updated.settings.minPlayers) {
+                lobbyTimeouts.startCountdown(
+                    lobbyId = lobbyId,
+                    seconds = updated.timeout
+                )
+                lobbyEvents.notifyCountdownStarted(
+                    lobbyId,
+                    Instant.now().plusSeconds(updated.timeout).toEpochMilli()
+                )
+            }
             success(updated)
         }
 
@@ -84,6 +127,10 @@ class LobbyService(
             val updated = lobby.copy(players = lobby.players.filter { it.id != user.id }.toSet())
             repoLobby.save(updated)
 
+            if (updated.players.size < updated.settings.minPlayers) {
+                lobbyTimeouts.cancelCountdown(lobbyId)
+                //lobbyEvents.notifyCountdownCancelled(lobbyId)
+            }
             lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
             lobbyEvents.notifyLobbyUpdated(lobbyId)
             success(false)
@@ -98,6 +145,8 @@ class LobbyService(
             if (lobby.host.id != host.id) return@run failure(LobbyError.NotHost)
             repoLobby.deleteLobbyById(lobbyId)
 
+            lobbyTimeouts.cancelCountdown(lobbyId)
+            //lobbyEvents.notifyCountdownCancelled(lobbyId)
             lobbyEvents.notifyLobbyClosed(lobbyId)
             success(Unit)
         }

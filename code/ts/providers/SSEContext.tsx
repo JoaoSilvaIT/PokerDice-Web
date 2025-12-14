@@ -26,6 +26,15 @@ interface LobbyClosedEvent {
     lobbyId: number;
 }
 
+interface CountdownStartedEvent {
+    lobbyId: number;
+    expiresAt: number;
+}
+
+interface CountdownCancelledEvent {
+    lobbyId: number;
+}
+
 interface GameStartedEvent {
     lobbyId: number;
     gameId: number;
@@ -63,6 +72,8 @@ interface LobbyEventHandler {
     onPlayerJoined?: (event: PlayerJoinedEvent) => void;
     onPlayerLeft?: (event: PlayerLeftEvent) => void;
     onGameStarted?: (event: GameStartedEvent) => void;
+    onCountdownStarted?: (event: CountdownStartedEvent) => void;
+    onCountdownCancelled?: (event: CountdownCancelledEvent) => void;
 }
 
 interface AllLobbiesEventHandler {
@@ -94,7 +105,9 @@ interface SSEContextType {
         lobbyId: number,
         onPlayerJoined?: (event: PlayerJoinedEvent) => void,
         onPlayerLeft?: (event: PlayerLeftEvent) => void,
-        onGameStarted?: (event: GameStartedEvent) => void
+        onGameStarted?: (event: GameStartedEvent) => void,
+        onCountdownStarted?: (event: CountdownStartedEvent) => void,
+        onCountdownCancelled?: (event: CountdownCancelledEvent) => void
     ) => void;
     registerAllLobbiesHandler: (
         onLobbyCreated?: (event: LobbyCreatedEvent) => void,
@@ -181,6 +194,32 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
         }
     }, []);
 
+    const handleCountdownStarted = useCallback((event: MessageEvent) => {
+        try {
+            const data: CountdownStartedEvent = JSON.parse(event.data)
+            const currentHandler = handler.current
+
+            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
+                currentHandler.onCountdownStarted?.(data)
+            }
+        } catch (e) {
+            console.error('Error parsing countdown-started event:', e)
+        }
+    }, [])
+
+    const handleCountdownCancelled = useCallback((event: MessageEvent) => {
+        try {
+            const data: CountdownCancelledEvent = JSON.parse(event.data)
+            const currentHandler = handler.current
+
+            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
+                currentHandler.onCountdownCancelled?.(data)
+            }
+        } catch (e) {
+            console.error('Error parsing countdown-cancelled event:', e)
+        }
+    }, [])
+
     const handleGameStarted = useCallback((event: MessageEvent) => {
         try {
             const data: GameStartedEvent = JSON.parse(event.data);
@@ -258,14 +297,18 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
         lobbyId: number,
         onPlayerJoined?: (event: PlayerJoinedEvent) => void,
         onPlayerLeft?: (event: PlayerLeftEvent) => void,
-        onGameStarted?: (event: GameStartedEvent) => void
+        onGameStarted?: (event: GameStartedEvent) => void,
+        onCountdownStarted?: (event: CountdownStartedEvent) => void,
+        onCountdownCancelled?: (event: CountdownCancelledEvent) => void
     ) => {
         handler.current = {
             type: 'lobby',
             lobbyId,
             onPlayerJoined,
             onPlayerLeft,
-            onGameStarted
+            onGameStarted,
+            onCountdownStarted,
+            onCountdownCancelled
         };
     }, []);
 
@@ -339,6 +382,8 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.addEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.addEventListener('player-left', handlePlayerLeft);
             emitterRef.current.addEventListener('game-started', handleGameStarted);
+            emitterRef.current.addEventListener('countdown-started', handleCountdownStarted)
+            emitterRef.current.addEventListener('countdown-cancelled', handleCountdownCancelled)
         });
     }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted]);
 
@@ -430,6 +475,8 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.removeEventListener('new-lobby', handleLobbyCreated);
             emitterRef.current.removeEventListener('lobby-updated', handleLobbyUpdated);
             emitterRef.current.removeEventListener('lobby-closed', handleLobbyClosed);
+            emitterRef.current.removeEventListener('countdown-started', handleCountdownStarted)
+            emitterRef.current.removeEventListener('countdown-cancelled', handleCountdownCancelled)
             emitterRef.current.removeEventListener('turn-changed', handleTurnChanged);
             emitterRef.current.removeEventListener('dice-rolled', handleDiceRolled);
             emitterRef.current.removeEventListener('round-ended', handleRoundEnded);

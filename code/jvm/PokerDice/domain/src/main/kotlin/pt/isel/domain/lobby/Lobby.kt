@@ -9,4 +9,5 @@ data class Lobby(
     val host: UserExternalInfo,
     val settings: LobbySettings,
     val players: Set<UserExternalInfo>,
+    val timeout : Long= 10L,
 )

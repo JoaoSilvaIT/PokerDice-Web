@@ -9,6 +9,7 @@ import pt.isel.domain.games.utils.State
 import pt.isel.domain.games.utils.decideGameWinner
 import pt.isel.domain.games.utils.decideRoundWinner
 import pt.isel.domain.games.utils.rollDicesLogic
+import pt.isel.domain.lobby.Lobby
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either

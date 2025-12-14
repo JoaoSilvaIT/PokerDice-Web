@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ### Generate Invite for new user
 POST http://localhost:8080/api/users/invite
-Authorization: Bearer tusohwXaNB6EoqLtcfQAYpErKzo9aHQgC9g6W1Sw97U=
+Authorization: Bearer d4HeyNogUqe4i5a9YWBcyaVgfv0KYE4znzqioNcKN_U=
 
 ### Create New First User
 POST http://localhost:8080/api/users
@@ -19,7 +19,7 @@ Content-Type: application/json
   "name": "jaco",
   "email": "jaco@gmail.com",
   "password": "jaco",
-  "invite": "nw8vtcoGT7AWEkmt-O2htw=="
+  "invite": "pyKLJCUn1nJknbBWrVNS5g=="
 }
 
 ### Create New Second User
@@ -30,7 +30,7 @@ Content-Type: application/json
   "name": "player1",
   "email": "player1@gmail.com",
   "password": "player1",
-  "invite": "Wz4klZSMTX2wxWOeg6gP-Q=="
+  "invite": "b8SqhxKEbIPnOyiJyUJLSA=="
 }
 
 ### Get token of first user
@@ -53,7 +53,7 @@ Content-Type: application/json
 
 ### Create Lobby with First User (host)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer 7ICF6NzpmSp2YL9b-wGWPudqT7c3soG4P6z5Hqpd2zE=
+Authorization: Bearer dGuSmp8rtIfkRt09jSbFP0yXmlhC0daPDmtLdYdE8Xs=
 Content-Type: application/json
 
 {
@@ -65,7 +65,7 @@ Content-Type: application/json
 
 ### Join Lobby with Second User (player1)
 POST http://localhost:8080/api/lobbies/1/join
-Authorization: Bearer Nwbxo0x96pW3aBxJnWhTy_-aGnt_jDDcn0KZW9XVmIM=
+Authorization: Bearer -OP5E8qstMXEPUHewFpjFdWd5NMqY7wdaUjfSBFgfQ8=
 
 ### Create Game with host permission
 POST http://localhost:8080/api/games
@@ -202,5 +202,5 @@ POST http://localhost:8080/api/games/1/check-game-winner
 Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 
 ### Listen
-GET http://localhost:8080/api/lobbies/listen
-Authorization: Bearer b9RTD7N95yjq7QF19pXXfPv8qcAxA46JvxOtgjTlSUI=
+GET http://localhost:8080/api/lobbies/1/listen
+Authorization: Bearer dGuSmp8rtIfkRt09jSbFP0yXmlhC0daPDmtLdYdE8Xs=

@@ -29,6 +29,7 @@ dependencies {
     testImplementation("org.jdbi:jdbi3-core:3.45.1")
     testImplementation("org.jdbi:jdbi3-kotlin:3.45.1")
     testImplementation("org.jdbi:jdbi3-postgres:3.45.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 }
 
 tasks.test {
