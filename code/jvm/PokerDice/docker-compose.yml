@@ -18,12 +18,12 @@ services:
     ports:
       - 8080:8080
 
-  pokerdice-ts:
-    container_name: pokerdice-ts
-    image: pokerdice-ts
-    environment:
-      - VITE_API_TARGET=http://pokerdice-jvm:8080
-    volumes:
-      - ../../ts:/app
+  pokerdice-nginx:
+    container_name: pokerdice-nginx
+    build:
+      context: ../../
+      dockerfile: jvm/PokerDice/docker/Dockerfile-nginx
     ports:
       - 5173:5173
+    depends_on:
+      - pokerdice-jvm
