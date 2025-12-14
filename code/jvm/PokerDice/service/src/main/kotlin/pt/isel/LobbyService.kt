@@ -117,19 +117,23 @@ class LobbyService(
     ): Either<LobbyError, Boolean> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
-            if (lobby.host.id == user.id) {
+            if (lobby.players.size == 1) {
                 repoLobby.deleteLobbyByHost(user)
 
                 lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
                 lobbyEvents.notifyLobbyClosed(lobbyId)
                 return@run success(true)
             }
+
             val updated = lobby.copy(players = lobby.players.filter { it.id != user.id }.toSet())
             repoLobby.save(updated)
 
             if (updated.players.size < updated.settings.minPlayers) {
                 lobbyTimeouts.cancelCountdown(lobbyId)
-                //lobbyEvents.notifyCountdownCancelled(lobbyId)
+                if(lobby.host.id == user.id){
+                    val newLobby = lobby.copy(host = updated.players.first(), players = updated.players)
+                    repoLobby.save(newLobby)
+                }
             }
             lobbyEvents.notifyPlayerLeft(lobbyId, user.id, Instant.now().toString())
             lobbyEvents.notifyLobbyUpdated(lobbyId)
