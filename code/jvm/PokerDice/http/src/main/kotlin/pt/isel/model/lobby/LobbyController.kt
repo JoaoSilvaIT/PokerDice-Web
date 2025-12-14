@@ -118,7 +118,7 @@ class LobbyController(
         lobbyTimeouts.getExpiration(id)?.let { expiresAt ->
             lobbyEventService.sendEventToUser(
                 Event.CountdownStarted(id, expiresAt),
-                user.user.id
+                user.user.id,
             )
         }
 

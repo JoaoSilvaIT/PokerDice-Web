@@ -9,4 +9,6 @@ data class GameRoundOutputModel(
     val turnUserId: Int,
     val rollsLeft: Int,
     val currentDice: List<String>,
+    val pot: Int,
+    val winners: List<PlayerInGameOutputModel>?,
 )

@@ -9,7 +9,6 @@ import pt.isel.domain.games.utils.State
 import pt.isel.domain.games.utils.decideGameWinner
 import pt.isel.domain.games.utils.decideRoundWinner
 import pt.isel.domain.games.utils.rollDicesLogic
-import pt.isel.domain.lobby.Lobby
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
@@ -178,114 +177,6 @@ class GameService(
                 gameEventService.notifyTurnChanged(gameId, newRound.turn.player.id, newRound.number)
                 gameEventService.notifyGameUpdated(gameId)
                 success(updatedGame)
-            }
-        }
-
-    fun fold(
-        gameId: Int,
-        playerId: Int,
-    ): Either<GameError, Game> =
-        trxManager.run {
-            val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
-
-            // Prevent processing if game already finished
-            if (game.state == State.FINISHED) return@run failure(GameError.GameAlreadyEnded)
-
-            val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
-            if (round.turn.player.id != playerId) return@run failure(GameError.UserNotPlayerOfTurn)
-
-            val newRound = repoGame.fold(round)
-
-            // Check if only one player remains (others folded)
-            val activePlayers =
-                newRound.players.filter { player ->
-                    !newRound.foldedPlayers.any { it.id == player.id }
-                }
-
-            if (activePlayers.size == 1) {
-                // Only one player left - they win the round automatically
-                val winner = activePlayers.first()
-                val completedRound = newRound.copy(winners = listOf(winner))
-                repoGame.save(game.copy(currentRound = completedRound))
-
-                // Distribute winnings
-                val distributedRound = repoGame.distributeWinnings(completedRound)
-                val gameAfterDistribution = game.copy(currentRound = distributedRound)
-                repoGame.save(gameAfterDistribution)
-
-                gameEventService.notifyRoundEnded(gameId, round.number, winner.id)
-
-                // Check if game is finished
-                if (round.number >= game.numberOfRounds) {
-                    val endedGame = gameAfterDistribution.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
-                    repoGame.save(endedGame)
-                    gameEventService.notifyGameEnded(gameId)
-                    return@run success(endedGame)
-                } else {
-                    // Start new round
-                    val newGame = repoGame.startNewRound(gameAfterDistribution)
-                    val newRoundData = newGame.currentRound ?: return@run failure(GameError.RoundNotStarted)
-                    val anteRound = repoGame.setAnte(round.ante, newRoundData)
-                    val anteGame = newGame.copy(currentRound = anteRound)
-                    repoGame.save(anteGame)
-                    val paidRound = repoGame.payAnte(anteRound)
-                    val paidGame = anteGame.copy(currentRound = paidRound)
-                    repoGame.save(paidGame)
-
-                    gameEventService.notifyGameUpdated(gameId)
-                    return@run success(paidGame)
-                }
-            } else {
-                // Game continues or round might be complete if everyone else played
-                
-                // Check if round is complete (nextTurn returned same player who just folded, OR next player is the one who folded - meaning full circle)
-                // Note: newRound.turn.player is the player returned by nextTurn.
-                // If it equals the player who just folded, it means nextTurn couldn't find anyone else who hasn't played/folded.
-                val roundComplete = newRound.turn.player.id == playerId
-
-                if (roundComplete) {
-                    // All players have played - determine winner
-                    val hands = repoGame.loadPlayerHands(game.id, round.number, round.players)
-                    val winners = decideRoundWinner(round.copy(playerHands = hands)) // Use original round context but with loaded hands
-                    val completedRound = newRound.copy(winners = winners)
-                    repoGame.save(game.copy(currentRound = completedRound))
-
-                    // Distribute winnings
-                    val distributedRound = repoGame.distributeWinnings(completedRound)
-                    val gameAfterDistribution = game.copy(currentRound = distributedRound)
-                    repoGame.save(gameAfterDistribution)
-
-                    gameEventService.notifyRoundEnded(gameId, round.number, winners.first().id)
-
-                    // Check if game is finished
-                    if (round.number >= game.numberOfRounds) {
-                        val endedGame = gameAfterDistribution.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
-                        repoGame.save(endedGame)
-                        gameEventService.notifyGameEnded(gameId)
-                        return@run success(endedGame)
-                    } else {
-                        // Start new round
-                        val newGame = repoGame.startNewRound(gameAfterDistribution)
-                        val newRoundData = newGame.currentRound ?: return@run failure(GameError.RoundNotStarted)
-                        val anteRound = repoGame.setAnte(round.ante, newRoundData)
-                        val anteGame = newGame.copy(currentRound = anteRound)
-                        repoGame.save(anteGame)
-                        val paidRound = repoGame.payAnte(anteRound)
-                        val paidGame = anteGame.copy(currentRound = paidRound)
-                        repoGame.save(paidGame)
-
-                        gameEventService.notifyGameUpdated(gameId)
-                        return@run success(paidGame)
-                    }
-                } else {
-                     // Game continues with next player
-                    val updatedGame = game.copy(currentRound = newRound)
-                    repoGame.save(updatedGame)
-
-                    gameEventService.notifyTurnChanged(gameId, newRound.turn.player.id, newRound.number)
-                    gameEventService.notifyGameUpdated(gameId)
-                    success(updatedGame)
-                }
             }
         }
 

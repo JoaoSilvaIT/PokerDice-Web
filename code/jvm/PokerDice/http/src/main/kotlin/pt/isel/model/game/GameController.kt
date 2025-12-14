@@ -117,22 +117,6 @@ class GameController(
         }
     }
 
-    @PostMapping("/api/games/{id}/rounds/fold")
-    fun fold(
-        user: AuthenticatedUser,
-        @PathVariable id: Int,
-    ): ResponseEntity<*> {
-        return when (val result = gameService.fold(id, user.user.id)) {
-            is Either.Success ->
-                ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(result.value.toOutputModel())
-            is Either.Failure -> {
-                result.value.toProblemResponse()
-            }
-        }
-    }
-
     @PostMapping("/api/games/{id}/rounds/next-turn")
     fun nextTurn(
         user: AuthenticatedUser,

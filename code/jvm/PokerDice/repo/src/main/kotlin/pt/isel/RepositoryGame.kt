@@ -35,11 +35,9 @@ interface RepositoryGame : Repository<Game> {
 
     fun payAnte(round: Round): Round
 
-    fun distributeWinnings(round: Round): Round
-
     fun nextTurn(round: Round): Round
 
-    fun fold(round: Round): Round
+    fun distributeWinnings(round: Round): Round
 
     fun updateTurn(
         chosenDice: Dice,

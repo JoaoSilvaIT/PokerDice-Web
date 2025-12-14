@@ -16,6 +16,8 @@ export interface GameRound {
     turnUserId: number;
     rollsLeft: number;
     currentDice: string[];
+    pot: number;
+    winners?: PlayerInGame[];
 }
 
 export interface PlayerInGame {
@@ -81,12 +83,6 @@ export const gameService = {
 
     async nextTurn(gameId: number): Promise<Result<GameDetails>> {
         return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/next-turn`, {
-            method: 'POST',
-        });
-    },
-
-    async fold(gameId: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/fold`, {
             method: 'POST',
         });
     },

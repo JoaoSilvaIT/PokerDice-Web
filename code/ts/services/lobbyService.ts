@@ -71,21 +71,15 @@ export const lobbyService = {
         });
     },
 
-    async getLobbyDetails(lobbyId: number): Promise<Result<LobbyDetails>> {
-        return await fetchWrapper<LobbyDetails>(RequestUri.lobby.details(lobbyId), {
-            method: 'GET',
-        });
-    },
-
     async joinLobby(lobbyId: number): Promise<Result<void>> {
         return await fetchWrapper<void>(RequestUri.lobby.join(lobbyId), {
             method: 'POST',
         });
     },
 
-    async leaveLobby(lobbyId: number): Promise<Result<void>> {
-        return await fetchWrapper<void>(RequestUri.lobby.leave(lobbyId), {
-            method: 'POST',
+    async getLobbyDetails(lobbyId: number): Promise<Result<LobbyDetails>> {
+        return await fetchWrapper<LobbyDetails>(RequestUri.lobby.details(lobbyId), {
+            method: 'GET',
         });
-    },
-};
+    }
+}

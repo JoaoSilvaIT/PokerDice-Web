@@ -10,11 +10,12 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class LobbyTimeoutManager(
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
     private data class Countdown(val job: Job, val expiresAt: Long)
 
     private val countdowns = ConcurrentHashMap<Int, Countdown>()
+
     @Volatile
     private var startHandler: (suspend (Int) -> Unit)? = null
 
@@ -22,17 +23,21 @@ class LobbyTimeoutManager(
         startHandler = handler
     }
 
-    fun startCountdown(lobbyId: Int, seconds: Long) {
+    fun startCountdown(
+        lobbyId: Int,
+        seconds: Long,
+    ) {
         countdowns.computeIfAbsent(lobbyId) {
             val expiresAt = Instant.now().plusSeconds(seconds).toEpochMilli()
-            val job = scope.launch {
-                try {
-                    delay(seconds * 1000)
-                    startHandler?.invoke(lobbyId)
-                } finally {
-                    countdowns.remove(lobbyId)
+            val job =
+                scope.launch {
+                    try {
+                        delay(seconds * 1000)
+                        startHandler?.invoke(lobbyId)
+                    } finally {
+                        countdowns.remove(lobbyId)
+                    }
                 }
-            }
             Countdown(job, expiresAt)
         }
     }

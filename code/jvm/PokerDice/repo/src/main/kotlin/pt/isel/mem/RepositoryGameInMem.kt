@@ -107,22 +107,15 @@ class RepositoryGameInMem : RepositoryGame {
             round.players.map { user ->
                 user.copy(currentBalance = user.currentBalance - round.ante)
             }
-        return round.copy(players = updatedPlayers)
+        return round.copy(players = updatedPlayers, pot = round.pot + (round.ante * round.players.size))
     }
 
     override fun nextTurn(round: Round): Round {
-        val currentIndex = round.players.indexOf(round.turn.player)
-        // val updatedPlayerHands = round.playerHands + (round.turn.player to round.turn.finalHand) // BROKEN reference
-        val nextIndex = (currentIndex + 1) % round.players.size
-
-        // Simulating basic next turn without round transition logic for now to fix build if needed
+        val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
+        val nextPlayer = round.players[(currentPlayerIndex + 1) % round.players.size]
         return round.copy(
-            turn = Turn(round.players[nextIndex], MAX_ROLLS, emptyList()),
+            turn = Turn(nextPlayer, MAX_ROLLS, emptyList()),
         )
-    }
-
-    override fun fold(round: Round): Round {
-        TODO("Not yet implemented")
     }
 
     override fun updateTurn(

@@ -182,26 +182,6 @@ class JdbiGamesRepository(
         return updatedRound
     }
 
-    override fun fold(round: Round): Round {
-        handle.createUpdate(
-            """
-            INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
-            VALUES (:game_id, :round_number, :user_id, '{}', -1)
-            ON CONFLICT (game_id, round_number, user_id)
-            DO UPDATE SET rolls_left = -1, dice_values = '{}'
-            """
-        )
-            .bind("game_id", round.gameId)
-            .bind("round_number", round.number)
-            .bind("user_id", round.turn.player.id)
-            .execute()
-
-        val updatedFoldedPlayers = round.foldedPlayers + round.turn.player
-        val updatedRound = round.copy(foldedPlayers = updatedFoldedPlayers)
-
-        return nextTurn(updatedRound)
-    }
-
     override fun nextTurn(round: Round): Round {
         val currentPlayerIndex = round.players.indexOfFirst { it.id == round.turn.player.id }
 
