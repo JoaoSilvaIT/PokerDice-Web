@@ -126,6 +126,7 @@ class LobbyController(
             .status(200)
             .header("Content-Type", "text/event-stream; charset=utf-8")
             .header("Connection", "keep-alive")
+            .header("Cache-Control", "no-cache")
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
     }
@@ -142,6 +143,7 @@ class LobbyController(
             .status(200)
             .header("Content-Type", "text/event-stream; charset=utf-8")
             .header("Connection", "keep-alive")
+            .header("Cache-Control", "no-cache")
             .header("X-Accel-Buffering", "no")
             .body(sseEmitter)
     }
