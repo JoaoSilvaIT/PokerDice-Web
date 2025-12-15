@@ -191,10 +191,10 @@ export function LobbyDetails() {
                                 Game Settings
                             </button>
                         )}
+                        <button onClick={handleLeaveLobby} className="leave-lobby-button">
+                            Leave Lobby
+                        </button>
                     </div>
-                    <button onClick={handleLeaveLobby} className="leave-lobby-button">
-                        Leave Lobby
-                    </button>
                 </div>
             </div>
 
