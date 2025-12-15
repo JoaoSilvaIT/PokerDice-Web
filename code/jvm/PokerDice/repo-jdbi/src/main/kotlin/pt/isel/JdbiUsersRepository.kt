@@ -148,7 +148,44 @@ class JdbiUsersRepository(
     }
 
     override fun getUserStats(userId: Int): UserStatistics {
-        return UserStatistics(1, 0, 0, 0.0)
+        val gamesPlayed = handle.createQuery(
+            """
+            SELECT COUNT(DISTINCT game_id) 
+            FROM dbo.TURN 
+            WHERE user_id = :user_id
+            """
+        )
+            .bind("user_id", userId)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(0)
+
+        val wins = handle.createQuery(
+            """
+            WITH GameTotals AS (
+                SELECT game_id, user_id, SUM(winnings_amount) as total_won
+                FROM dbo.ROUND_WINNER
+                GROUP BY game_id, user_id
+            ),
+            GameWinners AS (
+                SELECT game_id, user_id
+                FROM GameTotals gt
+                WHERE total_won = (SELECT MAX(total_won) FROM GameTotals WHERE game_id = gt.game_id)
+            )
+            SELECT COUNT(*) 
+            FROM GameWinners 
+            WHERE user_id = :user_id
+            """
+        )
+            .bind("user_id", userId)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(0)
+
+        val losses = if (gamesPlayed > wins) gamesPlayed - wins else 0
+        val winRate = if (gamesPlayed > 0) wins.toDouble() / gamesPlayed else 0.0
+
+        return UserStatistics(gamesPlayed, wins, losses, winRate)
     }
 
     override fun createToken(
