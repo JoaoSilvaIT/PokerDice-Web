@@ -369,8 +369,9 @@ export function Game() {
     const rollsLeft = game.currentRound?.rollsLeft ?? 3;
     const keptDice = game.currentRound?.currentDice || [];
 
-    // Betting phase is when pot is 0
-    const isBettingPhase = pot === 0;
+    // Betting phase is when ante has not been set yet (not when pot is 0)
+    // This ensures betting interface appears at the start of EACH round
+    const isBettingPhase = ante === 0;
 
     return (
         <div className="game-container">
