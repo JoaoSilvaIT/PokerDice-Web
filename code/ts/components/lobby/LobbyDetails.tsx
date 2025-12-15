@@ -109,6 +109,19 @@ export function LobbyDetails() {
         // For now, we assume game creation happens elsewhere or is triggered by host
     };
 
+    const handleLeaveLobby = async () => {
+        if (!lobbyId) return;
+
+        const result = await lobbyService.leaveLobby(parseInt(lobbyId));
+
+        if (isOk(result)) {
+            disconnect('lobby');
+            navigate('/lobbies');
+        } else {
+            setError(result.error || 'Failed to leave lobby. Please try again.');
+        }
+    };
+
     if (loading) {
         return (
             <div className="lobby-details-container">
@@ -166,7 +179,7 @@ export function LobbyDetails() {
 
                     {timeLeft > 0 && (
                         <span className="lobby-countdown">
-                        Jogo começa em {Math.ceil(timeLeft / 1000)}s
+                        Game starts in {Math.ceil(timeLeft / 1000)}s
                         </span>
                     )}
                     <div className="lobby-footer-buttons">
@@ -179,6 +192,9 @@ export function LobbyDetails() {
                             </button>
                         )}
                     </div>
+                    <button onClick={handleLeaveLobby} className="leave-lobby-button">
+                        Leave Lobby
+                    </button>
                 </div>
             </div>
 

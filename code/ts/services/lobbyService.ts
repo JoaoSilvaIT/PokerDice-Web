@@ -81,5 +81,11 @@ export const lobbyService = {
         return await fetchWrapper<LobbyDetails>(RequestUri.lobby.details(lobbyId), {
             method: 'GET',
         });
+    },
+
+    async leaveLobby(lobbyId: number): Promise<Result<void>> {
+        return await fetchWrapper<void>(RequestUri.lobby.leave(lobbyId), {
+            method: 'POST',
+        });
     }
 }
