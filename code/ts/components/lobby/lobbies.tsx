@@ -3,7 +3,42 @@ import {useNavigate} from 'react-router-dom';
 import {lobbyService, Lobby} from '../../services/lobbyService';
 import {isOk} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
+import {ToastContainer, useToast} from '../generic/Toast';
 import '../../styles/lobbies.css';
+
+const formatError = (err: string | object) => {
+    try {
+        // Handle case where err is already an object (runtime safety)
+        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
+        
+        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
+        if (msg && typeof msg === 'string') {
+             // If message looks like a URL, extract the last part
+             if (msg.startsWith('http') || msg.includes('urn:')) {
+                 const parts = msg.split('/');
+                 return parts[parts.length - 1].replace(/-/g, ' ');
+             }
+             // Handle hyphens and camelCase
+             return msg
+                .replace(/-/g, ' ')
+                .replace(/([A-Z])/g, ' $1')
+                .toLowerCase() // normalize case
+                .replace(/^\w/, (c: string) => c.toUpperCase()) // capitalize first letter
+                .trim();
+        }
+    } catch {
+        // Fallback for non-JSON strings
+    }
+    
+    if (typeof err === 'string') {
+        if (err.startsWith('http') || err.includes('urn:')) {
+             const parts = err.split('/');
+             return parts[parts.length - 1].replace(/-/g, ' ');
+        }
+        return err;
+    }
+    return 'An unknown error occurred';
+};
 
 export function Lobbies() {
     const navigate = useNavigate();
@@ -19,9 +54,9 @@ export function Lobbies() {
         minPlayers: 2,
         maxPlayers: 4,
     });
-    const [createError, setCreateError] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [joiningLobbyId, setJoiningLobbyId] = useState<number | null>(null);
+    const {toasts, removeToast, showError} = useToast();
 
     const fetchLobbies = useCallback(async () => {
         setLoading(true);
@@ -77,44 +112,42 @@ export function Lobbies() {
 
     const handleCreateLobby = async () => {
         if (!createFormData.name.trim()) {
-            setCreateError('Lobby name is required');
+            showError('Lobby name is required');
             return;
         }
 
         if (createFormData.minPlayers < 2 || createFormData.minPlayers > 10) {
-            setCreateError('Min players must be between 2 and 10');
+            showError('Min players must be between 2 and 10');
             return;
         }
 
         if (createFormData.maxPlayers < 2 || createFormData.maxPlayers > 10) {
-            setCreateError('Max players must be between 2 and 10');
+            showError('Max players must be between 2 and 10');
             return;
         }
 
         if (createFormData.minPlayers > createFormData.maxPlayers) {
-            setCreateError('Min players cannot be greater than max players');
+            showError('Min players cannot be greater than max players');
             return;
         }
 
         setIsCreating(true);
-        setCreateError(null);
 
         const result = await lobbyService.createLobby(createFormData);
 
         if (isOk(result)) {
             setCreateFormData({name: '', description: '', minPlayers: 2, maxPlayers: 4});
             setShowCreateMenu(false);
-            setCreateError(null);
 
             navigate(`/lobbies/${result.value.id}`);
         } else {
             if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
-                setCreateError('You must be logged in to create a lobby');
+                showError('You must be logged in to create a lobby');
                 setTimeout(() => {
                     navigate('/login', {state: {source: '/lobbies'}});
                 }, 2000);
             } else {
-                setCreateError(result.error || 'Failed to create lobby. Please try again.');
+                showError(formatError(result.error || 'Failed to create lobby'));
             }
         }
 
@@ -132,12 +165,12 @@ export function Lobbies() {
             navigate(`/lobbies/${lobbyId}`);
         } else {
             if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
-                setError('You must be logged in to join a lobby');
+                showError('You must be logged in to join a lobby');
                 setTimeout(() => {
                     navigate('/login', {state: {source: '/lobbies'}});
                 }, 2000);
             } else {
-                setError(result.error || 'Failed to join lobby. Please try again.');
+                showError(formatError(result.error || 'Failed to join lobby'));
             }
         }
 
@@ -158,6 +191,7 @@ export function Lobbies() {
 
     return (
         <div className="lobbies-container">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <div className="lobbies-content">
                 <div className="lobbies-header">
                     <h1 className="lobbies-title">Public Lobbies</h1>
@@ -305,8 +339,6 @@ export function Lobbies() {
                     <div className="lobby-form-hint">
                         Players must be between 2 and 10
                     </div>
-
-                    {createError && <div className="lobby-create-error">{createError}</div>}
 
                     <div className="lobby-create-actions">
                         <button
