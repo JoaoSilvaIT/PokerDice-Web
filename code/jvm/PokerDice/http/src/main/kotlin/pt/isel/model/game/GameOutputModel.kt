@@ -5,6 +5,7 @@ data class PlayerInGameOutputModel(
     val name: String,
     val currentBalance: Int,
     val moneyWon: Int,
+    val handRank: String? = null,
 )
 
 /**

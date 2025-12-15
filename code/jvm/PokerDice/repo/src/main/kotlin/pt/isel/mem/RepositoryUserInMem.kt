@@ -79,6 +79,17 @@ class RepositoryUserInMem : RepositoryUser {
         return initialSize - tokens.size
     }
 
+    override fun addBalance(
+        userId: Int,
+        amount: Int,
+    ) {
+        val userIndex = users.indexOfFirst { it.id == userId }
+        if (userIndex != -1) {
+            val user = users[userIndex]
+            users[userIndex] = user.copy(balance = user.balance + amount)
+        }
+    }
+
     override fun findById(id: Int): User? = users.firstOrNull { it.id == id }
 
     override fun findAll(): List<User> = users.toList()

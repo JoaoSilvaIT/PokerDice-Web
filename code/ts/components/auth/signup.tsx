@@ -47,7 +47,7 @@ type Action =
 }
 
 function logUnexpectedAction(state: State, action: Action) {
-    console.log(`Unexpected action '${action.type} on state '${state.type}'`)
+    // console.log(`Unexpected action '${action.type} on state '${state.type}'`)
 }
 
 function reduce(state: State, action: Action): State {

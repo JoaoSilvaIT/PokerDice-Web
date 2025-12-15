@@ -13,6 +13,7 @@ interface RepositoryLobby : Repository<Lobby> {
         minPlayers: Int,
         maxPlayers: Int,
         host: User,
+        timeout: Long,
     ): Lobby
 
     fun getLobbyById(id: Int): LobbyExternalInfo

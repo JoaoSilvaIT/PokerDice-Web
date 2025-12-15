@@ -98,6 +98,7 @@ class JdbiLobbiesRepository(
         minPlayers: Int,
         maxPlayers: Int,
         host: User,
+        timeout: Long,
     ): Lobby {
         val id =
             handle
@@ -132,7 +133,7 @@ class JdbiLobbiesRepository(
             maxPlayers = maxPlayers
         )
         val hostInfo = UserExternalInfo(host.id, host.name, host.balance)
-        return Lobby(id, name, description, hostInfo, settings, setOf(hostInfo))
+        return Lobby(id, name, description, hostInfo, settings, setOf(hostInfo), timeout)
     }
 
     override fun findByName(name: String): Lobby? =

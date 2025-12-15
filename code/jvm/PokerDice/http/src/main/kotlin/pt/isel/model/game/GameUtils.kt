@@ -3,6 +3,7 @@ package pt.isel.model.game
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import pt.isel.domain.games.Game
+import pt.isel.domain.games.utils.defineHandRank
 import pt.isel.errors.GameError
 import pt.isel.model.Problem
 
@@ -59,11 +60,23 @@ fun Game.toOutputModel() =
             },
         players =
             players.map { player ->
+                val handRank =
+                    currentRound?.playerHands?.get(player)?.let { hand ->
+                        if (hand.dices.size == 5) {
+                            defineHandRank(hand).second.name.replace("_", " ").lowercase()
+                                .split(' ')
+                                .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+                        } else {
+                            null
+                        }
+                    }
+
                 PlayerInGameOutputModel(
                     id = player.id,
                     name = player.name,
                     currentBalance = player.currentBalance,
                     moneyWon = player.moneyWon,
+                    handRank = handRank,
                 )
             },
     )

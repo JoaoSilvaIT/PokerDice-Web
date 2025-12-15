@@ -36,4 +36,9 @@ interface RepositoryUser : Repository<User> {
     )
 
     fun removeTokenByValidationInfo(tokenValidationInfo: TokenValidationInfo): Int
+
+    fun addBalance(
+        userId: Int,
+        amount: Int,
+    )
 }

@@ -1,44 +1,10 @@
 import React, {useEffect, useState, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {lobbyService, Lobby} from '../../services/lobbyService';
-import {isOk} from '../../services/utils';
+import {isOk, formatError} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
 import {ToastContainer, useToast} from '../generic/Toast';
 import '../../styles/lobbies.css';
-
-const formatError = (err: string | object) => {
-    try {
-        // Handle case where err is already an object (runtime safety)
-        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
-        
-        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
-        if (msg && typeof msg === 'string') {
-             // If message looks like a URL, extract the last part
-             if (msg.startsWith('http') || msg.includes('urn:')) {
-                 const parts = msg.split('/');
-                 return parts[parts.length - 1].replace(/-/g, ' ');
-             }
-             // Handle hyphens and camelCase
-             return msg
-                .replace(/-/g, ' ')
-                .replace(/([A-Z])/g, ' $1')
-                .toLowerCase() // normalize case
-                .replace(/^\w/, (c: string) => c.toUpperCase()) // capitalize first letter
-                .trim();
-        }
-    } catch {
-        // Fallback for non-JSON strings
-    }
-    
-    if (typeof err === 'string') {
-        if (err.startsWith('http') || err.includes('urn:')) {
-             const parts = err.split('/');
-             return parts[parts.length - 1].replace(/-/g, ' ');
-        }
-        return err;
-    }
-    return 'An unknown error occurred';
-};
 
 export function Lobbies() {
     const navigate = useNavigate();

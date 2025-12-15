@@ -90,6 +90,15 @@ class UserController(
                     id = user.user.id,
                     name = user.user.name,
                     email = user.user.email,
+                    balance = user.user.balance,
                 ),
             )
+
+    @PostMapping("/api/users/easteregg")
+    fun easterEgg(user: AuthenticatedUser): ResponseEntity<Map<String, Int>> {
+        return when (val result = userService.claimEasterEgg(user.user.id)) {
+            is Either.Success -> ResponseEntity.ok(mapOf("newBalance" to result.value))
+            is Either.Failure -> ResponseEntity.status(400).build()
+        }
+    }
 }

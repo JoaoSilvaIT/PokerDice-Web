@@ -25,6 +25,7 @@ export interface PlayerInGame {
     name: string;
     currentBalance: number;
     moneyWon: number;
+    handRank?: string;
 }
 
 export interface GameDetails {
@@ -60,60 +61,64 @@ export const gameService = {
     },
 
     async startGame(gameId: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/start`, {
+        return await fetchWrapper<GameDetails>(RequestUri.game.start(gameId), {
             method: 'POST',
+            credentials: 'include',
         });
     },
 
-    async rollDices(gameId: number): Promise<Result<RolledDice>> {
-        return await fetchWrapper<RolledDice>(`/api/games/${gameId}/rounds/roll-dices`, {
+    async rollDices(gameId: number): Promise<Result<{ dice: string[] }>> {
+        const result = await fetchWrapper<RolledDiceOutputModel>(RequestUri.game.roll(gameId), {
             method: 'POST',
+            credentials: 'include',
         });
+        if (result.success) {
+            return {success: true, value: {dice: result.value.dice}};
+        }
+        return {success: false, error: result.error};
     },
 
-    async updateTurn(gameId: number, dice: string): Promise<Result<RolledDice>> {
-        return await fetchWrapper<RolledDice>(`/api/games/${gameId}/rounds/update-turn`, {
+    async updateTurn(gameId: number, dice: string[]): Promise<Result<string[]>> {
+        const result = await fetchWrapper<DiceOutputModel>(RequestUri.game.turn(gameId), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({dice}),
+            body: JSON.stringify({dices: dice}), // Matches backend DiceUpdateInputModel
+            credentials: 'include',
         });
+        if (result.success) {
+            return {success: true, value: result.value.dices};
+        }
+        return {success: false, error: result.error};
     },
 
     async nextTurn(gameId: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/next-turn`, {
+        const result = await fetchWrapper<GameDetails>(RequestUri.game.nextTurn(gameId), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ante: null}),
+            body: JSON.stringify({}),
+            credentials: 'include',
         });
-    },
-
-    async startRound(gameId: number, ante: number | null = null): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/start`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ante}),
-        });
+        return result;
     },
 
     async setAnte(gameId: number, ante: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/ante`, {
+        return await fetchWrapper<GameDetails>(RequestUri.game.ante(gameId), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ante}),
+            credentials: 'include',
         });
     },
 
     async payAnte(gameId: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/pay-ante`, {
+        return await fetchWrapper<GameDetails>(RequestUri.game.payAnte(gameId), {
             method: 'POST',
+            credentials: 'include',
         });
-    }
+    },
+
+    async startRound(gameId: number): Promise<Result<GameDetails>> {
+        return await fetchWrapper<GameDetails>(RequestUri.game.startRound(gameId), {
+            method: 'POST',
+            body: JSON.stringify({}),
+            credentials: 'include',
+        });
+    },
 }

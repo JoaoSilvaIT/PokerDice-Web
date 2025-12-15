@@ -12,11 +12,44 @@ import {Profile} from './components/users/profile';
 import {Game} from './components/game/Game';
 
 // Layout component that includes the navbar
+import {userService} from './services/userService';
+import {isOk} from './services/utils';
+import {ToastContainer, useToast} from './components/generic/Toast';
+
 function Layout() {
+    const {toasts, removeToast, showSuccess, showError} = useToast();
+
+    const handleEasterEgg = async () => {
+        const result = await userService.claimEasterEgg();
+        if (isOk(result)) {
+            showSuccess(`🐣 Easter Egg Found! +1000 💰 (New Balance: ${result.value})`);
+        } else {
+            // Silently fail or show error if authenticated check fails
+            if (result.error !== 'Session expired') {
+                 // Nothing to do, just silently ignore.
+            }
+        }
+    };
+
     return (
         <>
             <Navbar/>
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <Outlet/>
+            <div 
+                onClick={handleEasterEgg}
+                style={{
+                    position: 'fixed',
+                    bottom: '0',
+                    right: '0',
+                    width: '50px',
+                    height: '50px',
+                    opacity: 0, // Fully transparent but interacting
+                    cursor: 'copy', // Subtle hint cursor
+                    zIndex: 2147483647 // Max z-index
+                }}
+                title="."
+            />
         </>
     );
 }

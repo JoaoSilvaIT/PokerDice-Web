@@ -11,10 +11,10 @@ import pt.isel.domain.games.utils.decideRoundWinner
 import pt.isel.domain.games.utils.rollDicesLogic
 import pt.isel.errors.GameError
 import pt.isel.repo.TransactionManager
+import pt.isel.timeout.LobbyTimeoutManager
 import pt.isel.utils.Either
 import pt.isel.utils.failure
 import pt.isel.utils.success
-import pt.isel.timeout.LobbyTimeoutManager
 
 @Component
 class GameService(
@@ -33,7 +33,7 @@ class GameService(
         if (startedAt <= 0) return failure(GameError.InvalidTime)
         return trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
-            
+
             val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
             if (activeGames.isNotEmpty()) {
                 return@run failure(GameError.LobbyHasActiveGame)
@@ -107,6 +107,14 @@ class GameService(
 
             val newGame = repoGame.startNewRound(game, ante)
 
+            if (newGame == null) {
+                // End game if not enough players
+                val endedGame = game.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
+                repoGame.save(endedGame)
+                gameEventService.notifyGameEnded(gameId)
+                return@run success(endedGame)
+            }
+
             gameEventService.notifyGameUpdated(gameId)
             success(newGame)
         }
@@ -157,7 +165,11 @@ class GameService(
 
                 // Distribute winnings FIRST (before checking if game ended)
                 val distributedRound = repoGame.distributeWinnings(completedRound)
-                val gameAfterDistribution = game.copy(currentRound = distributedRound)
+                val gameAfterDistribution =
+                    game.copy(
+                        currentRound = distributedRound,
+                        players = distributedRound.players,
+                    )
                 repoGame.save(gameAfterDistribution)
 
                 gameEventService.notifyRoundEnded(gameId, round.number, winners.first().id)
@@ -172,6 +184,14 @@ class GameService(
                 } else {
                     // Start new round with ante=0 (players will set it in betting phase)
                     val newGame = repoGame.startNewRound(gameAfterDistribution, null)
+
+                    if (newGame == null) {
+                        // Not enough players to continue
+                        val endedGame = gameAfterDistribution.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
+                        repoGame.save(endedGame)
+                        gameEventService.notifyGameEnded(gameId)
+                        return@run success(endedGame)
+                    }
 
                     gameEventService.notifyGameUpdated(gameId)
                     return@run success(newGame)
@@ -202,19 +222,24 @@ class GameService(
         }
 
     fun updateTurn(
-        chosenDice: Dice,
+        chosenDice: List<Dice>,
         gameId: Int,
     ): Either<GameError, Game> =
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
-            if (round.turn.currentDice.size >= 5) return@run failure(GameError.HandAlreadyFull)
+
+            if (round.turn.currentDice.size + chosenDice.size > 5) return@run failure(GameError.HandAlreadyFull)
 
             val updatedRound = repoGame.updateTurn(chosenDice, round)
             val newGame = game.copy(currentRound = updatedRound)
             repoGame.save(newGame)
 
+            // Notify with the updated full list of dice faces, not just the new ones, or just the new ones?
+            // The frontend usually refetches or we send just the event.
+            // The existing code sent: updatedRound.turn.currentDice.map { it.face.name } (which is ALL dice)
+            // So we keep sending the full state of current dice
             gameEventService.notifyDiceRolled(gameId, updatedRound.turn.player.id, updatedRound.turn.currentDice.map { it.face.name })
             gameEventService.notifyGameUpdated(gameId)
             success(newGame)

@@ -1,5 +1,5 @@
 package pt.isel.model.game
 
 data class DiceUpdateInputModel(
-    val dice: Char,
+    val dices: List<String>,
 )

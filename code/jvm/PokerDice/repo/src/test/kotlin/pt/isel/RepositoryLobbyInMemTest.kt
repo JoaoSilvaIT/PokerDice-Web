@@ -30,7 +30,7 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `createLobby should add lobby with host as first user and allow finding by id and name`() {
         val host = user(1)
-        val lobby = repo.createLobby(name = "Poker Room", description = "fun", minPlayers = 2, maxPlayers = 2, host = host)
+        val lobby = repo.createLobby(name = "Poker Room", description = "fun", minPlayers = 2, maxPlayers = 2, host = host, timeout = 10L)
 
         assertEquals(0, lobby.id)
         assertEquals("Poker Room", lobby.name)
@@ -62,7 +62,7 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `save should update existing lobby (e g adding a user) without duplicating`() {
         val host = user(10)
-        val lobby = repo.createLobby("L1", "d", 2, 2, host)
+        val lobby = repo.createLobby("L1", "d", 2, 2, host, 10L)
         val bob = user(11)
         val bobExt = UserExternalInfo(bob.id, bob.name, bob.balance)
 
@@ -81,14 +81,14 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `deleteById and deleteLobbyById should remove lobby`() {
         val host = user(2)
-        val lobby = repo.createLobby("L2", "d", 2, 2, host)
+        val lobby = repo.createLobby("L2", "d", 2, 2, host, 10L)
         assertNotNull(repo.findById(lobby.id))
 
         repo.deleteById(lobby.id)
         assertNull(repo.findById(lobby.id))
 
         // create again and remove via deleteLobbyById alias
-        val lobby2 = repo.createLobby("L3", "d", 2, 2, host)
+        val lobby2 = repo.createLobby("L3", "d", 2, 2, host, 10L)
         assertNotNull(repo.findById(lobby2.id))
         repo.deleteLobbyById(lobby2.id)
         assertNull(repo.findById(lobby2.id))
@@ -98,9 +98,9 @@ class RepositoryLobbyInMemTest {
     fun `deleteLobbyByHost should remove all lobbies created by that host`() {
         val host1 = user(1)
         val host2 = user(2)
-        val l1 = repo.createLobby("H1-L1", "d", 2, 10, host1)
-        val l2 = repo.createLobby("H1-L2", "d", 2, 10, host1)
-        val l3 = repo.createLobby("H2-L1", "d", 2, 10, host2)
+        val l1 = repo.createLobby("H1-L1", "d", 2, 10, host1, 10L)
+        val l2 = repo.createLobby("H1-L2", "d", 2, 10, host1, 10L)
+        val l3 = repo.createLobby("H2-L1", "d", 2, 10, host2, 10L)
 
         assertNotNull(repo.findById(l1.id))
         assertNotNull(repo.findById(l2.id))
@@ -116,8 +116,8 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `clear should remove all lobbies`() {
         val host = user(42)
-        repo.createLobby("A", "d", 2, 10, host)
-        repo.createLobby("B", "d", 2, 10, host)
+        repo.createLobby("A", "d", 2, 10, host, 10L)
+        repo.createLobby("B", "d", 2, 10, host, 10L)
         assertTrue(repo.findAll().isNotEmpty())
 
         repo.clear()
@@ -129,9 +129,9 @@ class RepositoryLobbyInMemTest {
         val host1 = user(1)
         val host2 = user(2)
 
-        val lobby1 = repo.createLobby("L1", "desc1", 2, 4, host1)
-        val lobby2 = repo.createLobby("L2", "desc2", 2, 4, host2)
-        val lobby3 = repo.createLobby("L3", "desc3", 2, 4, host1)
+        val lobby1 = repo.createLobby("L1", "desc1", 2, 4, host1, 10L)
+        val lobby2 = repo.createLobby("L2", "desc2", 2, 4, host2, 10L)
+        val lobby3 = repo.createLobby("L3", "desc3", 2, 4, host1, 10L)
 
         assertEquals(0, lobby1.id)
         assertEquals(1, lobby2.id)
@@ -143,9 +143,9 @@ class RepositoryLobbyInMemTest {
         val host1 = user(1)
         val host2 = user(2)
 
-        repo.createLobby("L1", "d", 2, 4, host1)
-        repo.createLobby("L2", "d", 2, 4, host2)
-        repo.createLobby("L3", "d", 2, 4, host1)
+        repo.createLobby("L1", "d", 2, 4, host1, 10L)
+        repo.createLobby("L2", "d", 2, 4, host2, 10L)
+        repo.createLobby("L3", "d", 2, 4, host1, 10L)
 
         val lobbies = repo.findAll()
         assertEquals(3, lobbies.size)
@@ -159,8 +159,8 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `findByName should handle multiple lobbies with different names`() {
         val host = user(1)
-        repo.createLobby("Poker Room 1", "d", 2, 4, host)
-        repo.createLobby("Poker Room 2", "d", 2, 4, host)
+        repo.createLobby("Poker Room 1", "d", 2, 4, host, 10L)
+        repo.createLobby("Poker Room 2", "d", 2, 4, host, 10L)
 
         assertNotNull(repo.findByName("Poker Room 1"))
         assertNotNull(repo.findByName("Poker Room 2"))
@@ -170,7 +170,7 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `save should preserve lobby properties when updating`() {
         val host = user(1)
-        val lobby = repo.createLobby("Original", "desc", 2, 4, host)
+        val lobby = repo.createLobby("Original", "desc", 2, 4, host, 10L)
 
         val player2 = user(2)
         val player2Ext = UserExternalInfo(player2.id, player2.name, player2.balance)
@@ -193,9 +193,9 @@ class RepositoryLobbyInMemTest {
         val host2 = user(2)
         val host3 = user(3)
 
-        val l1 = repo.createLobby("H1-L1", "d", 2, 4, host1)
-        val l2 = repo.createLobby("H2-L1", "d", 2, 4, host2)
-        val l3 = repo.createLobby("H3-L1", "d", 2, 4, host3)
+        val l1 = repo.createLobby("H1-L1", "d", 2, 4, host1, 10L)
+        val l2 = repo.createLobby("H2-L1", "d", 2, 4, host2, 10L)
+        val l3 = repo.createLobby("H3-L1", "d", 2, 4, host3, 10L)
 
         repo.deleteLobbyByHost(host2)
 
@@ -209,7 +209,7 @@ class RepositoryLobbyInMemTest {
         val host1 = user(1)
         val host2 = user(2)
 
-        repo.createLobby("L1", "d", 2, 4, host1)
+        repo.createLobby("L1", "d", 2, 4, host1, 10L)
         val sizeBefore = repo.findAll().size
 
         repo.deleteLobbyByHost(host2) // host2 has no lobbies
@@ -220,9 +220,9 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `deleteById should not affect other lobbies`() {
         val host = user(1)
-        val l1 = repo.createLobby("L1", "d", 2, 4, host)
-        val l2 = repo.createLobby("L2", "d", 2, 4, host)
-        val l3 = repo.createLobby("L3", "d", 2, 4, host)
+        val l1 = repo.createLobby("L1", "d", 2, 4, host, 10L)
+        val l2 = repo.createLobby("L2", "d", 2, 4, host, 10L)
+        val l3 = repo.createLobby("L3", "d", 2, 4, host, 10L)
 
         repo.deleteById(l2.id)
 
@@ -234,7 +234,7 @@ class RepositoryLobbyInMemTest {
     @Test
     fun `createLobby should initialize with correct default values`() {
         val host = user(1)
-        val lobby = repo.createLobby("Test Lobby", "A test lobby", 3, 6, host)
+        val lobby = repo.createLobby("Test Lobby", "A test lobby", 3, 6, host, 10L)
 
         assertEquals("Test Lobby", lobby.name)
         assertEquals("A test lobby", lobby.description)

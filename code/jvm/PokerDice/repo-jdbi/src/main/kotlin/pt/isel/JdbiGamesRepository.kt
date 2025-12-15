@@ -132,16 +132,25 @@ class JdbiGamesRepository(
         return updatedGame
     }
 
-    override fun startNewRound(game: Game, ante: Int?): Game {
+    override fun startNewRound(game: Game, ante: Int?): Game? {
+        // Filter players who can afford the MIN_ANTE (or provided ante, if any, but usually 0 at start)
+        // If ante is null, we assume MIN_ANTE for eligibility check, or just > 0
+        val threshold = ante ?: MIN_ANTE
+        val eligiblePlayers = game.players.filter { it.currentBalance >= threshold }
+
+        if (eligiblePlayers.size < 2) {
+            return null
+        }
+
         val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
-        val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
-        val firstPlayer = game.players[firstPlayerIndex]
+        val firstPlayerIndex = (nextRoundNumber - 1) % eligiblePlayers.size
+        val firstPlayer = eligiblePlayers[firstPlayerIndex]
 
         val newRound = Round(
             number = nextRoundNumber,
             firstPlayerIdx = firstPlayerIndex,
             turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
-            players = game.players,
+            players = eligiblePlayers,
             playerHands = emptyMap(),
             ante = ante ?: 0,
             gameId = game.id
@@ -310,8 +319,26 @@ class JdbiGamesRepository(
             .bind("pot", round.pot)
             .execute()
 
-        val diceArray = round.turn.currentDice.map { faceToChar(it.face).toString() }.toTypedArray()
+        // 1. Ensure all players in this round have a TURN record initialized
+        // This effectively persists "Who is in this round"
+        val emptyDiceArray = emptyArray<String>()
+        round.players.forEach { player ->
+             handle.createUpdate(
+            """
+            INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
+            VALUES (:game_id, :round_number, :user_id, :dice_values, 3)
+            ON CONFLICT (game_id, round_number, user_id) DO NOTHING
+            """
+            )
+            .bind("game_id", gameId)
+            .bind("round_number", round.number)
+            .bind("user_id", player.id)
+            .bindArray("dice_values", String::class.java, *emptyDiceArray)
+            .execute()
+        }
 
+        // 2. Update the CURRENT turn player's state specifically
+        val diceArray = round.turn.currentDice.map { faceToChar(it.face).toString() }.toTypedArray()
         handle.createUpdate(
             """
         INSERT INTO dbo.TURN (game_id, round_number, user_id, dice_values, rolls_left)
@@ -348,7 +375,7 @@ class JdbiGamesRepository(
 
 
 
-    override fun updateTurn(chosenDice: Dice, round: Round): Round {
+    override fun updateTurn(chosenDice: List<Dice>, round: Round): Round {
         val existingDice = handle.createQuery(
             """
         SELECT dice_values FROM dbo.TURN
@@ -363,9 +390,11 @@ class JdbiGamesRepository(
             .map { it.removeSurrounding("{", "}").split(",").toTypedArray() }  // Parse manual do array
             .orElse(emptyArray())
 
-        val updatedDiceArray = existingDice + faceToChar(chosenDice.face).toString()
-        val updatedDice = round.turn.currentDice + chosenDice
-        val updatedTurn = round.turn.copy(currentDice = updatedDice)
+        val newDiceStrings = chosenDice.map { faceToChar(it.face).toString() }.toTypedArray()
+        val updatedDiceArray = existingDice + newDiceStrings
+        
+        val updatedDiceList = round.turn.currentDice + chosenDice
+        val updatedTurn = round.turn.copy(currentDice = updatedDiceList)
 
         handle.createUpdate(
             """
@@ -500,8 +529,35 @@ class JdbiGamesRepository(
             .findOne()
             .orElse(null) ?: return null
 
+        // Determine who is actually in this round by checking TURN table
+        val playerIdsInRound = handle.createQuery(
+            """
+            SELECT user_id FROM dbo.TURN
+            WHERE game_id = :game_id AND round_number = :round_number
+            """
+        )
+            .bind("game_id", gameId)
+            .bind("round_number", roundNumber)
+            .mapTo(Int::class.java)
+            .list()
+            .toSet()
+
+        // Filter the full player list to only those present in this round
+        val playersInRound = players.filter { it.id in playerIdsInRound }
+
+        // Safety check: if playersInRound is empty but round exists, something is wrong.
+        // Fallback to all players if TURN table is empty (legacy support or error)?
+        // No, if round exists, TURN records must exist per our new saveRound logic.
+        // But for fresh rounds created before this fix, it might be an issue.
+        // However, we can assume playersInRound is correct.
+        
+        // If playersInRound is empty, we might crash on 'turnPlayer' lookup below if we don't handle it.
+        // But turn_of_player ID comes from ROUND table, which should correspond to a valid player.
+        
         val turnUserId = roundData["turn_of_player"] as Int
-        val turnPlayer = players.first { it.id == turnUserId }
+        // Use playersInRound to find the turn player
+        val turnPlayer = playersInRound.firstOrNull { it.id == turnUserId } 
+            ?: players.first { it.id == turnUserId } // Fallback to full list if for some reason missing in TURN
 
         val turnData = handle.createQuery(
             """
@@ -536,7 +592,7 @@ class JdbiGamesRepository(
             .mapTo(Int::class.java)
             .list()
 
-        val winners = players.filter { it.id in winnerIds }
+        val winners = playersInRound.filter { it.id in winnerIds }
 
         // Load folded players
         val foldedPlayerIds = handle.createQuery(
@@ -550,14 +606,18 @@ class JdbiGamesRepository(
             .mapTo(Int::class.java)
             .list()
 
-        val foldedPlayers = players.filter { it.id in foldedPlayerIds }
+        val foldedPlayers = playersInRound.filter { it.id in foldedPlayerIds }
+
+        // Populate playerHands correctly
+        // We can reuse the loadPlayerHands implementation since we are inside the class
+        val playerHands = loadPlayerHands(gameId, roundNumber, playersInRound)
 
         return Round(
             number = roundNumber,
             firstPlayerIdx = roundData["first_player_idx"] as Int,
             turn = Turn(turnPlayer, rollsRemaining = rollsLeft, currentDice = currentDice),
-            players = players,
-            playerHands = emptyMap(),
+            players = playersInRound, 
+            playerHands = playerHands, // <--- Use populated map
             gameId = gameId,
             ante = roundData["ante"] as Int,
             pot = roundData["pot"] as Int,

@@ -21,6 +21,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
         minPlayers: Int,
         maxPlayers: Int,
         host: User,
+        timeout: Long,
     ): Lobby {
         val settings =
             LobbySettings(
@@ -37,6 +38,7 @@ class RepositoryLobbyInMem : RepositoryLobby {
                 host = hostInfo,
                 settings = settings,
                 players = setOf(hostInfo),
+                timeout = timeout,
             )
         lobbies.add(lobby)
         return lobby

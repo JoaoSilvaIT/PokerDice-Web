@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {lobbyService} from '../../services/lobbyService';
 import {gameService} from '../../services/gameService';
-import {isOk} from '../../services/utils';
+import {isOk, formatError} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
 import {ToastContainer, useToast} from '../generic/Toast';
 import '../../styles/lobbyDetails.css';
@@ -21,35 +21,6 @@ interface LobbyDetails {
     players: Player[];
     hostId: number;
 }
-
-const formatError = (err: string | object) => {
-    try {
-        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
-        
-        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
-        if (msg && typeof msg === 'string') {
-             if (msg.startsWith('http') || msg.includes('urn:')) {
-                 const parts = msg.split('/');
-                 return parts[parts.length - 1].replace(/-/g, ' ');
-             }
-             return msg
-                .replace(/-/g, ' ')
-                .replace(/([A-Z])/g, ' $1')
-                .toLowerCase() 
-                .replace(/^\w/, (c: string) => c.toUpperCase())
-                .trim();
-        }
-    } catch { }
-    
-    if (typeof err === 'string') {
-        if (err.startsWith('http') || err.includes('urn:')) {
-             const parts = err.split('/');
-             return parts[parts.length - 1].replace(/-/g, ' ');
-        }
-        return err;
-    }
-    return 'An unknown error occurred';
-};
 
 export function LobbyDetails() {
     const {lobbyId} = useParams<{ lobbyId: string }>();

@@ -135,6 +135,14 @@ class UserAuthService(
         }
     }
 
+    fun claimEasterEgg(userId: Int): Either<AuthTokenError, Int> {
+        return trxManager.run {
+            repoUsers.addBalance(userId, 1000)
+            val updatedUser = repoUsers.getUserById(userId)
+            if (updatedUser != null) success(updatedUser.balance) else failure(AuthTokenError.UserNotFoundOrInvalidCredentials)
+        }
+    }
+
     private fun validatePassword(
         password: String,
         validationInfo: PasswordValidationInfo,

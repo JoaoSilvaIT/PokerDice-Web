@@ -28,7 +28,7 @@ export async function fetchWrapper<T>(
                     localStorage.removeItem('userId');
                     localStorage.removeItem('userEmail');
                     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                    window.location.href = '/login';
+                    // Let the application handle the redirect via state change or router
                     return {success: false, error: 'Session expired'};
                 }
             }
@@ -58,6 +58,53 @@ export async function fetchWrapper<T>(
         return {success: true, value: data as T};
     } catch (error) {
         console.error('fetchWrapper error:', error);
-        return {success: false, error: error.message};
+        return {success: false, error: (error as Error).message};
     }
 }
+
+export const formatError = (err: string | object, errorMap?: Record<string, string>): string => {
+    try {
+        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
+
+        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
+        if (msg && typeof msg === 'string') {
+            const lowerCaseMsg = msg.toLowerCase();
+            // Check against specific error map first
+            if (errorMap) {
+                const errorKey = Object.keys(errorMap).find(key => lowerCaseMsg.includes(key));
+                if (errorKey) {
+                    return errorMap[errorKey];
+                }
+            }
+
+            if (lowerCaseMsg.includes('session expired') || lowerCaseMsg.includes('unauthorized')) {
+                return 'Your session has expired. Please log in again.';
+            }
+
+            if (lowerCaseMsg.startsWith('http') || lowerCaseMsg.includes('urn:')) {
+                const parts = lowerCaseMsg.split('/');
+                return parts[parts.length - 1].replace(/-/g, ' ');
+            }
+            return msg
+                .replace(/-/g, ' ')
+                .replace(/([A-Z])/g, ' $1')
+                .toLowerCase()
+                .replace(/^\w/, (c: string) => c.toUpperCase())
+                .trim();
+        }
+    } catch {
+        // Fallback for non-JSON strings
+    }
+
+    if (typeof err === 'string') {
+        if (err.toLowerCase().includes('session expired') || err.toLowerCase().includes('unauthorized')) {
+            return 'Your session has expired. Please log in again.';
+        }
+        if (err.startsWith('http') || err.includes('urn:')) {
+            const parts = err.split('/');
+            return parts[parts.length - 1].replace(/-/g, ' ');
+        }
+        return err;
+    }
+    return 'An unknown error occurred';
+};

@@ -1,5 +1,6 @@
 package pt.isel
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.users.User
@@ -18,6 +19,7 @@ class LobbyService(
     private val lobbyEvents: LobbyEventService,
     private val lobbyTimeouts: LobbyTimeoutManager,
     private val gameService: GameService,
+    @Value("\${pokerdice.lobby.timeout-seconds:10}") private val lobbyTimeout: Long,
 ) {
     init {
         lobbyTimeouts.registerStartHandler { lobbyId ->
@@ -66,7 +68,7 @@ class LobbyService(
             if (repoLobby.findByName(trimmedName) != null) {
                 return@run failure(LobbyError.NameAlreadyUsed)
             }
-            val lobby = repoLobby.createLobby(trimmedName, trimmedDesc, minPlayers, maxPlayers, host)
+            val lobby = repoLobby.createLobby(trimmedName, trimmedDesc, minPlayers, maxPlayers, host, lobbyTimeout)
 
             lobbyEvents.notifyNewLobby(lobby.id, lobby.name)
             success(lobby)
@@ -89,7 +91,7 @@ class LobbyService(
     ): Either<LobbyError, Lobby> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
-            
+
             val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
             if (activeGames.isNotEmpty()) {
                 return@run failure(LobbyError.GameAlreadyStarted)
@@ -105,11 +107,11 @@ class LobbyService(
             if (updated.players.size >= updated.settings.minPlayers) {
                 lobbyTimeouts.startCountdown(
                     lobbyId = lobbyId,
-                    seconds = updated.timeout,
+                    seconds = lobbyTimeout,
                 )
                 lobbyEvents.notifyCountdownStarted(
                     lobbyId,
-                    Instant.now().plusSeconds(updated.timeout).toEpochMilli(),
+                    Instant.now().plusSeconds(lobbyTimeout).toEpochMilli(),
                 )
             }
             success(updated)
@@ -159,7 +161,6 @@ class LobbyService(
             repoLobby.deleteLobbyById(lobbyId)
 
             lobbyTimeouts.cancelCountdown(lobbyId)
-            // lobbyEvents.notifyCountdownCancelled(lobbyId)
             lobbyEvents.notifyLobbyClosed(lobbyId)
             success(Unit)
         }

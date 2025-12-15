@@ -352,4 +352,220 @@ class GameServiceTest {
         assertIs<Either.Success<Game>>(result)
         assertEquals(startTime, result.value.endedAt)
     }
+
+    @Test
+    fun `nextTurn should end game if only one player can afford ante`() {
+        // Setup users
+        val invite1 = createValidInvite()
+        val hostResult = serviceUser.createUser("Host", "host@example.com", "password123", invite1)
+        assertIs<Either.Success<User>>(hostResult)
+        val host = hostResult.value
+
+        val invite2 = createValidInvite()
+        val playerResult = serviceUser.createUser("Player", "player@example.com", "password123", invite2)
+        assertIs<Either.Success<User>>(playerResult)
+        val player = playerResult.value
+
+        // Setup Lobby & Game
+        val lobbyResult = serviceLobby.createLobby(host, "Poker Room", "desc", 2, 2)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        serviceLobby.joinLobby(lobbyResult.value.id, player)
+
+        val gameResult = serviceGame.createGame(System.currentTimeMillis(), lobbyResult.value.id, 5, host.id)
+        assertIs<Either.Success<Game>>(gameResult)
+        var game = gameResult.value
+
+        // Start Game
+        val startedGameResult = serviceGame.startGame(game.id, host.id)
+        assertIs<Either.Success<Game>>(startedGameResult)
+        game = startedGameResult.value
+
+        // Start Round 1
+        val round1Result = serviceGame.startNewRound(game.id, null)
+        assertIs<Either.Success<Game>>(round1Result)
+        game = round1Result.value
+        val round1 = game.currentRound!!
+
+        // Set Ante (e.g. 10)
+        val ante = 10
+        val setAnteResult = serviceGame.setAnte(game.id, ante, round1.turn.player.id)
+        assertIs<Either.Success<Game>>(setAnteResult)
+        game = setAnteResult.value
+
+        // Pay Ante
+        val payAnteResult = serviceGame.payAnte(game.id)
+        assertIs<Either.Success<Game>>(payAnteResult)
+        game = payAnteResult.value
+
+        // Set one player's balance to 0 (Bankruptcy simulation)
+        // We need to update the Game object in repo directly because InMem Game repo doesn't sync with User repo automatically
+        trxManager.run {
+            val g = repoGame.findById(game.id)!!
+            val updatedPlayers =
+                g.players.map {
+                    if (it.id == player.id) it.copy(currentBalance = 0) else it
+                }
+            val updatedGame = g.copy(players = updatedPlayers)
+            repoGame.save(updatedGame)
+        }
+
+        // Complete the round so nextTurn is called
+        // We need to roll dice for all players
+        // This is tedious to simulate full round.
+        // Instead, we can call 'startNewRound' directly which triggers the check?
+        // But 'startNewRound' checks eligibility.
+        // If we call 'nextTurn' on the last turn, it triggers 'startNewRound'.
+
+        // Let's try calling startNewRound directly for Round 2.
+        // But startNewRound checks if previous round is finished.
+        // "if (round.winners.isEmpty() && round.number != 0) return failure(GameError.RoundWinnerNotDecided)"
+
+        // So we must finish round 1.
+        // Shortcut: Update the game state in repo to make round 1 finished?
+        // Or just force start a new round if we can bypass the check? No.
+
+        // Let's manually set a winner for Round 1 in the repo?
+        trxManager.run {
+            val g = repoGame.findById(game.id)!!
+            val r = g.currentRound!!
+            val winners = listOf(g.players.first { it.id == host.id })
+            val finishedRound = r.copy(winners = winners)
+            repoGame.updateGameRound(finishedRound, g)
+        }
+
+        // Now try to start Round 2
+        val round2Result = serviceGame.startNewRound(game.id, null)
+
+        // Expectation: Since 'player' has 0 balance (less than MIN_ANTE which is likely > 0),
+        // they should be excluded.
+        // Remaining players: 1 (host).
+        // Since < 2 players, game should END.
+
+        assertIs<Either.Success<Game>>(round2Result)
+        val gameRound2 = round2Result.value
+
+        assertEquals(pt.isel.domain.games.utils.State.FINISHED, gameRound2.state)
+        assertNotNull(gameRound2.endedAt)
+    }
+
+    private fun createUser(name: String): User {
+        val invite = createValidInvite()
+        val result = serviceUser.createUser(name, "$name@example.com", "password", invite)
+        return (result as Either.Success).value
+    }
+
+    @Test
+    fun `3 players, 1 bankrupt - Game should continue with 2 players`() {
+        // 1. Setup 3 Users
+        val p1 = createUser("P1")
+        val p2 = createUser("P2")
+        val p3 = createUser("P3")
+
+        // 2. Create Lobby & Join
+        val lobbyResult = serviceLobby.createLobby(p1, "Room", "Desc", 2, 4)
+        assertIs<Either.Success<Lobby>>(lobbyResult)
+        val lobbyId = lobbyResult.value.id
+        serviceLobby.joinLobby(lobbyId, p2)
+        serviceLobby.joinLobby(lobbyId, p3)
+
+        // 3. Start Game
+        val gameResult = serviceGame.createGame(System.currentTimeMillis(), lobbyId, 5, p1.id)
+        assertIs<Either.Success<Game>>(gameResult)
+        var game = gameResult.value
+        serviceGame.startGame(game.id, p1.id)
+
+        // 4. Start Round 1
+        val r1Result = serviceGame.startNewRound(game.id, null)
+        assertIs<Either.Success<Game>>(r1Result)
+        game = r1Result.value
+
+        // 5. Simulate Gameplay - Set Ante & Pay
+        val round1 = game.currentRound!!
+        serviceGame.setAnte(game.id, 10, round1.turn.player.id)
+        serviceGame.payAnte(game.id)
+
+        // 6. Force P3 Bankruptcy
+        trxManager.run {
+            val g = repoGame.findById(game.id)!!
+            val updatedPlayers =
+                g.players.map {
+                    if (it.id == p3.id) it.copy(currentBalance = 0) else it
+                }
+            val updatedGame = g.copy(players = updatedPlayers)
+            repoGame.save(updatedGame)
+
+            // Hack to finish round 1 in repo
+            val r = g.currentRound!!
+            val winners = listOf(g.players.first { it.id == p1.id }) // P1 wins
+            val finishedRound = r.copy(winners = winners)
+            repoGame.updateGameRound(finishedRound, updatedGame)
+        }
+
+        // 7. Attempt to start Round 2
+        // Since P3 is bankrupt, Round 2 should start with only P1 and P2
+        val r2Result = serviceGame.startNewRound(game.id, null)
+        assertIs<Either.Success<Game>>(r2Result)
+        game = r2Result.value
+
+        // Assertions
+        assertEquals(pt.isel.domain.games.utils.State.RUNNING, game.state, "Game should still be RUNNING")
+        val round2 = game.currentRound!!
+        assertEquals(2, round2.number)
+        assertEquals(2, round2.players.size, "Round 2 should have 2 players")
+
+        val pIds = round2.players.map { it.id }
+        kotlin.test.assertTrue(pIds.contains(p1.id))
+        kotlin.test.assertTrue(pIds.contains(p2.id))
+        kotlin.test.assertTrue(!pIds.contains(p3.id), "P3 should be excluded")
+    }
+
+    @Test
+    fun `3 players, 2 bankrupt - Game should END`() {
+        // 1. Setup 3 Users
+        val p1 = createUser("P1")
+        val p2 = createUser("P2")
+        val p3 = createUser("P3")
+
+        // 2. Create Lobby & Join
+        val lobbyResult = serviceLobby.createLobby(p1, "Room", "Desc", 2, 4)
+        val lobbyId = (lobbyResult as Either.Success).value.id
+        serviceLobby.joinLobby(lobbyId, p2)
+        serviceLobby.joinLobby(lobbyId, p3)
+
+        // 3. Start Game
+        val gameResult = serviceGame.createGame(System.currentTimeMillis(), lobbyId, 5, p1.id)
+        var game = (gameResult as Either.Success).value
+        serviceGame.startGame(game.id, p1.id)
+
+        // 4. Start Round 1
+        serviceGame.startNewRound(game.id, null)
+
+        // 5. Force P2 & P3 Bankruptcy
+        trxManager.run {
+            val g = repoGame.findById(game.id)!!
+            val updatedPlayers =
+                g.players.map {
+                    if (it.id == p2.id || it.id == p3.id) it.copy(currentBalance = 0) else it
+                }
+            val updatedGame = g.copy(players = updatedPlayers)
+            repoGame.save(updatedGame)
+
+            // Hack to finish round 1
+            val r = g.currentRound!!
+            val winners = listOf(g.players.first { it.id == p1.id })
+            val finishedRound = r.copy(winners = winners)
+            repoGame.updateGameRound(finishedRound, updatedGame)
+        }
+
+        // 6. Attempt to start Round 2
+        val r2Result = serviceGame.startNewRound(game.id, null)
+
+        // Assertions
+        // Game should transition to FINISHED because only 1 player (P1) is left
+        assertIs<Either.Success<Game>>(r2Result)
+        game = r2Result.value
+
+        assertEquals(pt.isel.domain.games.utils.State.FINISHED, game.state, "Game should be FINISHED")
+        assertNotNull(game.endedAt)
+    }
 }

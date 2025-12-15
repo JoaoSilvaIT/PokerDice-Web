@@ -131,7 +131,7 @@ class JdbiUsersRepository(
         return handle
             .createQuery(
                 """
-            SELECT id, username
+            SELECT id, username, balance
             FROM dbo.USERS
             WHERE id = :id
             """,
@@ -259,6 +259,13 @@ class JdbiUsersRepository(
                 """,
             ).bind("token", tokenValidationInfo.validationInfo)
             .execute()
+
+    override fun addBalance(userId: Int, amount: Int) {
+        handle.createUpdate("UPDATE dbo.USERS SET balance = balance + :amount WHERE id = :id")
+            .bind("amount", amount)
+            .bind("id", userId)
+            .execute()
+    }
 
     private fun mapRowToUser(rs: ResultSet): User =
         User(

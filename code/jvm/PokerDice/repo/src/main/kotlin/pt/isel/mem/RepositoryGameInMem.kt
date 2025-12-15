@@ -5,6 +5,7 @@ import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.MAX_ROLLS
+import pt.isel.domain.games.MIN_ANTE
 import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.games.Round
 import pt.isel.domain.games.Turn
@@ -76,20 +77,27 @@ class RepositoryGameInMem : RepositoryGame {
     override fun startNewRound(
         game: Game,
         ante: Int?,
-    ): Game {
+    ): Game? {
+        val threshold = ante ?: MIN_ANTE
+        val eligiblePlayers = game.players.filter { it.currentBalance >= threshold }
+
+        if (eligiblePlayers.size < 2) {
+            return null
+        }
+
         val nextRoundNr = (game.currentRound?.number ?: 0) + 1
-        val firstPlayerIndex = (nextRoundNr - 1) % game.players.size
+        val firstPlayerIndex = (nextRoundNr - 1) % eligiblePlayers.size
         val newRound =
             Round(
                 number = nextRoundNr,
                 firstPlayerIdx = firstPlayerIndex,
                 turn =
                     Turn(
-                        game.players[firstPlayerIndex],
+                        eligiblePlayers[firstPlayerIndex],
                         MAX_ROLLS,
                         emptyList(),
                     ),
-                game.players,
+                eligiblePlayers,
                 emptyMap(),
                 ante = ante ?: 0,
                 gameId = game.id,
@@ -123,14 +131,30 @@ class RepositoryGameInMem : RepositoryGame {
     }
 
     override fun updateTurn(
-        chosenDice: Dice,
+        chosenDice: List<Dice>,
         round: Round,
     ): Round {
-        TODO("Not yet implemented")
+        val currentDice = round.turn.currentDice + chosenDice
+        val updatedTurn = round.turn.copy(currentDice = currentDice)
+        // In-memory update: find game and update round
+        val game = games.find { it.id == round.gameId }
+        if (game != null) {
+            val updatedRound = round.copy(turn = updatedTurn)
+            save(game.copy(currentRound = updatedRound))
+            return updatedRound
+        }
+        return round.copy(turn = updatedTurn)
     }
 
     override fun distributeWinnings(round: Round): Round {
-        TODO("Not yet implemented")
+        // Simple mock implementation: clear pot
+        val updatedRound = round.copy(pot = 0)
+        // Update game in memory
+        val game = games.find { it.id == round.gameId }
+        if (game != null) {
+            save(game.copy(currentRound = updatedRound))
+        }
+        return updatedRound
     }
 
     override fun loadPlayerHands(
@@ -138,7 +162,10 @@ class RepositoryGameInMem : RepositoryGame {
         roundNumber: Int,
         players: List<PlayerInGame>,
     ): Map<PlayerInGame, Hand> {
-        TODO("Not yet implemented")
+        val game = games.find { it.id == gameId } ?: return emptyMap()
+        val round = game.currentRound ?: return emptyMap()
+        if (round.number != roundNumber) return emptyMap()
+        return round.playerHands
     }
 
     override fun updateGameRound(

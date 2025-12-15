@@ -5,7 +5,7 @@ import {useLocation} from 'react-router-dom'
 
 export function RequireAuthentication({children}) {
     const [username] = useAuthentication()
-    const hasCookie = document.cookie.includes('token')
+    const hasCookie = document.cookie.split('; ').some(row => row.startsWith('token='))
     const location = useLocation()
 
     if (username && hasCookie) {

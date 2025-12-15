@@ -94,12 +94,3 @@ fun faceToChar(face: Face): Char =
         Face.TEN -> 'T'
         Face.NINE -> '9'
     }
-
-/*
-fun chooseDices(dicesToKeep: List<Dice>, turn: Turn): Turn {
-    val newSetOfDices = dicesToKeep.toSet()
-    val newTurn = turn.heldDice + newSetOfDices
-    return turn.copy(heldDice = newTurn)
-}
-
- */

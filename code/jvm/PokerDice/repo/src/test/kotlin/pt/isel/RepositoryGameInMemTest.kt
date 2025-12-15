@@ -26,7 +26,8 @@ class RepositoryGameInMemTest {
         id: Int,
         name: String = "User$id",
         email: String = "user$id@example.com",
-    ) = User(id = id, name = name, email = email, balance = MIN_BALANCE, passwordValidation = PasswordValidationInfo("h"))
+        balance: Int = MIN_BALANCE,
+    ) = User(id = id, name = name, email = email, balance = balance, passwordValidation = PasswordValidationInfo("h"))
 
     private fun lobby(
         id: Int = 0,
@@ -213,5 +214,59 @@ class RepositoryGameInMemTest {
         assertTrue(all.any { it.id == g1.id && it.state == State.RUNNING })
         assertTrue(all.any { it.id == g3.id })
         assertTrue(all.none { it.id == g2.id })
+    }
+
+    @Test
+    fun `startNewRound should return null if fewer than 2 players have enough balance`() {
+        // Setup a lobby with 2 players
+        val host = user(1, balance = 0) // Bankrupt
+        val p2 = user(2, balance = 100)
+        val hostInfo = pt.isel.domain.users.UserExternalInfo(host.id, host.name, host.balance)
+        val p2Info = pt.isel.domain.users.UserExternalInfo(p2.id, p2.name, p2.balance)
+
+        val l =
+            Lobby(
+                id = 1,
+                name = "Lobby1",
+                description = "desc",
+                host = hostInfo,
+                settings = pt.isel.domain.lobby.LobbySettings(3, 2, 10),
+                players = setOf(hostInfo, p2Info),
+            )
+
+        val game = repo.createGame(100L, l, 3)
+
+        // Attempt to start round - host has 0 balance < MIN_ANTE (10)
+        val newGame = repo.startNewRound(game, null)
+
+        assertNull(newGame)
+    }
+
+    @Test
+    fun `startNewRound should create new round if enough players have balance`() {
+        // Setup a lobby with 2 players
+        val host = user(1, balance = 100)
+        val p2 = user(2, balance = 100)
+        val hostInfo = pt.isel.domain.users.UserExternalInfo(host.id, host.name, host.balance)
+        val p2Info = pt.isel.domain.users.UserExternalInfo(p2.id, p2.name, p2.balance)
+
+        val l =
+            Lobby(
+                id = 1,
+                name = "Lobby1",
+                description = "desc",
+                host = hostInfo,
+                settings = pt.isel.domain.lobby.LobbySettings(3, 2, 10),
+                players = setOf(hostInfo, p2Info),
+            )
+
+        val game = repo.createGame(100L, l, 3)
+
+        val newGame = repo.startNewRound(game, null)
+
+        assertNotNull(newGame)
+        assertNotNull(newGame.currentRound)
+        assertEquals(1, newGame.currentRound!!.number)
+        assertEquals(2, newGame.currentRound!!.players.size)
     }
 }

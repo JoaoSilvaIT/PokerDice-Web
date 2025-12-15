@@ -1,129 +1,61 @@
-import React, {useReducer} from 'react';
+import React, {useState} from 'react';
 import {useAuthentication} from "../../providers/authentication";
 import {Navigate, useLocation, Link} from 'react-router-dom';
 import {authService} from "../../services/authService";
-import {isOk} from "../../services/utils";
+import {isOk, formatError} from "../../services/utils";
+import {ToastContainer, useToast} from '../generic/Toast';
 import '../../styles/login.css';
 
-type State =
-    | {
-    type: 'editing',
-    inputs: { email: string; password: string },
-    error: string | null,
-    redirect: boolean
-}
-    | { type: 'redirecting' }
-    | {
-    type: 'submitting',
-    inputs: { email: string; password: string },
-    error: string | null,
-    isLoading: boolean,
-    redirect: boolean
-}
-
-type Action =
-    | { type: 'edit'; inputName: string; value: string }
-    | { type: 'submit'; inputs: { email: string; password: string } }
-    | { type: 'setError'; error: string | null }
-    | { type: 'setRedirect'; }
-    | { type: 'setLoading'; isLoading: boolean }
-
-function unexpectedAction(action: Action, state: State) {
-    console.log(`Unauthorized action: ${action.type} in state: ${state.type}`);
-    return state
-}
-
-function reduce(state: State, action: Action): State {
-    switch (state.type) {
-        case 'editing':
-            switch (action.type) {
-                case 'edit':
-                    return {...state, inputs: {...state.inputs, [action.inputName]: action.value}}
-                case 'submit':
-                    return {
-                        type: 'submitting',
-                        inputs: action.inputs,
-                        error: null,
-                        isLoading: true,
-                        redirect: false
-                    }
-                default:
-                    unexpectedAction(action, state)
-                    return state
-            }
-        case 'submitting':
-            switch (action.type) {
-                case 'setError':
-                    return {
-                        type: 'editing',
-                        inputs: {...state.inputs, password: ''},
-                        error: action.error,
-                        redirect: false
-                    }
-                case 'setRedirect':
-                    return {type: 'redirecting'}
-                default:
-                    unexpectedAction(action, state)
-                    return state
-            }
-        default:
-            unexpectedAction(action, state)
-            return state
-    }
-}
-
 export function Login() {
-    const [state, dispatch] = useReducer(reduce, {
-        type: 'editing',
-        inputs: {email: '', password: ''},
-        error: null,
-        redirect: false
-    })
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [redirect, setRedirect] = useState(false);
     const [, setUsername] = useAuthentication();
-    const location = useLocation()
+    const location = useLocation();
+    const {toasts, removeToast, showError} = useToast();
 
-    if (state.type === 'redirecting') {
-        return <Navigate to={location.state?.source || '/home'} replace={true}/>
-    }
-
-    function handleChange(ev: React.ChangeEvent<HTMLInputElement>) {
-        dispatch({type: 'edit', inputName: ev.target.name, value: ev.target.value})
+    if (redirect) {
+        return <Navigate to={'/home'} replace={true}/>;
     }
 
     async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
-        ev.preventDefault()
-        if (state.type === 'editing') {
-            dispatch({type: 'submit', inputs: state.inputs})
-            const result = await authService.login(state.inputs)
+        ev.preventDefault();
+        setLoading(true);
 
-            if (isOk(result)) {
-                const userInfoResult = await authService.getUserInfo()
+        const result = await authService.login({email, password});
 
-                if (isOk(userInfoResult)) {
-                    const userInfo = userInfoResult.value
-                    localStorage.setItem('userId', userInfo.id.toString())
-                    localStorage.setItem('username', userInfo.name)
-                    localStorage.setItem('userEmail', userInfo.email)
-                    setUsername(userInfo.name)
-                    dispatch({type: 'setRedirect'})
-                } else {
-                    dispatch({type: 'setError', error: 'Failed to fetch user information. Please try again.'})
-                }
+        if (isOk(result)) {
+            const userInfoResult = await authService.getUserInfo();
+
+            if (isOk(userInfoResult)) {
+                const userInfo = userInfoResult.value;
+                localStorage.setItem('userId', userInfo.id.toString());
+                localStorage.setItem('username', userInfo.name);
+                localStorage.setItem('userEmail', userInfo.email);
+                setUsername(userInfo.name);
+                setRedirect(true);
             } else {
-                dispatch({type: 'setError', error: result.error})
+                showError('Failed to fetch user information. Please try again.');
+                setPassword('');
             }
+        } else {
+            let msg = formatError(result.error);
+            if (msg.toLowerCase().includes('user not found or invalid credentials')) {
+                msg = 'Invalid email or password';
+            }
+            showError(msg);
+            setPassword('');
         }
+        setLoading(false);
     }
-
-    const inputs = state.type === 'editing' || state.type === 'submitting'
-        ? state.inputs
-        : {email: '', password: ''}
 
     return (
         <div className="auth-container">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <h1 className="auth-title">Login</h1>
             <form onSubmit={handleSubmit}>
-                <fieldset disabled={state.type === 'submitting' && state.isLoading}>
+                <fieldset disabled={loading}>
                     <div className="auth-form-group">
                         <div>
                             <label htmlFor="email" className="auth-label">
@@ -134,8 +66,8 @@ export function Login() {
                                 id="email"
                                 type="email"
                                 name="email"
-                                value={inputs.email}
-                                onChange={handleChange}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Enter your email"
                                 required
                             />
@@ -151,8 +83,8 @@ export function Login() {
                                     id="password"
                                     type="password"
                                     name="password"
-                                    value={inputs.password}
-                                    onChange={handleChange}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter your password"
                                     required
                                 />
@@ -174,11 +106,7 @@ export function Login() {
                     </p>
                 </div>
 
-                {state.type === 'editing' && state.error && (
-                    <div className="auth-error">{state.error}</div>
-                )}
-
-                {state.type === 'submitting' && (
+                {loading && (
                     <div className="auth-loading">Loading...</div>
                 )}
             </form>

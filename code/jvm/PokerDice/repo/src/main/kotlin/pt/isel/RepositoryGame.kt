@@ -29,7 +29,7 @@ interface RepositoryGame : Repository<Game> {
     fun startNewRound(
         game: Game,
         ante: Int?,
-    ): Game
+    ): Game?
 
     fun setAnte(
         ante: Int,
@@ -43,7 +43,7 @@ interface RepositoryGame : Repository<Game> {
     fun distributeWinnings(round: Round): Round
 
     fun updateTurn(
-        chosenDice: Dice,
+        chosenDice: List<Dice>,
         round: Round,
     ): Round
 
