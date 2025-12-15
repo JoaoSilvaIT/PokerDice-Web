@@ -70,10 +70,26 @@ export function LobbyDetails() {
         registerLobbyHandler(
             lobbyIdNum,
             (event) => {
-                fetchLobbyDetails();
+                // Update state locally with the new player instead of fetching
+                setLobby(prev => {
+                    if (!prev) return prev;
+                    // Check if player already exists
+                    if (prev.players.some(p => p.id === event.userId)) return prev;
+                    return {
+                        ...prev,
+                        players: [...prev.players, { id: event.userId, name: event.playerName }]
+                    };
+                });
             },
             (event) => {
-                fetchLobbyDetails();
+                // Player left - update state locally
+                setLobby(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        players: prev.players.filter(p => p.id !== event.playerId)
+                    };
+                });
             },
             (event) => {
                 disconnect('lobby');
@@ -87,15 +103,9 @@ export function LobbyDetails() {
             }
         );
 
-        connectToLobby(lobbyIdNum)
-            .then(() => {
-                // Fetch again after SSE connection is established to catch any updates
-                // that happened while connecting
-                fetchLobbyDetails();
-            })
-            .catch((error) => {
-                console.error('Failed to connect to SSE:', error);
-            });
+        connectToLobby(lobbyIdNum).catch((error) => {
+            console.error('Failed to connect to SSE:', error);
+        });
 
         return () => {
             unregisterHandler();
