@@ -8,7 +8,8 @@
     "allowSyntheticDefaultImports": true,
     "strict": false,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true
   },
   "include": ["src", "*.ts", "*.tsx", "**/*.ts", "**/*.tsx"]
 }

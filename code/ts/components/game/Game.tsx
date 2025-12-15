@@ -47,10 +47,12 @@ export function Game() {
             if (isOk(result)) {
                 setGame(result.value);
 
-                // Fetch lobby to get host information
-                const lobbyResult = await lobbyService.getLobbyDetails(result.value.lobbyId);
-                if (isOk(lobbyResult)) {
-                    setHostId(lobbyResult.value.hostId);
+                // Fetch lobby to get host information (only if lobby still exists)
+                if (result.value.lobbyId) {
+                    const lobbyResult = await lobbyService.getLobbyDetails(result.value.lobbyId);
+                    if (isOk(lobbyResult)) {
+                        setHostId(lobbyResult.value.hostId);
+                    }
                 }
 
                 setError(null);
@@ -222,6 +224,35 @@ export function Game() {
     };
 
     const handleLeaveGame = async () => {
+        if (!game || !game.lobbyId) {
+            navigate('/lobbies');
+            return;
+        }
+
+        let currentHostId = hostId;
+        // If we don't know the host yet, try to fetch it now as a fallback
+        if (!currentHostId) {
+            const lobbyRes = await lobbyService.getLobbyDetails(game.lobbyId);
+            if (isOk(lobbyRes)) {
+                currentHostId = lobbyRes.value.hostId;
+            }
+        }
+
+        // If we are the host, delete the lobby
+        if (currentHostId === currentUserId) {
+            const result = await lobbyService.deleteLobby(game.lobbyId);
+            if (!result.success) {
+                // If lobby is already gone (e.g. 404), just proceed
+                if (result.error && (result.error.includes("not found") || result.error.includes("NotFound"))) {
+                    navigate('/lobbies');
+                    return;
+                }
+
+                console.error("Failed to delete lobby:", result.error);
+                setError(`Failed to delete lobby: ${result.error}. Please try again.`);
+                return;
+            }
+        }
         navigate('/lobbies');
     };
 

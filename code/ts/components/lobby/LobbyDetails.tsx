@@ -105,8 +105,19 @@ export function LobbyDetails() {
         }));
     };
     const handleStartGame = async () => {
-        // Logic to start game would go here
-        // For now, we assume game creation happens elsewhere or is triggered by host
+        if (!lobby || !lobbyId) return;
+
+        setConfigError(null);
+
+        const result = await gameService.createGame({
+            lobbyId: parseInt(lobbyId),
+            numberOfRounds: gameConfig.rounds
+        });
+
+        if (!isOk(result)) {
+            setConfigError(result.error || 'Failed to create game');
+        }
+        // Game will start via SSE event which will navigate to the game page
     };
 
     const handleLeaveLobby = async () => {
@@ -119,6 +130,16 @@ export function LobbyDetails() {
             navigate('/lobbies');
         } else {
             setError(result.error || 'Failed to leave lobby. Please try again.');
+        }
+    };
+
+    const handleDeleteLobby = async () => {
+        if (!lobbyId) return;
+        const result = await lobbyService.deleteLobby(parseInt(lobbyId));
+        if (isOk(result)) {
+            navigate('/lobbies');
+        } else {
+            setError(result.error || 'Failed to delete lobby.');
         }
     };
 

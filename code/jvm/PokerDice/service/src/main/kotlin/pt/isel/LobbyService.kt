@@ -115,6 +115,11 @@ class LobbyService(
     ): Either<LobbyError, Boolean> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
+
+            if (lobby.players.none { it.id == user.id }) {
+                return@run success(false)
+            }
+
             if (lobby.players.size == 1) {
                 repoLobby.deleteLobbyById(lobbyId)
 

@@ -38,8 +38,8 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "jaco@gmail.com",
-  "password": "jaco"
+  "email": "user1@gmail.com",
+  "password": "1234"
 }
 
 ### Get token of second user
@@ -47,17 +47,17 @@ POST http://localhost:8080/api/users/token
 Content-Type: application/json
 
 {
-  "email": "player1@gmail.com",
-  "password": "player1"
+  "email": "user2@gmail.com",
+  "password": "1234"
 }
 
 ### Create Lobby with First User (host)
 POST http://localhost:8080/api/lobbies
-Authorization: Bearer dGuSmp8rtIfkRt09jSbFP0yXmlhC0daPDmtLdYdE8Xs=
+Authorization: Bearer yNVktVyrUVYIW-hwXL5ucSqpBmHw3vQeEjZiHFNfZIA=
 Content-Type: application/json
 
 {
-  "name": "host lobby",
+  "name": "host jj",
   "description": "lobby for presentation",
   "maxPlayers": 6,
   "minPlayers": 2
@@ -65,11 +65,11 @@ Content-Type: application/json
 
 ### Join Lobby with Second User (player1)
 POST http://localhost:8080/api/lobbies/1/join
-Authorization: Bearer -OP5E8qstMXEPUHewFpjFdWd5NMqY7wdaUjfSBFgfQ8=
+Authorization: Bearer 1fb79s__DBzRbmM-Zv-l1b1EbQkhvkpGNmhUpuOLwMM=
 
 ### Create Game with host permission
 POST http://localhost:8080/api/games
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+Authorization: Bearer yNVktVyrUVYIW-hwXL5ucSqpBmHw3vQeEjZiHFNfZIA=
 Content-Type: application/json
 
 {
@@ -79,11 +79,11 @@ Content-Type: application/json
 
 ### Start Game with host permission
 POST http://localhost:8080/api/games/1/start
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+Authorization: Bearer yNVktVyrUVYIW-hwXL5ucSqpBmHw3vQeEjZiHFNfZIA=
 
 ### Start new round
-POST http://localhost:8080/api/games/1/rounds/start
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+POST http://localhost:8080/api/games/5/rounds/start
+Authorization: Bearer 4xKJmbzNOVFRtS0jDFEczLFhKElkl7uje___Fu_6jC0=
 
 ### First player of the rounds sets ante
 POST http://localhost:8080/api/games/1/rounds/ante
@@ -95,26 +95,26 @@ Content-Type: application/json
 }
 
 ### Everyone pays the ante
-POST http://localhost:8080/api/games/1/rounds/pay-ante
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+POST http://localhost:8080/api/games/5/rounds/pay-ante
+Authorization: Bearer 4xKJmbzNOVFRtS0jDFEczLFhKElkl7uje___Fu_6jC0=
 Content-Type: application/json
 
 ### Roll dices
-POST http://localhost:8080/api/games/1/rounds/roll-dices
-Authorization: Bearer gkyiT2FNA2J5-iWcAtrqmYtfpPrA0_Fqxmag9KiZmxg=
+POST http://localhost:8080/api/games/5/rounds/roll-dices
+Authorization: Bearer G2GI-YINk0HvnNtaQaRZu2c9mevaYh0zYGCTgFK27-s=
 
 ### Choose which dices to keep
-POST http://localhost:8080/api/games/1/rounds/update-turn
-Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
+POST http://localhost:8080/api/games/5/rounds/update-turn
+Authorization: Bearer G2GI-YINk0HvnNtaQaRZu2c9mevaYh0zYGCTgFK27-s=
 Content-Type: application/json
 
 {
-  "dice": "9"
+  "dice": "Q"
 }
 
 ### Move on to next player's turn
-POST http://localhost:8080/api/games/1/rounds/next-turn
-Authorization: Bearer lt06gxKC2MhFTvDznyFcVIu3c1jZbNqDd9ROAcLGD7g=
+POST http://localhost:8080/api/games/5/rounds/next-turn
+Authorization: Bearer G2GI-YINk0HvnNtaQaRZu2c9mevaYh0zYGCTgFK27-s=
 
 ### Roll dices
 POST http://localhost:8080/api/games/1/rounds/roll-dices
@@ -204,3 +204,7 @@ Authorization: Bearer nTmseDm7o5yf30wSlbHIoziWVWLolo7H--M35CkUK5E=
 ### Listen
 GET http://localhost:8080/api/lobbies/1/listen
 Authorization: Bearer dGuSmp8rtIfkRt09jSbFP0yXmlhC0daPDmtLdYdE8Xs=
+
+### Delete lobby
+DELETE http://localhost:8080/api/lobbies/1
+Authorization: Bearer yNVktVyrUVYIW-hwXL5ucSqpBmHw3vQeEjZiHFNfZIA=
