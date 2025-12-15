@@ -109,17 +109,19 @@ class LobbyController(
         @PathVariable id: Int,
     ): ResponseEntity<SseEmitter> {
         val sseEmitter = SseEmitter(TimeUnit.HOURS.toMillis(1))
+        val emitter = SseEmitterBasedEventEmitter(sseEmitter)
         lobbyEventService.addEventEmitter(
-            SseEmitterBasedEventEmitter(sseEmitter),
+            emitter,
             user.user.id,
             id,
         )
 
         lobbyTimeouts.getExpiration(id)?.let { expiresAt ->
-            lobbyEventService.sendEventToUser(
-                Event.CountdownStarted(id, expiresAt),
-                user.user.id,
-            )
+            try {
+                emitter.emit(Event.CountdownStarted(id, expiresAt))
+            } catch (_: Exception) {
+                // Ignore if sending fails - connection might not be ready yet
+            }
         }
 
         return ResponseEntity

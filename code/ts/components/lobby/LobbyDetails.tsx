@@ -87,9 +87,15 @@ export function LobbyDetails() {
             }
         );
 
-        connectToLobby(lobbyIdNum).catch((error) => {
-            console.error('Failed to connect to SSE:', error);
-        });
+        connectToLobby(lobbyIdNum)
+            .then(() => {
+                // Fetch again after SSE connection is established to catch any updates
+                // that happened while connecting
+                fetchLobbyDetails();
+            })
+            .catch((error) => {
+                console.error('Failed to connect to SSE:', error);
+            });
 
         return () => {
             unregisterHandler();
