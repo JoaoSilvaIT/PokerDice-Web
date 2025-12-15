@@ -53,6 +53,10 @@ export const lobbyService = {
     async getAvailableLobbies(): Promise<Result<Lobby[]>> {
         const result = await fetchWrapper<LobbyListResponse>(RequestUri.lobby.list, {
             method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
         });
 
         if (!result.success) {
@@ -83,9 +87,16 @@ export const lobbyService = {
         });
     },
 
+    // Leave a lobby
     async leaveLobby(lobbyId: number): Promise<Result<void>> {
         return await fetchWrapper<void>(RequestUri.lobby.leave(lobbyId), {
             method: 'POST',
         });
-    }
+    },
+
+    async deleteLobby(lobbyId: number): Promise<Result<void>> {
+        return await fetchWrapper<void>(RequestUri.lobby.close(lobbyId), {
+            method: 'DELETE',
+        });
+    },
 }

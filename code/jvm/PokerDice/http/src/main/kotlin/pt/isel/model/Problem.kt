@@ -55,6 +55,8 @@ sealed class Problem(
 
     data object UserAlreadyInLobby : Problem(URI("$PROBLEM_URI_PATH/user-already-in-lobby"))
 
+    data object GameAlreadyStarted : Problem(URI("$PROBLEM_URI_PATH/game-already-started"))
+
     // Game errors
     data object InvalidNumberOfRounds : Problem(URI("$PROBLEM_URI_PATH/invalid-number-of-rounds"))
 

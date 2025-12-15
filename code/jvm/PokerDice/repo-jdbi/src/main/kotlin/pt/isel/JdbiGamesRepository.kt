@@ -411,9 +411,10 @@ class JdbiGamesRepository(
 
     private fun mapRowToGame(rs: ResultSet): Game {
         val gameId = rs.getInt("id")
-        val lobbyId = rs.getInt("lobby_id")
+        val lobbyId = rs.getObject("lobby_id") as Int?
 
-        val lobbyPlayers =
+        val lobbyPlayers = if (lobbyId != null) {
+            // Lobby still exists - fetch players from LOBBY_USER
             handle
                 .createQuery(
                     """
@@ -432,6 +433,28 @@ class JdbiGamesRepository(
                         moneyWon
                     )
                 }.list()
+        } else {
+            // Lobby was deleted - fetch players from game's TURN records
+            handle
+                .createQuery(
+                    """
+                    SELECT DISTINCT u.id, u.username, u.balance 
+                    FROM dbo.USERS u
+                    JOIN dbo.TURN t ON u.id = t.user_id
+                    WHERE t.game_id = :game_id
+                    """,
+                ).bind("game_id", gameId)
+                .map { playerRs, _ ->
+                    val playerId = playerRs.getInt("id")
+                    val moneyWon = calculatePlayerMoneyWon(gameId, playerId)
+                    PlayerInGame(
+                        playerId,
+                        playerRs.getString("username"),
+                        playerRs.getInt("balance"),
+                        moneyWon
+                    )
+                }.list()
+        }
 
         val currentRoundNumber = rs.getInt("current_round_number")
         val currentRound = if (currentRoundNumber > 0) loadRound(gameId, currentRoundNumber, lobbyPlayers) else null

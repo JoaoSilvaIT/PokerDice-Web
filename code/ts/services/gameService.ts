@@ -31,7 +31,7 @@ export interface GameDetails {
     id: number;
     startedAt: number;
     endedAt: number | null;
-    lobbyId: number;
+    lobbyId: number | null;
     numberOfRounds: number;
     state: string;
     currentRound: GameRound | null;

@@ -41,7 +41,7 @@ create type dbo.GAME_STATE as enum ('WAITING', 'RUNNING', 'TERMINATED', 'FINISHE
 
 create table dbo.GAME (
     id serial primary key,
-    lobby_id integer not null references dbo.LOBBY(id),
+    lobby_id integer references dbo.LOBBY(id) ON DELETE SET NULL,
     state dbo.GAME_STATE not null,
     current_round_number integer,
     total_rounds integer not null,

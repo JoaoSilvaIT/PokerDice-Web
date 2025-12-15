@@ -213,6 +213,31 @@
     text-align: center;
 }
 
+.kept-dice-container,
+.rolled-dice-container {
+    margin-bottom: 1rem;
+}
+
+.kept-dice-container h4,
+.rolled-dice-container h4 {
+    color: #e9c46a;
+    margin-bottom: 0.5rem;
+}
+
+.dice-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.no-dice {
+    color: #999;
+    font-style: italic;
+}
+
 .dice-placeholder {
     display: flex;
     gap: 0.75rem;
@@ -392,7 +417,9 @@
 
 .waiting-players-list {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.75rem;
     max-height: 300px;
     overflow-y: auto;
@@ -400,13 +427,15 @@
 
 .waiting-player {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     background: rgba(26, 26, 46, 0.6);
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+    padding: 1rem;
+    border-radius: 12px;
     border: 2px solid rgba(233, 196, 106, 0.3);
     transition: all 0.3s ease;
+    min-width: 100px;
 }
 
 .waiting-player:hover {

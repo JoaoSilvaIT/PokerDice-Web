@@ -73,6 +73,15 @@ class JdbiLobbiesRepository(
     }
 
     override fun deleteById(id: Int) {
+        handle.createUpdate("UPDATE dbo.GAME SET lobby_id = NULL WHERE lobby_id = :id")
+            .bind("id", id)
+            .execute()
+
+        handle
+            .createUpdate("DELETE FROM dbo.LOBBY_USER WHERE lobby_id = :id")
+            .bind("id", id)
+            .execute()
+
         handle
             .createUpdate("DELETE FROM dbo.LOBBY WHERE id = :id")
             .bind("id", id)

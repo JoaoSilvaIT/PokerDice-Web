@@ -18,6 +18,21 @@ services:
     ports:
       - 8080:8080
 
+  # Development mode service (Use this for coding)
+  # pokerdice-ts-dev:
+  #   container_name: pokerdice-ts-dev
+  #   build:
+  #     context: ../../
+  #     dockerfile: jvm/PokerDice/docker/Dockerfile-ts
+  #   volumes:
+  #     - ../../ts:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - 5173:5173
+  #   depends_on:
+  #     - pokerdice-jvm
+
+  # Production mode service (Commented out by default)
   pokerdice-nginx:
     container_name: pokerdice-nginx
     build:

@@ -14,12 +14,14 @@ import pt.isel.repo.TransactionManager
 import pt.isel.utils.Either
 import pt.isel.utils.failure
 import pt.isel.utils.success
+import pt.isel.timeout.LobbyTimeoutManager
 
 @Component
 class GameService(
     private val trxManager: TransactionManager,
     private val lobbyEventService: LobbyEventService,
     private val gameEventService: GameEventService,
+    private val lobbyTimeoutManager: LobbyTimeoutManager,
 ) {
     fun createGame(
         startedAt: Long,
@@ -31,7 +33,16 @@ class GameService(
         if (startedAt <= 0) return failure(GameError.InvalidTime)
         return trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
+            
+            val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
+            if (activeGames.isNotEmpty()) {
+                return@run failure(GameError.LobbyHasActiveGame)
+            }
+
             if (lobby.host.id != creatorId) return@run failure(GameError.UserNotLobbyHost)
+
+            lobbyTimeoutManager.cancelCountdown(lobbyId)
+
             val game = repoGame.createGame(startedAt, lobby, numberOfRounds)
 
             lobbyEventService.notifyGameCreated(lobbyId, game.id)
@@ -51,9 +62,10 @@ class GameService(
     ): Either<GameError, Game> {
         return trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
-            val lobby = repoLobby.findById(game.lobbyId) ?: return@run failure(GameError.LobbyNotFound)
+            val lobbyId = game.lobbyId ?: return@run failure(GameError.LobbyNotFound)
+            val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
 
-            val activeGames = repoGame.findActiveGamesByLobbyId(game.lobbyId)
+            val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
             if (activeGames.any { it.id != gameId }) {
                 return@run failure(GameError.LobbyHasActiveGame)
             }
@@ -154,6 +166,7 @@ class GameService(
                 if (round.number >= game.numberOfRounds) {
                     val endedGame = gameAfterDistribution.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
                     repoGame.save(endedGame)
+
                     gameEventService.notifyGameEnded(gameId)
                     return@run success(endedGame)
                 } else {

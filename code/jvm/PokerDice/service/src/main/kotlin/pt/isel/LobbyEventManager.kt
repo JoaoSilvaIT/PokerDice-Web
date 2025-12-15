@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import pt.isel.domain.sse.Event
 import pt.isel.domain.sse.EventEmitter
 import java.time.Instant
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -24,8 +25,8 @@ class LobbyEventService {
         private val logger = LoggerFactory.getLogger(LobbyEventService::class.java)
     }
 
-    // Important: mutable state on a singleton service
-    private val listeners = mutableListOf<ListenerInfo>()
+    // Important: mutable state on a singleton service - using CopyOnWriteArrayList for thread-safety
+    private val listeners = CopyOnWriteArrayList<ListenerInfo>()
     private val lock = ReentrantLock()
 
     // A scheduler to send the periodic keep-alive events
@@ -47,6 +48,20 @@ class LobbyEventService {
     ): EventEmitter =
         lock.withLock {
             logger.info("adding listener for userId={}, lobbyId={}", userId, lobbyId)
+
+            // Remove ALL existing listeners for the same userId to avoid stale connections
+            // A user can only have one active SSE connection at a time
+            val existingListeners = listeners.filter { it.userId == userId }
+            existingListeners.forEach { existing ->
+                logger.info("removing existing listener for userId={}, old lobbyId={}", userId, existing.lobbyId)
+                try {
+                    existing.eventEmitter.complete()
+                } catch (_: Exception) {
+                    // Ignore errors when completing old listeners
+                }
+                listeners.remove(existing)
+            }
+
             listeners.add(ListenerInfo(listener, userId, lobbyId))
             listener.onCompletion {
                 removeListener(listener)
@@ -147,6 +162,7 @@ class LobbyEventService {
         lobbyId: Int,
     ) {
         logger.info("sending event to lobby {}: {}", lobbyId, event)
+        val failedListeners = mutableListOf<EventEmitter>()
         listeners
             .filter { it.lobbyId == lobbyId }
             .forEach { listenerInfo ->
@@ -154,18 +170,23 @@ class LobbyEventService {
                     listenerInfo.eventEmitter.emit(event)
                 } catch (ex: Exception) {
                     logger.info("Exception while sending event to userId={} - {}", listenerInfo.userId, ex.message)
+                    failedListeners.add(listenerInfo.eventEmitter)
                 }
             }
+        failedListeners.forEach { removeListener(it) }
     }
 
     private fun sendEventToAll(event: Event) {
+        val failedListeners = mutableListOf<EventEmitter>()
         listeners.forEach { listenerInfo ->
             try {
                 listenerInfo.eventEmitter.emit(event)
             } catch (ex: Exception) {
                 logger.info("Exception while sending keep-alive to userId={} - {}", listenerInfo.userId, ex.message)
+                failedListeners.add(listenerInfo.eventEmitter)
             }
         }
+        failedListeners.forEach { removeListener(it) }
     }
 
     fun sendEventToUser(
@@ -173,6 +194,7 @@ class LobbyEventService {
         userId: Int,
     ) = lock.withLock {
         logger.info("sending event to userId={}: {}", userId, event)
+        val failedListeners = mutableListOf<EventEmitter>()
         listeners
             .filter { it.userId == userId }
             .forEach { listenerInfo ->
@@ -180,7 +202,9 @@ class LobbyEventService {
                     listenerInfo.eventEmitter.emit(event)
                 } catch (ex: Exception) {
                     logger.info("Exception while sending event to userId={} - {}", userId, ex.message)
+                    failedListeners.add(listenerInfo.eventEmitter)
                 }
             }
+        failedListeners.forEach { removeListener(it) }
     }
 }

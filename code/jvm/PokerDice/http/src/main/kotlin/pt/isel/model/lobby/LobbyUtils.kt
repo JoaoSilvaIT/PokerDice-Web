@@ -17,6 +17,7 @@ fun LobbyError.toProblemResponse(): ResponseEntity<Any> =
         LobbyError.NotHost -> Problem.NotHost.response(HttpStatus.FORBIDDEN)
         LobbyError.UserAlreadyInLobby -> Problem.UserAlreadyInLobby.response(HttpStatus.CONFLICT)
         LobbyError.UserNotInLobby -> Problem.UserNotInLobby.response(HttpStatus.BAD_REQUEST)
+        LobbyError.GameAlreadyStarted -> Problem.GameAlreadyStarted.response(HttpStatus.CONFLICT)
     }
 
 fun Lobby.toOutputModel() =

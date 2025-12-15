@@ -89,6 +89,12 @@ class LobbyService(
     ): Either<LobbyError, Lobby> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
+            
+            val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
+            if (activeGames.isNotEmpty()) {
+                return@run failure(LobbyError.GameAlreadyStarted)
+            }
+
             if (lobby.players.size >= lobby.settings.maxPlayers) return@run failure(LobbyError.LobbyFull)
             if (lobby.players.any { it.id == user.id }) return@run failure(LobbyError.UserAlreadyInLobby)
             val updated = lobby.copy(players = lobby.players + UserExternalInfo(user.id, user.name, user.balance))
@@ -115,6 +121,11 @@ class LobbyService(
     ): Either<LobbyError, Boolean> =
         trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(LobbyError.LobbyNotFound)
+
+            if (lobby.players.none { it.id == user.id }) {
+                return@run success(false)
+            }
+
             if (lobby.players.size == 1) {
                 repoLobby.deleteLobbyById(lobbyId)
 

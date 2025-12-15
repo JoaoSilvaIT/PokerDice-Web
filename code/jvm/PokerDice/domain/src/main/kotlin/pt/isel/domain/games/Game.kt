@@ -5,7 +5,7 @@ import pt.isel.domain.users.User
 
 data class Game(
     val id: Int,
-    val lobbyId: Int,
+    val lobbyId: Int?,
     val players: List<PlayerInGame>,
     val numberOfRounds: Int,
     val state: State,

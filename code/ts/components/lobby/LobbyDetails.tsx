@@ -4,6 +4,7 @@ import {lobbyService} from '../../services/lobbyService';
 import {gameService} from '../../services/gameService';
 import {isOk} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
+import {ToastContainer, useToast} from '../generic/Toast';
 import '../../styles/lobbyDetails.css';
 
 interface Player {
@@ -21,6 +22,35 @@ interface LobbyDetails {
     hostId: number;
 }
 
+const formatError = (err: string | object) => {
+    try {
+        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
+        
+        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
+        if (msg && typeof msg === 'string') {
+             if (msg.startsWith('http') || msg.includes('urn:')) {
+                 const parts = msg.split('/');
+                 return parts[parts.length - 1].replace(/-/g, ' ');
+             }
+             return msg
+                .replace(/-/g, ' ')
+                .replace(/([A-Z])/g, ' $1')
+                .toLowerCase() 
+                .replace(/^\w/, (c: string) => c.toUpperCase())
+                .trim();
+        }
+    } catch { }
+    
+    if (typeof err === 'string') {
+        if (err.startsWith('http') || err.includes('urn:')) {
+             const parts = err.split('/');
+             return parts[parts.length - 1].replace(/-/g, ' ');
+        }
+        return err;
+    }
+    return 'An unknown error occurred';
+};
+
 export function LobbyDetails() {
     const {lobbyId} = useParams<{ lobbyId: string }>();
     const navigate = useNavigate();
@@ -32,9 +62,9 @@ export function LobbyDetails() {
     const [gameConfig, setGameConfig] = useState({
         rounds: 5,
     });
-    const [configError, setConfigError] = useState<string | null>(null);
     const [countdownEnd, setCountdownEnd] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
+    const {toasts, removeToast, showError} = useToast();
 
     useEffect(() => {
         if (!countdownEnd) return;
@@ -70,19 +100,32 @@ export function LobbyDetails() {
         registerLobbyHandler(
             lobbyIdNum,
             (event) => {
-                fetchLobbyDetails();
+                setLobby(prev => {
+                    if (!prev) return prev;
+                    if (prev.players.some(p => p.id === event.userId)) return prev;
+                    return {
+                        ...prev,
+                        players: [...prev.players, { id: event.userId, name: event.playerName }]
+                    };
+                });
             },
             (event) => {
-                fetchLobbyDetails();
+                setLobby(prev => {
+                    if (!prev) return prev;
+                    return {
+                        ...prev,
+                        players: prev.players.filter(p => p.id !== event.playerId)
+                    };
+                });
             },
             (event) => {
                 disconnect('lobby');
                 navigate(`/games/${event.gameId}`);
             },
-            (event) => {                             // onCountdownStarted
+            (event) => {                             
                 setCountdownEnd(event.expiresAt);
             },
-            (event) => {                             // onCountdownCancelled
+            (event) => {                             
                 setCountdownEnd(null);
             }
         );
@@ -105,8 +148,16 @@ export function LobbyDetails() {
         }));
     };
     const handleStartGame = async () => {
-        // Logic to start game would go here
-        // For now, we assume game creation happens elsewhere or is triggered by host
+        if (!lobby || !lobbyId) return;
+
+        const result = await gameService.createGame({
+            lobbyId: parseInt(lobbyId),
+            numberOfRounds: gameConfig.rounds
+        });
+
+        if (!isOk(result)) {
+            showError(formatError(result.error));
+        }
     };
 
     const handleLeaveLobby = async () => {
@@ -118,7 +169,7 @@ export function LobbyDetails() {
             disconnect('lobby');
             navigate('/lobbies');
         } else {
-            setError(result.error || 'Failed to leave lobby. Please try again.');
+            showError(formatError(result.error));
         }
     };
 
@@ -150,6 +201,7 @@ export function LobbyDetails() {
 
     return (
         <div className="lobby-details-container">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
             <div className="lobby-details-content">
                 <div className="lobby-details-header">
                     <h1 className="lobby-title">{lobby.name}</h1>
@@ -213,7 +265,6 @@ export function LobbyDetails() {
                     <button
                         onClick={() => {
                             setShowGameConfigMenu(false);
-                            setConfigError(null);
                         }}
                         className="lobby-create-menu-close"
                     >
@@ -241,8 +292,6 @@ export function LobbyDetails() {
                     <div className="lobby-form-hint">
                         Configure how many rounds the game will have (1-20)
                     </div>
-
-                    {configError && <div className="lobby-create-error">{configError}</div>}
 
                     <div className="lobby-create-actions">
                         <button

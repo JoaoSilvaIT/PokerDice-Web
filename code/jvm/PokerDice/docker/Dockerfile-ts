@@ -2,11 +2,11 @@ FROM node:22
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY ts/package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY ts/ .
 
 EXPOSE 5173
 

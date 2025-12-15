@@ -130,6 +130,7 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 export function SSEProvider({children}: { children: React.ReactNode }) {
     const emitterRef = useRef<EventSource | null>(null);
     const connectionType = useRef<'lobby' | 'all-lobbies' | 'game' | null>(null);
+    const currentTargetId = useRef<number | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
     const handler = useRef<EventHandler | null>(null);
 
@@ -350,11 +351,14 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
 
     const connectToLobby = useCallback((lobbyId: number) => {
         return new Promise<void>((resolve, reject) => {
+            // If already connected to the same lobby, just resolve
+            if (emitterRef.current && connectionType.current === 'lobby' && currentTargetId.current === lobbyId) {
+                resolve();
+                return;
+            }
+
+            // Close any existing connection
             if (emitterRef.current) {
-                if (connectionType.current === 'lobby') {
-                   resolve();
-                   return;
-                }
                 emitterRef.current.close();
             }
 
@@ -362,6 +366,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
                 withCredentials: true
             });
             connectionType.current = 'lobby';
+            currentTargetId.current = lobbyId;
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
@@ -379,6 +384,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
                 reject(error);
             };
 
+
             emitterRef.current.addEventListener('player-joined', handlePlayerJoined);
             emitterRef.current.addEventListener('player-left', handlePlayerLeft);
             emitterRef.current.addEventListener('game-started', handleGameStarted);
@@ -390,9 +396,9 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
     const connectToAllLobbies = useCallback(() => {
         return new Promise<void>((resolve, reject) => {
             if (emitterRef.current) {
-                 if (connectionType.current === 'all-lobbies') {
-                   resolve();
-                   return;
+                if (connectionType.current === 'all-lobbies') {
+                    resolve();
+                    return;
                 }
                 emitterRef.current.close();
             }
@@ -401,6 +407,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
                 withCredentials: true
             });
             connectionType.current = 'all-lobbies';
+            currentTargetId.current = null;
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
@@ -426,6 +433,12 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
 
     const connectToGame = useCallback((gameId: number) => {
         return new Promise<void>((resolve, reject) => {
+            // If already connected to the same game, just resolve
+            if (emitterRef.current && connectionType.current === 'game' && currentTargetId.current === gameId) {
+                resolve();
+                return;
+            }
+
             if (emitterRef.current) {
                 emitterRef.current.close();
                 emitterRef.current = null;
@@ -436,6 +449,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
                 withCredentials: true
             });
             connectionType.current = 'game';
+            currentTargetId.current = gameId;
 
             emitterRef.current.onopen = () => {
                 setIsConnected(true);
@@ -486,6 +500,7 @@ export function SSEProvider({children}: { children: React.ReactNode }) {
             emitterRef.current.close();
             emitterRef.current = null;
             connectionType.current = null;
+            currentTargetId.current = null;
             setIsConnected(false);
         }
     }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted, handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed,
