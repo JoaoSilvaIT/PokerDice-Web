@@ -26,7 +26,10 @@ interface RepositoryGame : Repository<Game> {
         game: Game,
     ): Game
 
-    fun startNewRound(game: Game): Game
+    fun startNewRound(
+        game: Game,
+        ante: Int?,
+    ): Game
 
     fun setAnte(
         ante: Int,

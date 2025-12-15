@@ -4,6 +4,7 @@ import org.jdbi.v3.core.Handle
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Game
 import pt.isel.domain.games.Hand
+import pt.isel.domain.games.MIN_ANTE
 import pt.isel.domain.games.PlayerInGame
 import pt.isel.domain.lobby.Lobby
 import pt.isel.domain.games.Round
@@ -131,7 +132,7 @@ class JdbiGamesRepository(
         return updatedGame
     }
 
-    override fun startNewRound(game: Game): Game {
+    override fun startNewRound(game: Game, ante: Int?): Game {
         val nextRoundNumber = (game.currentRound?.number ?: 0) + 1
         val firstPlayerIndex = (nextRoundNumber - 1) % game.players.size
         val firstPlayer = game.players[firstPlayerIndex]
@@ -142,6 +143,7 @@ class JdbiGamesRepository(
             turn = Turn(firstPlayer, rollsRemaining = 3, currentDice = emptyList()),
             players = game.players,
             playerHands = emptyMap(),
+            ante = ante ?: 0,
             gameId = game.id
         )
 

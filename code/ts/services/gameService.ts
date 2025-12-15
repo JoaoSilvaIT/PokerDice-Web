@@ -84,12 +84,20 @@ export const gameService = {
     async nextTurn(gameId: number): Promise<Result<GameDetails>> {
         return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/next-turn`, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ante: null}),
         });
     },
 
-    async startRound(gameId: number): Promise<Result<GameDetails>> {
+    async startRound(gameId: number, ante: number | null = null): Promise<Result<GameDetails>> {
         return await fetchWrapper<GameDetails>(`/api/games/${gameId}/rounds/start`, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ante}),
         });
     },
 

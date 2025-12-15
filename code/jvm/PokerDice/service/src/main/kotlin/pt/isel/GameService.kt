@@ -81,7 +81,10 @@ class GameService(
             success(endedGame)
         }
 
-    fun startNewRound(gameId: Int): Either<GameError, Game> =
+    fun startNewRound(
+        gameId: Int,
+        ante: Int?,
+    ): Either<GameError, Game> =
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
             if (game.state != State.RUNNING) return@run failure(GameError.GameNotStarted)
@@ -89,7 +92,8 @@ class GameService(
             if (round != null) {
                 if (round.winners.isEmpty() && round.number != 0) return@run failure(GameError.RoundWinnerNotDecided)
             }
-            val newGame = repoGame.startNewRound(game)
+
+            val newGame = repoGame.startNewRound(game, ante)
 
             gameEventService.notifyGameUpdated(gameId)
             success(newGame)
@@ -117,6 +121,7 @@ class GameService(
     fun nextTurn(
         gameId: Int,
         playerId: Int,
+        ante: Int?,
     ): Either<GameError, Game> =
         trxManager.run {
             val game = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
@@ -152,22 +157,11 @@ class GameService(
                     gameEventService.notifyGameEnded(gameId)
                     return@run success(endedGame)
                 } else {
-                    // Start new round
-                    val newGame = repoGame.startNewRound(gameAfterDistribution)
-
-                    // Set ante for new round (use same ante or increment)
-                    val newRoundData = newGame.currentRound ?: return@run failure(GameError.RoundNotStarted)
-                    val anteRound = repoGame.setAnte(round.ante, newRoundData)
-                    val anteGame = newGame.copy(currentRound = anteRound)
-                    repoGame.save(anteGame)
-
-                    // Pay ante
-                    val paidRound = repoGame.payAnte(anteRound)
-                    val paidGame = anteGame.copy(currentRound = paidRound)
-                    repoGame.save(paidGame)
+                    // Start new round with ante=0 (players will set it in betting phase)
+                    val newGame = repoGame.startNewRound(gameAfterDistribution, null)
 
                     gameEventService.notifyGameUpdated(gameId)
-                    return@run success(paidGame)
+                    return@run success(newGame)
                 }
             } else {
                 // Round continues with next player

@@ -73,7 +73,10 @@ class RepositoryGameInMem : RepositoryGame {
         return games.find { it.id == id }
     }
 
-    override fun startNewRound(game: Game): Game {
+    override fun startNewRound(
+        game: Game,
+        ante: Int?,
+    ): Game {
         val nextRoundNr = (game.currentRound?.number ?: 0) + 1
         val firstPlayerIndex = (nextRoundNr - 1) % game.players.size
         val newRound =
@@ -88,6 +91,7 @@ class RepositoryGameInMem : RepositoryGame {
                     ),
                 game.players,
                 emptyMap(),
+                ante = ante ?: 0,
                 gameId = game.id,
             )
         val updatedGame = game.copy(currentRound = newRound)

@@ -122,7 +122,7 @@ export function Game() {
         setRoundStarting(true);
 
         try {
-            // Start the round
+            // Start the round without ante - players will set it in betting phase
             await gameService.startRound(gId);
             // Refresh game state
             const gameRes = await gameService.getGame(gId);
@@ -203,7 +203,7 @@ export function Game() {
             return;
         }
 
-        // Set ante
+        // Set ante for the existing round
         const anteResult = await gameService.setAnte(parseInt(gameId), betAmount);
         if (!isOk(anteResult)) {
             setError(anteResult.error || 'Failed to set ante');

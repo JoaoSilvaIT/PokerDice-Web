@@ -73,8 +73,9 @@ class GameController(
     @PostMapping("/api/games/{id}/rounds/start")
     fun startRound(
         @PathVariable id: Int,
+        @RequestBody input: SetAnteInputModel,
     ): ResponseEntity<*> {
-        return when (val result = gameService.startNewRound(id)) {
+        return when (val result = gameService.startNewRound(id, input.ante)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -91,7 +92,12 @@ class GameController(
         @PathVariable id: Int,
         @RequestBody input: SetAnteInputModel,
     ): ResponseEntity<*> {
-        return when (val result = gameService.setAnte(id, input.ante, user.user.id)) {
+        val ante =
+            input.ante ?: return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "Ante is required"))
+
+        return when (val result = gameService.setAnte(id, ante, user.user.id)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
@@ -121,8 +127,9 @@ class GameController(
     fun nextTurn(
         user: AuthenticatedUser,
         @PathVariable id: Int,
+        @RequestBody input: SetAnteInputModel,
     ): ResponseEntity<*> {
-        return when (val result = gameService.nextTurn(id, user.user.id)) {
+        return when (val result = gameService.nextTurn(id, user.user.id, input.ante)) {
             is Either.Success ->
                 ResponseEntity
                     .status(HttpStatus.OK)
