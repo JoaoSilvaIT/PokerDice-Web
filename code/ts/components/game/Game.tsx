@@ -286,7 +286,7 @@ export function Game() {
                         </div>
                         {isHost && (
                             <button onClick={handleStartGame} className="start-game-button">
-                                🎮 Start Game
+                                Start Game
                             </button>
                         )}
                         {!isHost && (
@@ -307,7 +307,7 @@ export function Game() {
             <div className="game-container">
                 <div className="waiting-overlay">
                     <div className="waiting-content">
-                        <h1>🏆 GAME OVER 🏆</h1>
+                        <h1> GAME OVER </h1>
                         <div className="winner-display">
                             <h2>Winner: {winner.name}</h2>
                             <p className="winner-money">Total Won: 💰 {winner.moneyWon}</p>
@@ -346,10 +346,10 @@ export function Game() {
             <div className="game-container">
                 <div className="waiting-overlay">
                     <div className="waiting-content">
-                        <h1>⏳ A INICIALIZAR RONDA...</h1>
+                        <h1>Round starting...</h1>
                         <div className="waiting-info">
                             <p>Game #{gameId}</p>
-                            <p>A preparar a primeira ronda...</p>
+                            <p>Preparing the first round...</p>
                         </div>
                     </div>
                 </div>
@@ -389,7 +389,7 @@ export function Game() {
                 {/* Round Winner Banner */}
                 {lastRoundWinnerId && (
                     <div className="winner-banner">
-                        🏆 Round Winner: {players.find(p => p.id === lastRoundWinnerId)?.name} 🏆
+                         Round Winner: {players.find(p => p.id === lastRoundWinnerId)?.name}
                     </div>
                 )}
 
@@ -397,9 +397,9 @@ export function Game() {
                 {game.currentRound && (
                     <div className={`turn-banner ${isMyTurn ? 'your-turn' : ''}`}>
                         {isMyTurn ? (
-                            <span>🎲 É A TUA VEZ! 🎲</span>
+                            <span>🎲 It's Your Turn 🎲</span>
                         ) : (
-                            <span>⏳ Vez de: {players.find(p => p.id === currentPlayerId)?.name}</span>
+                            <span> Turn : {players.find(p => p.id === currentPlayerId)?.name}</span>
                         )}
                     </div>
                 )}
@@ -413,12 +413,12 @@ export function Game() {
                         <div className="player-avatar">{player.name.charAt(0).toUpperCase()}</div>
                         <div className="player-name">
                             {player.name}
-                            {player.id === currentUserId && ' (Tu)'}
+                            {player.id === currentUserId && ' (You)'}
                         </div>
                         <div className="player-chips">💰 {player.currentBalance}</div>
                         {currentPlayerId === player.id && (
                             <div className="turn-indicator">
-                                {player.id === currentUserId ? '🎲 Tua Vez!' : '⏳ A Jogar...'}
+                                {player.id === currentUserId ? '🎲 Your Turn!' : 'Playing...'}
                             </div>
                         )}
                     </div>
@@ -489,14 +489,14 @@ export function Game() {
 
                             {!isMyTurn && currentPlayerId && (
                                 <div className="waiting-turn">
-                                    ⏳ A esperar pela jogada
+                                    ⏳ Waiting for your turn
                                     de {players.find(p => p.id === currentPlayerId)?.name || 'outro jogador'}...
                                 </div>
                             )}
 
                             {isMyTurn && (
                                 <div className="dice-info">
-                                    🎲 Lançamentos restantes: {rollsLeft} | Dados guardados: {keptDice.length}/5
+                                    🎲 Rolls Left: {rollsLeft} | Dice Kept : {keptDice.length}/5
                                 </div>
                             )}
                         </div>
@@ -512,21 +512,21 @@ export function Game() {
                         onClick={handleRollDice}
                         disabled={!isMyTurn || rollsLeft <= 0 || rolledDice.length > 0 || keptDice.length >= 5}
                     >
-                        🎲 Roll Dice
+                        Roll Dice
                     </button>
                     <button
                         className="game-button hold-button"
                         onClick={handleHoldSelected}
                         disabled={!isMyTurn || selectedIndices.length === 0}
                     >
-                        ✋ Hold Selected
+                        Hold Selected
                     </button>
                     <button
                         className="game-button finish-turn-button"
                         onClick={handleFinishTurn}
                         disabled={!isMyTurn || keptDice.length < 5}
                     >
-                        ✅ Finish Turn
+                        Finish Turn
                     </button>
                 </div>
             )}
