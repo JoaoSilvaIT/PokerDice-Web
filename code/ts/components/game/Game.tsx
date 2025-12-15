@@ -6,6 +6,36 @@ import {isOk} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
 import '../../styles/game.css';
 
+
+const formatError = (err: string | object) => {
+    try {
+        const parsed = typeof err === 'string' ? JSON.parse(err) : err;
+
+        const msg = parsed.title || parsed.detail || parsed.message || parsed.error;
+        if (msg && typeof msg === 'string') {
+            if (msg.startsWith('http') || msg.includes('urn:')) {
+                const parts = msg.split('/');
+                return parts[parts.length - 1].replace(/-/g, ' ');
+            }
+            return msg
+                .replace(/-/g, ' ')
+                .replace(/([A-Z])/g, ' $1')
+                .toLowerCase()
+                .replace(/^\w/, (c: string) => c.toUpperCase())
+                .trim();
+        }
+    } catch { }
+
+    if (typeof err === 'string') {
+        if (err.startsWith('http') || err.includes('urn:')) {
+            const parts = err.split('/');
+            return parts[parts.length - 1].replace(/-/g, ' ');
+        }
+        return err;
+    }
+    return 'An unknown error occurred';
+};
+
 export function Game() {
     const {gameId} = useParams<{ gameId: string }>();
     const navigate = useNavigate();
@@ -466,18 +496,38 @@ export function Game() {
 
                     {/* BETTING INTERFACE */}
                     {isBettingPhase ? (
-                        <div className="betting-interface">
+                        <div className="betting-interface betting-centered">
                             <h3>Place Your Bet</h3>
                             {isMyTurn ? (
                                 <div className="bet-controls">
-                                    <input
-                                        type="number"
-                                        min="10"
-                                        step="10"
-                                        value={betAmount}
-                                        onChange={(e) => setBetAmount(parseInt(e.target.value))}
-                                        className="bet-input"
-                                    />
+                                    <div className="bet-amount-wrapper">
+                                        <span className="currency-symbol">💰</span>
+                                        <input
+                                            type="number"
+                                            min="10"
+                                            step="10"
+                                            value={betAmount}
+                                            onChange={(e) => setBetAmount(parseInt(e.target.value))}
+                                            className="bet-input"
+                                        />
+                                    </div>
+                                    <div className="quick-bets prettier-quick-bets">
+                                        {[10, 20, 50, 100].map(amount => {
+                                            const currentPlayer = game.players.find(p => p.id === currentUserId);
+                                            const currentPlayerBalance = currentPlayer ? currentPlayer.currentBalance : 0;
+                                            const isDisabled = amount > currentPlayerBalance;
+                                            return (
+                                                <button
+                                                    key={amount}
+                                                    onClick={() => setBetAmount(amount)}
+                                                    className={`quick-bet-btn prettier-quick-bet-btn ${betAmount === amount ? 'active' : ''}`}
+                                                    disabled={isDisabled}
+                                                >
+                                                    {amount}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                     <button onClick={handlePlaceBet} className="bet-button">
                                         💰 Place Bet
                                     </button>

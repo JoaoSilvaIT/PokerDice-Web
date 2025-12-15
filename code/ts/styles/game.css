@@ -1,4 +1,4 @@
-﻿﻿ /* Game container */
+/* Game container */
 .game-container {
     padding: 2rem;
     max-width: 1600px;
@@ -204,6 +204,128 @@
     margin-top: 0.25rem;
 }
 
+/* Betting Interface */
+.betting-interface {
+    background: rgba(26, 26, 46, 0.8);
+    border: 2px solid #e9c46a;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    color: white;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.betting-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    width: 100%;
+}
+
+.bet-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.bet-amount-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.bet-input {
+    width: 90px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    border: 2px solid #e9c46a;
+    background: #fffbe7;
+    color: #264653;
+    font-weight: bold;
+    outline: none;
+    transition: border 0.2s;
+}
+.bet-input:focus {
+    border-color: #2a9d8f;
+}
+
+.prettier-quick-bets {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0 0.5rem 0;
+    justify-content: center;
+}
+
+.prettier-quick-bet-btn {
+    background: linear-gradient(135deg, #f4a261 60%, #e9c46a 100%);
+    color: #264653;
+    border: none;
+    border-radius: 50px;
+    padding: 0.6rem 1.6rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(244, 162, 97, 0.15);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.prettier-quick-bet-btn.active, .prettier-quick-bet-btn:focus {
+    background: linear-gradient(135deg, #2a9d8f 60%, #21867a 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(42, 157, 143, 0.25);
+    transform: scale(1.08);
+}
+.prettier-quick-bet-btn:disabled {
+    background: #eee;
+    color: #aaa;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+.bet-button {
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #2a9d8f 60%, #21867a 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem 2.2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(42, 157, 143, 0.15);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.bet-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #21867a 60%, #2a9d8f 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px rgba(42, 157, 143, 0.25);
+}
+
+.betting-interface h3 {
+    color: #e9c46a;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.waiting-bet {
+    color: #e9c46a;
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Dice Area */
 .dice-area {
     background: rgba(26, 26, 46, 0.6);
@@ -213,35 +335,18 @@
     text-align: center;
 }
 
-.kept-dice-container,
-.rolled-dice-container {
-    margin-bottom: 1rem;
-}
-
-.kept-dice-container h4,
-.rolled-dice-container h4 {
-    color: #e9c46a;
-    margin-bottom: 0.5rem;
-}
-
-.dice-row {
-    display: flex;
-    flex-direction: row;
-    gap: 0.75rem;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.no-dice {
-    color: #999;
-    font-style: italic;
-}
-
 .dice-placeholder {
     display: flex;
     gap: 0.75rem;
     justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.dice-row {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
     margin-bottom: 1rem;
 }
 
@@ -257,17 +362,42 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: all 0.2s ease;
+    color: #264653; /* Ensure dice numbers are visible */
+    font-weight: bold;
 }
 
-.dice:hover {
+.dice.kept {
+    background: #e0f7fa;
+    border: 2px solid #2a9d8f;
+}
+
+.dice.selectable:hover {
     transform: translateY(-4px) scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-.dice.selected {
-    border: 3px solid #2a9d8f;
-    background: #e0f7f4;
+.dice.selectable.selected {
+    border: 3px solid #f4a261;
+    background: #ffe0b2;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(244, 162, 97, 0.6);
 }
+
+.no-dice {
+    color: #e9c46a;
+    font-style: italic;
+}
+
+.kept-dice-container, .rolled-dice-container {
+    margin-bottom: 1.5rem;
+}
+
+.kept-dice-container h4, .rolled-dice-container h4 {
+    color: #f4a261;
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+}
+
 
 .dice-info {
     color: #e9c46a;
@@ -417,9 +547,7 @@
 
 .waiting-players-list {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     gap: 0.75rem;
     max-height: 300px;
     overflow-y: auto;
@@ -427,15 +555,13 @@
 
 .waiting-player {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
     background: rgba(26, 26, 46, 0.6);
-    padding: 1rem;
-    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
     border: 2px solid rgba(233, 196, 106, 0.3);
     transition: all 0.3s ease;
-    min-width: 100px;
 }
 
 .waiting-player:hover {
