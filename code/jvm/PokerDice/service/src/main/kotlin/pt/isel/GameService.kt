@@ -33,6 +33,12 @@ class GameService(
         if (startedAt <= 0) return failure(GameError.InvalidTime)
         return trxManager.run {
             val lobby = repoLobby.findById(lobbyId) ?: return@run failure(GameError.LobbyNotFound)
+            
+            val activeGames = repoGame.findActiveGamesByLobbyId(lobbyId)
+            if (activeGames.isNotEmpty()) {
+                return@run failure(GameError.LobbyHasActiveGame)
+            }
+
             if (lobby.host.id != creatorId) return@run failure(GameError.UserNotLobbyHost)
 
             lobbyTimeoutManager.cancelCountdown(lobbyId)

@@ -18,4 +18,6 @@ sealed class LobbyError {
     data object UserNotInLobby : LobbyError()
 
     data object UserAlreadyInLobby : LobbyError()
+
+    data object GameAlreadyStarted : LobbyError()
 }
