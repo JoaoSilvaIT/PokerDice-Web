@@ -60,8 +60,10 @@ fun Game.toOutputModel() =
             },
         players =
             players.map { player ->
+                // Find hand by player ID since PlayerInGame equality includes all fields
+                // which may differ between game.players and round.playerHands keys
                 val handRank =
-                    currentRound?.playerHands?.get(player)?.let { hand ->
+                    currentRound?.playerHands?.entries?.find { it.key.id == player.id }?.value?.let { hand ->
                         if (hand.dices.size == 5) {
                             defineHandRank(hand).second.name.replace("_", " ").lowercase()
                                 .split(' ')

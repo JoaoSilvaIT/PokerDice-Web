@@ -16,11 +16,15 @@ TRUNCATE TABLE dbo.TOKEN CASCADE;
 TRUNCATE TABLE dbo.INVITE CASCADE;
 TRUNCATE TABLE dbo.USERS RESTART IDENTITY CASCADE;
 
+
 INSERT INTO dbo.USERS (username, email, password_hash, balance)
 VALUES ('Admin', 'Admin@gmail.com', crypt('password123', gen_salt('bf', 10)), 1000);
-INSERT INTO dbo.USERS (username, email, password_hash, balance)
-VALUES ('User2', 'user2@gmail.com', crypt('1234', gen_salt('bf', 10)), 1000);
+
 INSERT INTO dbo.USERS (username, email, password_hash, balance)
 VALUES ('User1', 'user1@gmail.com', crypt('1234', gen_salt('bf', 10)), 1000);
+
+INSERT INTO dbo.USERS (username, email, password_hash, balance)
+VALUES ('User2', 'user2@gmail.com', crypt('1234', gen_salt('bf', 10)), 1000);
+
 INSERT INTO dbo.USERS (username, email, password_hash, balance)
 VALUES ('User3', 'user3@gmail.com', crypt('1234', gen_salt('bf', 10)), 1000)

@@ -130,6 +130,10 @@ class GameService(
             val round = game.currentRound ?: return@run failure(GameError.RoundNotStarted)
             require(ante > 0 && ante >= MIN_ANTE) { "Cost must be positive and at least $MIN_ANTE" }
             if (round.turn.player.id != playerId) return@run failure(GameError.UserNotFirstPlayerOfRound)
+            // Validate that ALL players can afford the ante before setting it
+            if (round.players.any { player -> player.currentBalance < ante }) {
+                return@run failure(GameError.InsufficientFunds)
+            }
             val newRound = repoGame.setAnte(ante, round)
             val updatedGame = game.copy(currentRound = newRound)
             repoGame.save(updatedGame)
@@ -163,19 +167,23 @@ class GameService(
                 val completedRound = round.copy(winners = winners)
                 repoGame.save(game.copy(currentRound = completedRound))
 
-                // Distribute winnings FIRST (before checking if game ended)
-                val distributedRound = repoGame.distributeWinnings(completedRound)
+                // Re-fetch the game to ensure we have the correct pot value from database
+                val gameWithCorrectPot = repoGame.findById(gameId) ?: return@run failure(GameError.GameNotFound)
+                val roundWithCorrectPot = gameWithCorrectPot.currentRound ?: return@run failure(GameError.RoundNotStarted)
+
+                // Distribute winnings using the round with correct pot value
+                val distributedRound = repoGame.distributeWinnings(roundWithCorrectPot)
                 val gameAfterDistribution =
-                    game.copy(
+                    gameWithCorrectPot.copy(
                         currentRound = distributedRound,
                         players = distributedRound.players,
                     )
                 repoGame.save(gameAfterDistribution)
 
-                gameEventService.notifyRoundEnded(gameId, round.number, winners.first().id)
+                gameEventService.notifyRoundEnded(gameId, roundWithCorrectPot.number, winners.first().id)
 
                 // Check if game is finished (after distributing winnings)
-                if (round.number >= game.numberOfRounds) {
+                if (roundWithCorrectPot.number >= gameWithCorrectPot.numberOfRounds) {
                     val endedGame = gameAfterDistribution.copy(endedAt = System.currentTimeMillis(), state = State.FINISHED)
                     repoGame.save(endedGame)
 

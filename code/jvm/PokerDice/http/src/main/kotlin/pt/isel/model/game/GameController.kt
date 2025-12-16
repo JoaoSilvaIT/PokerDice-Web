@@ -145,7 +145,7 @@ class GameController(
         @RequestBody input: DiceUpdateInputModel,
         @PathVariable id: Int,
     ): ResponseEntity<*> {
-        val diceList = input.dices.map { Dice(charToFace(it.first())) }
+        val diceList = input.dices.map { Dice(charToFace(it.trim().first())) }
         return when (val result = gameService.updateTurn(diceList, id)) {
             is Either.Success ->
                 ResponseEntity

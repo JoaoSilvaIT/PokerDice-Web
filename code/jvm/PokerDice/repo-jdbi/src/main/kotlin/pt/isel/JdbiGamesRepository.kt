@@ -420,6 +420,7 @@ class JdbiGamesRepository(
             """
         SELECT user_id, dice_values FROM dbo.TURN
         WHERE game_id = :game_id AND round_number = :round_number
+        AND array_length(dice_values, 1) = 5
         """
         )
             .bind("game_id", gameId)
@@ -431,8 +432,12 @@ class JdbiGamesRepository(
                 val player = players.firstOrNull { it.id == userId } ?: return@mapNotNull null
 
                 val diceArray = (row["dice_values"] as java.sql.Array).array as Array<*>
-                val dices = diceArray.mapNotNull { it?.toString()?.firstOrNull() }
+                val dices = diceArray.mapNotNull { it?.toString()?.trim()?.firstOrNull() }
                     .map { Dice(charToFace(it)) }
+
+                // Only include complete hands with exactly 5 dice
+                if (dices.size != 5) return@mapNotNull null
+
                 player to Hand(dices)
             }
             .toMap()
@@ -575,6 +580,7 @@ class JdbiGamesRepository(
         val currentDice = turnData?.get("dice_values")?.toString()
             ?.removeSurrounding("{", "}")
             ?.split(",")
+            ?.map { it.trim() }
             ?.filter { it.isNotBlank() }
             ?.map { Dice(charToFace(it[0])) } ?: emptyList()
 

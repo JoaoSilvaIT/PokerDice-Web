@@ -1,9 +1,11 @@
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import pt.isel.domain.games.Dice
 import pt.isel.domain.games.Hand
 import pt.isel.domain.games.utils.Face
 import pt.isel.domain.games.utils.HandRank
+import pt.isel.domain.games.utils.calculateFullHandValue
 import pt.isel.domain.games.utils.defineHandRank
 
 class GameLogicTests {
@@ -124,5 +126,43 @@ class GameLogicTests {
             )
         val (_, rank) = defineHandRank(hand)
         assertEquals(HandRank.STRAIGHT, rank)
+    }
+
+    @Test
+    fun `test full house beats three of a kind`() {
+        // Full House: AAA KK
+        val fullHouse =
+            Hand(
+                listOf(
+                    Dice(Face.ACE),
+                    Dice(Face.ACE),
+                    Dice(Face.ACE),
+                    Dice(Face.KING),
+                    Dice(Face.KING),
+                ),
+            )
+
+        // Three of a Kind: AAA KQ
+        val threeOfKind =
+            Hand(
+                listOf(
+                    Dice(Face.ACE),
+                    Dice(Face.ACE),
+                    Dice(Face.ACE),
+                    Dice(Face.KING),
+                    Dice(Face.QUEEN),
+                ),
+            )
+
+        val (_, fhRank) = defineHandRank(fullHouse)
+        val (_, tokRank) = defineHandRank(threeOfKind)
+
+        assertEquals(HandRank.FULL_HOUSE, fhRank)
+        assertEquals(HandRank.THREE_OF_A_KIND, tokRank)
+
+        val fhValue = calculateFullHandValue(defineHandRank(fullHouse))
+        val tokValue = calculateFullHandValue(defineHandRank(threeOfKind))
+
+        assertTrue(fhValue > tokValue, "Full House ($fhValue) should beat Three of a Kind ($tokValue)")
     }
 }

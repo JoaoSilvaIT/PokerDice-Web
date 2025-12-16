@@ -27,18 +27,8 @@ export function Game() {
     const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
     const [roundStarting, setRoundStarting] = useState(false);
     const [betAmount, setBetAmount] = useState<number>(10);
-    const [lastRoundWinnerId, setLastRoundWinnerId] = useState<number | null>(null);
     const [processingAction, setProcessingAction] = useState(false);
 
-    useEffect(() => {
-        if (lastRoundWinnerId && game) {
-            const winner = game.players.find(p => p.id === lastRoundWinnerId);
-            if (winner) {
-                showSuccess(`🏆 Round Winner: ${winner.name}`);
-            }
-            setLastRoundWinnerId(null);
-        }
-    }, [lastRoundWinnerId, game]);
 
     useEffect(() => {
         if (!gameId) {
@@ -86,11 +76,24 @@ export function Game() {
                 fetchGame();
             },
             // onRoundEnded
-            (event) => {
-                fetchGame();
+            async (event) => {
+                // Fetch game first to get updated player data
+                const result = await gameService.getGame(gameIdNum);
+                if (isOk(result)) {
+                    setGame(result.value);
+                    // Check winners from the round data
+                    const winners = result.value.currentRound?.winners;
+                    if (winners && winners.length > 1) {
+                        showSuccess(`🤝 Round Draw!`);
+                    } else {
+                        const winner = result.value.players.find(p => p.id === event.winnerId);
+                        if (winner) {
+                            showSuccess(`🏆 Round Winner: ${winner.name}`);
+                        }
+                    }
+                }
                 setRolledDice([]);
                 setSelectedIndices([]);
-                setLastRoundWinnerId(event.winnerId);
             },
             // onGameUpdated
             () => {
@@ -239,10 +242,11 @@ export function Game() {
     const handlePlaceBet = async () => {
         if (!gameId || processingAction) return;
 
-        // Check if player has enough balance (the only real error that can happen in browser)
-        const currentPlayer = game?.players.find(p => p.id === currentUserId);
-        if (currentPlayer && betAmount > currentPlayer.currentBalance) {
-            showError(`💸 Insufficient funds! You have 💰${currentPlayer.currentBalance} but tried to bet 💰${betAmount}`);
+        // Check if ALL players have enough balance for the ante (backend validates this too)
+        const minPlayerBalance = game?.players.reduce((min, p) => Math.min(min, p.currentBalance), Infinity) ?? 0;
+        if (betAmount > minPlayerBalance) {
+            const poorestPlayer = game?.players.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, game.players[0]);
+            showError(`💸 Insufficient funds! ${poorestPlayer?.name} only has 💰${poorestPlayer?.currentBalance}, max bet is 💰${minPlayerBalance}`);
             return;
         }
 
@@ -534,48 +538,56 @@ export function Game() {
                         <div className={`${styles['betting-interface']} ${styles['betting-centered']}`}>
                             <h3>Place Your Bet</h3>
                             {isMyTurn ? (
-                                <div className={styles['bet-controls']}>
-                                    <div className={styles['bet-amount-wrapper']}>
-                                        <span className={styles['currency-symbol']}>💰</span>
-                                        <input
-                                            type="number"
-                                            min="10"
-                                            step="10"
-                                            value={betAmount}
-                                            onChange={(e) => setBetAmount(parseInt(e.target.value))}
-                                            className={styles['bet-input']}
-                                        />
-                                    </div>
-                                    <div className={`${styles['quick-bets']} ${styles['prettier-quick-bets']}`}>
-                                        {[10, 20, 50, 100].map(amount => {
-                                            const currentPlayer = game.players.find(p => p.id === currentUserId);
-                                            const currentPlayerBalance = currentPlayer ? currentPlayer.currentBalance : 0;
-                                            const isDisabled = amount > currentPlayerBalance || processingAction;
-                                            return (
-                                                <button
-                                                    key={amount}
-                                                    onClick={() => setBetAmount(amount)}
-                                                    className={`${styles['quick-bet-btn']} ${styles['prettier-quick-bet-btn']} ${betAmount === amount ? styles['active'] : ''}`}
-                                                    disabled={isDisabled}
-                                                >
-                                                    {amount}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    <button
-                                        onClick={handlePlaceBet}
-                                        className={styles['bet-button']}
-                                        disabled={betAmount > (game.players.find(p => p.id === currentUserId)?.currentBalance || 0) || processingAction}
-                                    >
-                                        💰 Place Bet
-                                    </button>
-                                    {betAmount > (game.players.find(p => p.id === currentUserId)?.currentBalance || 0) && (
-                                        <div className={styles['bet-warning']} style={{color: '#ff6b6b', marginTop: '8px', fontSize: '14px'}}>
-                                            ⚠️ Insufficient funds! Your balance: 💰{game.players.find(p => p.id === currentUserId)?.currentBalance}
+                                (() => {
+                                    // Calculate max bet based on the minimum balance among all players
+                                    const minPlayerBalance = game.players.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
+                                    const poorestPlayer = game.players.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, game.players[0]);
+                                    const betExceedsLimit = betAmount > minPlayerBalance;
+
+                                    return (
+                                        <div className={styles['bet-controls']}>
+                                            <div className={styles['bet-amount-wrapper']}>
+                                                <span className={styles['currency-symbol']}>💰</span>
+                                                <input
+                                                    type="number"
+                                                    min="10"
+                                                    max={minPlayerBalance}
+                                                    step="10"
+                                                    value={betAmount}
+                                                    onChange={(e) => setBetAmount(parseInt(e.target.value))}
+                                                    className={styles['bet-input']}
+                                                />
+                                            </div>
+                                            <div className={`${styles['quick-bets']} ${styles['prettier-quick-bets']}`}>
+                                                {[10, 20, 50, 100].map(amount => {
+                                                    const isDisabled = amount > minPlayerBalance || processingAction;
+                                                    return (
+                                                        <button
+                                                            key={amount}
+                                                            onClick={() => setBetAmount(amount)}
+                                                            className={`${styles['quick-bet-btn']} ${styles['prettier-quick-bet-btn']} ${betAmount === amount ? styles['active'] : ''}`}
+                                                            disabled={isDisabled}
+                                                        >
+                                                            {amount}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <button
+                                                onClick={handlePlaceBet}
+                                                className={styles['bet-button']}
+                                                disabled={betExceedsLimit || processingAction}
+                                            >
+                                                💰 Place Bet
+                                            </button>
+                                            {betExceedsLimit && (
+                                                <div className={styles['bet-warning']} style={{color: '#ff6b6b', marginTop: '8px', fontSize: '14px'}}>
+                                                    ⚠️ Max bet is 💰{minPlayerBalance} ({poorestPlayer?.name} can't afford more)
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
+                                    );
+                                })()
                             ) : (
                                 <div className={styles['waiting-bet']}>
                                     ⏳ Waiting for {players.find(p => p.id === currentPlayerId)?.name} to place bet...

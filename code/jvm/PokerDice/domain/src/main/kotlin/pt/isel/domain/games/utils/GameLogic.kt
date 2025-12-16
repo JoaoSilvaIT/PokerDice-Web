@@ -21,10 +21,52 @@ fun defineHandRank(hand: Hand): Pair<Hand, HandRank> {
 }
 
 fun calculateFullHandValue(handIt: Pair<Hand, HandRank>): Int {
-    val numberOfHand = handIt.second.strength
-    val numberOfMajorDice = handIt.first.dices.maxOf { it.face.strength }
+    val hand = handIt.first
+    val rank = handIt.second
+    val rankStrength = rank.strength
 
-    return numberOfHand + numberOfMajorDice
+    // Group dice by face and count occurrences
+    val diceGroups = hand.dices.groupingBy { it.face }.eachCount()
+
+    // Calculate the primary value based on the dice that form the combination
+    val (primaryDiceValue, kicker) =
+        when (rank) {
+            HandRank.FIVE_OF_A_KIND -> {
+                diceGroups.keys.first().strength to 0
+            }
+            HandRank.FOUR_OF_A_KIND -> {
+                val main = diceGroups.entries.first { it.value == 4 }.key.strength
+                val kick = diceGroups.entries.first { it.value == 1 }.key.strength
+                main to kick
+            }
+            HandRank.FULL_HOUSE -> {
+                val triplet = diceGroups.entries.first { it.value == 3 }.key.strength
+                val pair = diceGroups.entries.first { it.value == 2 }.key.strength
+                triplet to pair
+            }
+            HandRank.THREE_OF_A_KIND -> {
+                val main = diceGroups.entries.first { it.value == 3 }.key.strength
+                val kick = diceGroups.entries.filter { it.value == 1 }.maxOf { it.key.strength }
+                main to kick
+            }
+            HandRank.TWO_PAIR -> {
+                val pairs = diceGroups.entries.filter { it.value == 2 }.map { it.key.strength }.sortedDescending()
+                val kick = diceGroups.entries.firstOrNull { it.value == 1 }?.key?.strength ?: 0
+                pairs[0] * 10 + pairs[1] to kick
+            }
+            HandRank.ONE_PAIR -> {
+                val main = diceGroups.entries.first { it.value == 2 }.key.strength
+                val kick = diceGroups.entries.filter { it.value == 1 }.maxOf { it.key.strength }
+                main to kick
+            }
+            HandRank.STRAIGHT, HandRank.HIGH_DICE -> {
+                val sorted = hand.dices.map { it.face.strength }.sortedDescending()
+                sorted[0] to sorted[1]
+            }
+        }
+
+    // rank * 1000 + primaryValue * 10 + kicker
+    return rankStrength * 1000 + primaryDiceValue * 10 + kicker
 }
 
 fun decideRoundWinner(round: Round): List<PlayerInGame> {
@@ -76,13 +118,14 @@ fun lockDices(dices: List<Dice>): Hand {
 }
 
 fun charToFace(char: Char): Face =
-    when (char) {
+    when (char.uppercaseChar()) {
         'A' -> Face.ACE
         'K' -> Face.KING
         'Q' -> Face.QUEEN
         'J' -> Face.JACK
         'T' -> Face.TEN
-        else -> Face.NINE
+        '9' -> Face.NINE
+        else -> throw IllegalArgumentException("Unknown dice face character: '$char'")
     }
 
 fun faceToChar(face: Face): Char =
