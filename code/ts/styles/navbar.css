@@ -54,3 +54,9 @@
 .navbar-logout:hover {
     color: #eb8934;
 }
+.navbar-links a.active {
+     color: #eb8934;
+     font-weight: bold;
+     text-decoration: underline;
+}
+

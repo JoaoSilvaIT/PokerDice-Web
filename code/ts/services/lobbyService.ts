@@ -1,5 +1,5 @@
 import { RequestUri } from './requestUri';
-import { fetchWrapper, Result } from './utils';
+import { fetchWrapper, isOk, Result } from './utils';
 
 export interface Lobby {
     id: number;
@@ -56,13 +56,14 @@ export const lobbyService = {
             headers: {
                 'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache'
-            }
+            },
+            credentials: 'include',
         });
 
-        if (!result.success) {
-            return result as Result<Lobby[]>;
+        if (isOk(result)) {
+            return { success: true, value: result.value.lobbies };
         }
-        return { success: true, value: result.value.lobbies };
+        return { success: false, error: result.error };
     },
 
     async createLobby(data: CreateLobbyRequest): Promise<Result<CreateLobbyResponse>> {
@@ -72,18 +73,21 @@ export const lobbyService = {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
+            credentials: 'include',
         });
     },
 
     async joinLobby(lobbyId: number): Promise<Result<void>> {
         return await fetchWrapper<void>(RequestUri.lobby.join(lobbyId), {
             method: 'POST',
+            credentials: 'include',
         });
     },
 
     async getLobbyDetails(lobbyId: number): Promise<Result<LobbyDetails>> {
         return await fetchWrapper<LobbyDetails>(RequestUri.lobby.details(lobbyId), {
             method: 'GET',
+            credentials: 'include',
         });
     },
 
@@ -91,12 +95,14 @@ export const lobbyService = {
     async leaveLobby(lobbyId: number): Promise<Result<void>> {
         return await fetchWrapper<void>(RequestUri.lobby.leave(lobbyId), {
             method: 'POST',
+            credentials: 'include',
         });
     },
 
     async deleteLobby(lobbyId: number): Promise<Result<void>> {
         return await fetchWrapper<void>(RequestUri.lobby.close(lobbyId), {
             method: 'DELETE',
+            credentials: 'include',
         });
     },
 }

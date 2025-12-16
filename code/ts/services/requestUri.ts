@@ -7,11 +7,11 @@ export const RequestUri = {
         logout: `${BASE_API_URL}/users/logout`,
         stats: `${BASE_API_URL}/users/stats`,
         info: `${BASE_API_URL}/me`,
+        easterEgg: `${BASE_API_URL}/users/easteregg`,
     },
     game: {
         create: `${BASE_API_URL}/games`,
         list: `${BASE_API_URL}/games`,
-        join: (gameId: number) => `${BASE_API_URL}/games/${gameId}/join`,
         details: (gameId: number) => `${BASE_API_URL}/games/${gameId}`,
         roll: (gameId: number) => `${BASE_API_URL}/games/${gameId}/rounds/roll-dices`,
         turn: (gameId: number) => `${BASE_API_URL}/games/${gameId}/rounds/update-turn`,
@@ -22,6 +22,7 @@ export const RequestUri = {
         startRound: (gameId: number) => `${BASE_API_URL}/games/${gameId}/rounds/start`,
         end: (gameId: number) => `${BASE_API_URL}/games/${gameId}/end`,
         state: (gameId: number) => `${BASE_API_URL}/games/${gameId}/state`,
+        listen: (gameId: number) => `${BASE_API_URL}/games/${gameId}/listen`,
     },
     lobby: {
         list: `${BASE_API_URL}/lobbies`,
@@ -33,15 +34,4 @@ export const RequestUri = {
         listen: (lobbyId: number) => `${BASE_API_URL}/lobbies/${lobbyId}/listen`,
         listenAll: `${BASE_API_URL}/lobbies/listen`,
     },
-    leaderboard: {
-        global: `${BASE_API_URL}/leaderboard`,
-        daily: `${BASE_API_URL}/leaderboard/daily`,
-        weekly: `${BASE_API_URL}/leaderboard/weekly`,
-        friends: `${BASE_API_URL}/leaderboard/friends`,
-    },
-    notifications: {
-        getInvites: `${BASE_API_URL}/users/invites`,
-        acceptInvite: (inviteId: number) => `${BASE_API_URL}/invites/${inviteId}/accept`,
-        declineInvite: (inviteId: number) => `${BASE_API_URL}/invites/${inviteId}/decline`,
-    }
 }

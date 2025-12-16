@@ -16,7 +16,6 @@ export async function fetchWrapper<T>(
 
         const response = await fetch(url, {
             ...options,
-            credentials: 'include',
             headers,
         });
 
@@ -33,19 +32,19 @@ export async function fetchWrapper<T>(
                 }
             }
 
-            const clonedResponse = response.clone();
-
-            let errorMessage = 'Request failed';
+            let errorMessage = `HTTP ${response.status}`;
             try {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
-            } catch (e) {
-                try {
-                    const errorText = await clonedResponse.text();
-                    errorMessage = errorText || `HTTP ${response.status}`;
-                } catch (textError) {
-                    errorMessage = `HTTP ${response.status}`;
+                const text = await response.text();
+                if (text) {
+                    try {
+                        const errorData = JSON.parse(text);
+                        errorMessage = errorData.message || errorData.error || errorData.title || JSON.stringify(errorData);
+                    } catch {
+                        errorMessage = text;
+                    }
                 }
+            } catch {
+                // Ignore error reading body
             }
 
             return {success: false, error: errorMessage};

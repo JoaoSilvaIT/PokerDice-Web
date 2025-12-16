@@ -4,25 +4,11 @@ import {isOk} from "../../services/utils";
 import {authService} from "../../services/authService";
 import {useAuthentication} from "../../providers/authentication";
 
-type State =
-    | {
-    type: 'editing';
+type State = {
     inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string };
     showPassword: boolean;
     error: string | null;
-    shouldRedirect: boolean;
-    passwordCriteria: {
-        blank: boolean;
-        maxLength: boolean;
-    };
-}
-    | { type: 'redirect' }
-    | {
-    type: 'submitting';
-    inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string };
-    showPassword: boolean;
-    error: string | null;
-    isLoading: boolean;
+    isSubmitting: boolean;
     shouldRedirect: boolean;
     passwordCriteria: {
         blank: boolean;
@@ -32,84 +18,54 @@ type State =
 
 type Action =
     | { type: 'edit'; inputName: string; inputValue: string }
-    | {
-    type: 'submit';
-    inputs: { name: string; email: string; password: string; confirmPassword: string; invite: string }
-}
+    | { type: 'submitStart' }
+    | { type: 'submitSuccess' }
+    | { type: 'submitError'; error: string }
     | { type: 'togglePassword' }
-    | { type: 'setError'; error: string | null }
-    | { type: 'setRedirect' }
-    | {
-    type: 'updatePasswordCriteria'; criteria: {
-        blank: boolean;
-        maxLength: boolean;
-    }
-}
-
-function logUnexpectedAction(state: State, action: Action) {
-    // console.log(`Unexpected action '${action.type} on state '${state.type}'`)
-}
+    | { type: 'updatePasswordCriteria'; criteria: { blank: boolean; maxLength: boolean } }
 
 function reduce(state: State, action: Action): State {
-    switch (state.type) {
-        case 'editing':
-            switch (action.type) {
-                case 'edit':
-                    const newInputs = {...state.inputs, [action.inputName]: action.inputValue}
-                    return {
-                        ...state,
-                        inputs: newInputs,
-                    }
-                case 'submit':
-                    return {
-                        type: 'submitting',
-                        inputs: action.inputs,
-                        showPassword: state.showPassword,
-                        error: null,
-                        isLoading: true,
-                        shouldRedirect: false,
-                        passwordCriteria: state.passwordCriteria
-                    }
-                case 'togglePassword':
-                    return {...state, showPassword: !state.showPassword}
-                case 'updatePasswordCriteria':
-                    return {...state, passwordCriteria: action.criteria}
-                default:
-                    logUnexpectedAction(state, action)
-                    return state
+    switch (action.type) {
+        case 'edit':
+            return {
+                ...state,
+                inputs: {...state.inputs, [action.inputName]: action.inputValue},
+                error: null
             }
-        case 'submitting':
-            switch (action.type) {
-                case 'setError':
-                    return {
-                        type: 'editing',
-                        inputs: {...state.inputs, password: '', confirmPassword: ''},
-                        showPassword: false,
-                        error: action.error,
-                        shouldRedirect: false,
-                        passwordCriteria: {
-                            blank: false,
-                            maxLength: false
-                        }
-                    }
-                case 'setRedirect':
-                    return {type: 'redirect'}
-                default:
-                    logUnexpectedAction(state, action)
-                    return state
+        case 'submitStart':
+            return {
+                ...state,
+                isSubmitting: true,
+                error: null
             }
+        case 'submitSuccess':
+            return {
+                ...state,
+                isSubmitting: false,
+                shouldRedirect: true
+            }
+        case 'submitError':
+            return {
+                ...state,
+                isSubmitting: false,
+                error: action.error,
+                inputs: {...state.inputs, password: '', confirmPassword: ''}
+            }
+        case 'togglePassword':
+            return {...state, showPassword: !state.showPassword}
+        case 'updatePasswordCriteria':
+            return {...state, passwordCriteria: action.criteria}
         default:
-            logUnexpectedAction(state, action)
             return state
     }
 }
 
 export function Signup() {
     const [state, dispatch] = useReducer(reduce, {
-        type: 'editing',
         inputs: {name: '', email: '', password: '', confirmPassword: '', invite: ''},
         showPassword: false,
         error: null,
+        isSubmitting: false,
         shouldRedirect: false,
         passwordCriteria: {
             blank: false,
@@ -120,7 +76,7 @@ export function Signup() {
     const [, setUsername] = useAuthentication();
     const location = useLocation()
 
-    if (state.type === 'redirect') {
+    if (state.shouldRedirect) {
         return <Navigate to={location.state?.source || '/'} replace={true}/>
     }
 
@@ -143,47 +99,44 @@ export function Signup() {
 
     async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
         ev.preventDefault()
-        if (state.type === 'editing') {
-            const {password, confirmPassword} = state.inputs
-            if (password !== confirmPassword) {
-                dispatch({type: 'setError', error: 'Passwords do not match'})
-                return
-            }
-            const criteria = validatePassword(password)
-            if (!Object.values(criteria).every(Boolean)) {
-                dispatch({type: 'setError', error: 'Password does not meet all requirements'})
-                return
-            }
-            dispatch({type: 'submit', inputs: state.inputs})
-            const result = await authService.signup(state.inputs)
-            if (isOk(result)) {
-                const userInfoResult = await authService.getUserInfo()
+        
+        const {password, confirmPassword} = state.inputs
+        if (password !== confirmPassword) {
+            dispatch({type: 'submitError', error: 'Passwords do not match'})
+            return
+        }
+        const criteria = validatePassword(password)
+        if (!Object.values(criteria).every(Boolean)) {
+            dispatch({type: 'submitError', error: 'Password does not meet all requirements'})
+            return
+        }
+        
+        dispatch({type: 'submitStart'})
+        
+        const result = await authService.signup(state.inputs)
+        if (isOk(result)) {
+            const userInfoResult = await authService.getUserInfo()
 
-                if (isOk(userInfoResult)) {
-                    const userInfo = userInfoResult.value
-                    localStorage.setItem('userId', userInfo.id.toString())
-                    localStorage.setItem('username', userInfo.name)
-                    localStorage.setItem('userEmail', userInfo.email)
-                    setUsername(userInfo.name)
-                    dispatch({type: 'setRedirect'})
-                } else {
-                    dispatch({type: 'setError', error: 'Failed to fetch user information. Please try again.'})
-                }
+            if (isOk(userInfoResult)) {
+                const userInfo = userInfoResult.value
+                localStorage.setItem('userId', userInfo.id.toString())
+                localStorage.setItem('username', userInfo.name)
+                localStorage.setItem('userEmail', userInfo.email)
+                setUsername(userInfo.name)
+                dispatch({type: 'submitSuccess'})
             } else {
-                dispatch({type: 'setError', error: result.error})
+                dispatch({type: 'submitError', error: 'Failed to fetch user information. Please try again.'})
             }
+        } else {
+            dispatch({type: 'submitError', error: result.error})
         }
     }
-
-    const inputs = state.type === 'editing' || state.type === 'submitting'
-        ? state.inputs
-        : {name: '', email: '', password: '', confirmPassword: '', invite: ''}
 
     return (
         <div className="auth-container">
             <h1 className="auth-title">Sign Up</h1>
             <form onSubmit={handleSubmit}>
-                <fieldset disabled={state.type === 'submitting'}>
+                <fieldset disabled={state.isSubmitting}>
                     <div className="auth-form-group">
                         <div>
                             <label htmlFor="name" className="auth-label">
@@ -194,7 +147,7 @@ export function Signup() {
                                 type="text"
                                 id="name"
                                 name="name"
-                                value={inputs.name}
+                                value={state.inputs.name}
                                 onChange={handleChange}
                                 placeholder="Enter your username"
                                 required
@@ -209,7 +162,7 @@ export function Signup() {
                                 type="email"
                                 id="email"
                                 name="email"
-                                value={inputs.email}
+                                value={state.inputs.email}
                                 onChange={handleChange}
                                 placeholder="Enter your email"
                                 required
@@ -225,7 +178,7 @@ export function Signup() {
                                     type={state.showPassword ? "text" : "password"}
                                     id="password"
                                     name="password"
-                                    value={inputs.password}
+                                    value={state.inputs.password}
                                     onChange={handleChange}
                                     placeholder="Enter your password"
                                     required
@@ -260,7 +213,7 @@ export function Signup() {
                                 type="password"
                                 id="confirmPassword"
                                 name="confirmPassword"
-                                value={inputs.confirmPassword}
+                                value={state.inputs.confirmPassword}
                                 onChange={handleChange}
                                 placeholder="Confirm your password"
                                 required
@@ -276,7 +229,7 @@ export function Signup() {
                                 type="text"
                                 id="invite"
                                 name="invite"
-                                value={inputs.invite}
+                                value={state.inputs.invite}
                                 onChange={handleChange}
                                 placeholder="Enter your invite code"
                                 required
@@ -285,7 +238,7 @@ export function Signup() {
 
                         <button
                             type="submit"
-                            disabled={state.type === 'editing' && (
+                            disabled={state.isSubmitting || (
                                 state.inputs.password !== state.inputs.confirmPassword ||
                                 Object.values(state.passwordCriteria).some(criteria => !criteria)
                             )}

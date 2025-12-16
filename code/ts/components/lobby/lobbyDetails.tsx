@@ -4,7 +4,7 @@ import {lobbyService} from '../../services/lobbyService';
 import {gameService} from '../../services/gameService';
 import {isOk, formatError} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
-import {ToastContainer, useToast} from '../generic/Toast';
+import {ToastContainer, useToast} from '../generic/toast';
 import '../../styles/lobbyDetails.css';
 
 interface Player {

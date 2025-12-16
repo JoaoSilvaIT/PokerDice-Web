@@ -1,45 +1,47 @@
-import React, {useContext} from 'react'
-import {createContext, useState} from 'react'
+import React, {useContext, createContext, useState, ReactNode} from 'react'
 
-const AuthenticationContext = createContext({
+interface AuthContextType {
+    username: string | undefined;
+    setUsername: (username: string) => void;
+    clearUsername: () => void;
+}
+
+const AuthenticationContext = createContext<AuthContextType>({
     username: undefined,
-    setUsername: (_: string) => {
-    },
-    clearUsername: () => {
-    }
+    setUsername: () => {},
+    clearUsername: () => {}
 })
 
-export function AuthenticationProvider({children}) {
-    const [username, setUsername] = useState<string | undefined>(() =>
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+export function AuthenticationProvider({children}: AuthProviderProps) {
+    const [username, setUsernameState] = useState<string | undefined>(() =>
         localStorage.getItem('username') || undefined
     )
 
     const clearUsername = () => {
-        setUsername(undefined)
+        setUsernameState(undefined)
         localStorage.removeItem('username')
         localStorage.removeItem('userId')
         localStorage.removeItem('userEmail')
     }
 
-    const value = {
-        username: username,
-        setUsername: (newUsername: string) => {
-            localStorage.setItem('username', newUsername)
-            setUsername(newUsername)
-        },
-        clearUsername: clearUsername
+    const setUsername = (newUsername: string) => {
+        localStorage.setItem('username', newUsername)
+        setUsernameState(newUsername)
     }
+
+    const value = { username, setUsername, clearUsername }
     return <AuthenticationContext.Provider value={value}>{children}</AuthenticationContext.Provider>
 }
 
-export function useAuthentication() {
-    const state = useContext(AuthenticationContext)
-
+export function useAuthentication(): [string | undefined, (username: string) => void, () => void] {
+    const context = useContext(AuthenticationContext)
     return [
-        state.username,
-        (username: string) => {
-            state.setUsername(username)
-        },
-        state.clearUsername
+        context.username,
+        context.setUsername,
+        context.clearUsername
     ]
 }

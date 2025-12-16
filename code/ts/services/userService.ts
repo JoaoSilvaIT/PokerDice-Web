@@ -1,5 +1,5 @@
 import {RequestUri} from './requestUri';
-import {fetchWrapper, Result} from './utils';
+import {fetchWrapper, isOk, Result} from './utils';
 
 export interface UserStats {
     gamesPlayed: number;
@@ -17,11 +17,11 @@ export const userService = {
     },
 
     async claimEasterEgg(): Promise<Result<number>> {
-        const result = await fetchWrapper<{ newBalance: number }>('/api/users/easteregg', {
+        const result = await fetchWrapper<{ newBalance: number }>(RequestUri.user.easterEgg, {
             method: 'POST',
             credentials: 'include',
         });
-        if (result.success) {
+        if (isOk(result)) {
             return {success: true, value: result.value.newBalance};
         }
         return {success: false, error: result.error};

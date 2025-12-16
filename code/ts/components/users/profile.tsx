@@ -84,12 +84,7 @@ export function Profile() {
                     </div>
                     <h1 className="profile-username">{userInfo?.name}</h1>
                     <p className="profile-email">{userInfo?.email}</p>
-                    <div className="profile-balance" style={{ 
-                        marginTop: '10px', 
-                        fontSize: '1.2rem', 
-                        color: '#ffd700', 
-                        fontWeight: 'bold' 
-                    }}>
+                    <div className="profile-balance">
                         💰 Balance: {userInfo?.balance}
                     </div>
                 </div>

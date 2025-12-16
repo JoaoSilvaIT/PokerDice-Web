@@ -3,8 +3,9 @@ import {useNavigate} from 'react-router-dom';
 import {lobbyService, Lobby} from '../../services/lobbyService';
 import {isOk, formatError} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
-import {ToastContainer, useToast} from '../generic/Toast';
+import {ToastContainer, useToast} from '../generic/toast';
 import '../../styles/lobbies.css';
+import { CreateLobbyMenu } from './createLobbyMenu';
 
 export function Lobbies() {
     const navigate = useNavigate();
@@ -14,12 +15,6 @@ export function Lobbies() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateMenu, setShowCreateMenu] = useState(false);
-    const [createFormData, setCreateFormData] = useState({
-        name: '',
-        description: '',
-        minPlayers: 2,
-        maxPlayers: 4,
-    });
     const [isCreating, setIsCreating] = useState(false);
     const [joiningLobbyId, setJoiningLobbyId] = useState<number | null>(null);
     const {toasts, removeToast, showError} = useToast();
@@ -68,43 +63,13 @@ export function Lobbies() {
         };
     }, [fetchLobbies, connectToAllLobbies, registerAllLobbiesHandler, disconnect]);
 
-    const handleCreateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const {name, value} = e.target;
-        setCreateFormData(prev => ({
-            ...prev,
-            [name]: name === 'minPlayers' || name === 'maxPlayers' ? parseInt(value) || 0 : value,
-        }));
-    };
-
-    const handleCreateLobby = async () => {
-        if (!createFormData.name.trim()) {
-            showError('Lobby name is required');
-            return;
-        }
-
-        if (createFormData.minPlayers < 2 || createFormData.minPlayers > 10) {
-            showError('Min players must be between 2 and 10');
-            return;
-        }
-
-        if (createFormData.maxPlayers < 2 || createFormData.maxPlayers > 10) {
-            showError('Max players must be between 2 and 10');
-            return;
-        }
-
-        if (createFormData.minPlayers > createFormData.maxPlayers) {
-            showError('Min players cannot be greater than max players');
-            return;
-        }
-
+    const handleCreateLobby = async (formData: { name: string; description: string; minPlayers: number; maxPlayers: number }) => {
         setIsCreating(true);
 
-        const result = await lobbyService.createLobby(createFormData);
+        const result = await lobbyService.createLobby(formData);
 
         if (isOk(result)) {
-            setCreateFormData({name: '', description: '', minPlayers: 2, maxPlayers: 4});
             setShowCreateMenu(false);
-
             navigate(`/lobbies/${result.value.id}`);
         } else {
             if (result.error?.includes('Unauthorized') || result.error?.includes('401')) {
@@ -218,105 +183,12 @@ export function Lobbies() {
                 </div>
             </div>
 
-            {showCreateMenu && (
-                <div
-                    className="lobby-menu-overlay"
-                    onClick={() => setShowCreateMenu(false)}
-                />
-            )}
-
-            <div className={`lobby-create-menu ${showCreateMenu ? 'open' : ''}`}>
-                <div className="lobby-create-menu-header">
-                    <h2 className="lobby-create-menu-title">Create New Lobby</h2>
-                    <button
-                        onClick={() => {
-                            setShowCreateMenu(false);
-                            setCreateFormData({name: '', description: '', minPlayers: 2, maxPlayers: 4});
-                        }}
-                        className="lobby-create-menu-close"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <div className="lobby-create-form">
-                    <div className="lobby-form-group">
-                        <label htmlFor="name" className="lobby-form-label">
-                            Lobby Name *
-                        </label>
-                        <textarea
-                            id="name"
-                            name="name"
-                            value={createFormData.name}
-                            onChange={handleCreateFormChange}
-                            rows={1}
-                            className="lobby-form-textarea"
-                            placeholder="Enter lobby name"
-                        />
-                    </div>
-
-                    <div className="lobby-form-group">
-                        <label htmlFor="description" className="lobby-form-label">
-                            Description
-                        </label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={createFormData.description}
-                            onChange={handleCreateFormChange}
-                            rows={4}
-                            className="lobby-form-textarea"
-                            placeholder="Optional description"
-                        />
-                    </div>
-
-                    <div className="lobby-form-group">
-                        <label htmlFor="minPlayers" className="lobby-form-label">
-                            Min Players
-                        </label>
-                        <input
-                            type="number"
-                            id="minPlayers"
-                            name="minPlayers"
-                            value={createFormData.minPlayers}
-                            onChange={handleCreateFormChange}
-                            min="2"
-                            max="10"
-                            className="lobby-form-input"
-                        />
-                    </div>
-
-                    <div className="lobby-form-group">
-                        <label htmlFor="maxPlayers" className="lobby-form-label">
-                            Max Players
-                        </label>
-                        <input
-                            type="number"
-                            id="maxPlayers"
-                            name="maxPlayers"
-                            value={createFormData.maxPlayers}
-                            onChange={handleCreateFormChange}
-                            min="2"
-                            max="10"
-                            className="lobby-form-input"
-                        />
-                    </div>
-
-                    <div className="lobby-form-hint">
-                        Players must be between 2 and 10
-                    </div>
-
-                    <div className="lobby-create-actions">
-                        <button
-                            onClick={handleCreateLobby}
-                            className="lobby-create-button"
-                            disabled={isCreating}
-                        >
-                            {isCreating ? 'Creating...' : 'Create Lobby'}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <CreateLobbyMenu 
+                isOpen={showCreateMenu} 
+                onClose={() => setShowCreateMenu(false)} 
+                onCreate={handleCreateLobby} 
+                isCreating={isCreating} 
+            />
         </div>
     );
 }

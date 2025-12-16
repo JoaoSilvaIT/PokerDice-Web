@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {NavLink, useNavigate} from 'react-router-dom';
 import {useAuthentication} from '../../providers/authentication';
 import '../../styles/navbar.css';
 import {authService} from "../../services/authService";
@@ -9,14 +9,18 @@ export function Navbar() {
     const navigate = useNavigate();
 
     async function handleLogout() {
-        const result = await authService.logout();
-        if (result.success) {
+        try {
+            await authService.logout();
+        } catch (e) {
+            console.warn('Logout server request failed, clearing local session anyway', e);
+        } finally {
             clearUsername();
             navigate('/home');
-        } else {
-            console.error('Logout failed');
         }
     }
+
+    const getLinkClass = ({ isActive }: { isActive: boolean }) => 
+        isActive ? "nav-link active" : "nav-link";
 
     return (
         <nav className="navbar">
@@ -24,18 +28,18 @@ export function Navbar() {
                 <h2>PokerDice</h2>
             </div>
             <div className="navbar-links">
-                <Link to="/">Home</Link>
-                <Link to="/lobbies">Lobbies</Link>
-                <Link to="/about">About</Link>
+                <NavLink to="/home" className={getLinkClass}>Home</NavLink>
+                <NavLink to="/lobbies" className={getLinkClass}>Lobbies</NavLink>
+                <NavLink to="/about" className={getLinkClass}>About</NavLink>
                 {username ? (
                     <>
-                        <Link to="/profile" className="navbar-username">Welcome, {username}</Link>
+                        <NavLink to="/profile" className={getLinkClass}>Welcome, {username}</NavLink>
                         <button onClick={handleLogout} className="navbar-logout">Logout</button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login">Login</Link>
-                        <Link to="/signup">Sign Up</Link>
+                        <NavLink to="/login" className={getLinkClass}>Login</NavLink>
+                        <NavLink to="/signup" className={getLinkClass}>Sign Up</NavLink>
                     </>
                 )}
             </div>

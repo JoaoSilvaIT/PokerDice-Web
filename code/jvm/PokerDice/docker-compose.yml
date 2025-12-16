@@ -32,9 +32,10 @@ services:
   #   depends_on:
   #     - pokerdice-jvm
 
-  # Production mode service (Commented out by default)
+  # Production mode service
   pokerdice-nginx:
     container_name: pokerdice-nginx
+    image: pokerdice-nginx
     build:
       context: ../../
       dockerfile: jvm/PokerDice/docker/Dockerfile-nginx

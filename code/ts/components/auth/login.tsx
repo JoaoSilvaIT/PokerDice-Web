@@ -1,23 +1,20 @@
 import React, {useState} from 'react';
 import {useAuthentication} from "../../providers/authentication";
-import {Navigate, useLocation, Link} from 'react-router-dom';
+import {useNavigate, useLocation, Link} from 'react-router-dom';
 import {authService} from "../../services/authService";
 import {isOk, formatError} from "../../services/utils";
-import {ToastContainer, useToast} from '../generic/Toast';
+import {ToastContainer, useToast} from '../generic/toast';
 import '../../styles/login.css';
 
 export function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [redirect, setRedirect] = useState(false);
+    const navigate = useNavigate();
     const [, setUsername] = useAuthentication();
     const location = useLocation();
     const {toasts, removeToast, showError} = useToast();
 
-    if (redirect) {
-        return <Navigate to={'/home'} replace={true}/>;
-    }
 
     async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
         ev.preventDefault();
@@ -34,7 +31,7 @@ export function Login() {
                 localStorage.setItem('username', userInfo.name);
                 localStorage.setItem('userEmail', userInfo.email);
                 setUsername(userInfo.name);
-                setRedirect(true);
+                navigate('/home', { replace: true });
             } else {
                 showError('Failed to fetch user information. Please try again.');
                 setPassword('');

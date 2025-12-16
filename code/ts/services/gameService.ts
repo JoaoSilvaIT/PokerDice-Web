@@ -1,5 +1,5 @@
 import {RequestUri} from './requestUri';
-import {fetchWrapper, Result} from './utils';
+import {fetchWrapper, isOk, Result} from './utils';
 
 interface CreateGameRequest {
     lobbyId: number;
@@ -43,6 +43,15 @@ export interface RolledDice {
     dice: string[];
 }
 
+
+export interface RolledDiceOutputModel {
+    dice: string[];
+}
+
+export interface DiceOutputModel {
+    dices: string[];
+}
+
 export const gameService = {
     async createGame(data: CreateGameRequest): Promise<Result<CreateGameResponse>> {
         return await fetchWrapper<CreateGameResponse>(RequestUri.game.create, {
@@ -51,12 +60,14 @@ export const gameService = {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
+            credentials: 'include',
         });
     },
 
     async getGame(gameId: number): Promise<Result<GameDetails>> {
-        return await fetchWrapper<GameDetails>(`/api/games/${gameId}`, {
+        return await fetchWrapper<GameDetails>(RequestUri.game.details(gameId), {
             method: 'GET',
+            credentials: 'include',
         });
     },
 
@@ -72,7 +83,7 @@ export const gameService = {
             method: 'POST',
             credentials: 'include',
         });
-        if (result.success) {
+        if (isOk(result)) {
             return {success: true, value: {dice: result.value.dice}};
         }
         return {success: false, error: result.error};
@@ -84,7 +95,7 @@ export const gameService = {
             body: JSON.stringify({dices: dice}), // Matches backend DiceUpdateInputModel
             credentials: 'include',
         });
-        if (result.success) {
+        if (isOk(result)) {
             return {success: true, value: result.value.dices};
         }
         return {success: false, error: result.error};

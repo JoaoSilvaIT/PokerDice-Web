@@ -187,3 +187,14 @@ fieldset {
     margin-top: 1rem;
     font-size: 1.1rem;
 }
+
+.easter-egg-trigger {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    opacity: 0;
+    cursor: copy;
+    z-index: 2147483647;
+}

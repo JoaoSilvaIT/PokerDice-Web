@@ -1,99 +1,24 @@
-import React, {createContext, useCallback, useContext, useRef} from 'react';
-import {RequestUri} from '../services/requestUri';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { RequestUri } from '../services/requestUri';
 
-interface PlayerJoinedEvent {
-    lobbyId: number;
-    userId: number;
-    playerName: string;
-}
+// --- Interfaces (Mantidas patestei ra tipagem forte) ---
+interface PlayerJoinedEvent { lobbyId: number; userId: number; playerName: string; }
+interface PlayerLeftEvent { lobbyId: number; playerId: number; timestamp: string; }
+interface LobbyCreatedEvent { lobbyId: number; lobbyName: string; }
+interface LobbyUpdatedEvent { lobbyId: number; }
+interface LobbyClosedEvent { lobbyId: number; }
+interface CountdownStartedEvent { lobbyId: number; expiresAt: number; }
+interface CountdownCancelledEvent { lobbyId: number; }
+interface GameStartedEvent { lobbyId: number; gameId: number; }
+interface TurnChangedEvent { gameId: number; turnUserId: number; roundNumber: number; }
+interface DiceRolledEvent { gameId: number; userId: number; dice: string[]; }
+interface RoundEndedEvent { gameId: number; roundNumber: number; winnerId: number; }
+interface GameUpdatedEvent { gameId: number; }
+interface GameEndedEvent { gameId: number; }
 
-interface PlayerLeftEvent {
-    lobbyId: number;
-    playerId: number;
-    timestamp: string;
-}
-
-interface LobbyCreatedEvent {
-    lobbyId: number;
-    lobbyName: string;
-}
-
-interface LobbyUpdatedEvent {
-    lobbyId: number;
-}
-
-interface LobbyClosedEvent {
-    lobbyId: number;
-}
-
-interface CountdownStartedEvent {
-    lobbyId: number;
-    expiresAt: number;
-}
-
-interface CountdownCancelledEvent {
-    lobbyId: number;
-}
-
-interface GameStartedEvent {
-    lobbyId: number;
-    gameId: number;
-}
-
-interface TurnChangedEvent {
-    gameId: number;
-    turnUserId: number;
-    roundNumber: number;
-}
-
-interface DiceRolledEvent {
-    gameId: number;
-    userId: number;
-    dice: string[];
-}
-
-interface RoundEndedEvent {
-    gameId: number;
-    roundNumber: number;
-    winnerId: number;
-}
-
-interface GameUpdatedEvent {
-    gameId: number;
-}
-
-interface GameEndedEvent {
-    gameId: number;
-}
-
-interface LobbyEventHandler {
-    type: 'lobby';
-    lobbyId: number;
-    onPlayerJoined?: (event: PlayerJoinedEvent) => void;
-    onPlayerLeft?: (event: PlayerLeftEvent) => void;
-    onGameStarted?: (event: GameStartedEvent) => void;
-    onCountdownStarted?: (event: CountdownStartedEvent) => void;
-    onCountdownCancelled?: (event: CountdownCancelledEvent) => void;
-}
-
-interface AllLobbiesEventHandler {
-    type: 'all-lobbies';
-    onLobbyCreated?: (event: LobbyCreatedEvent) => void;
-    onLobbyUpdated?: (event: LobbyUpdatedEvent) => void;
-    onLobbyClosed?: (event: LobbyClosedEvent) => void;
-}
-
-interface GameEventHandler {
-    type: 'game';
-    gameId: number;
-    onTurnChanged?: (event: TurnChangedEvent) => void;
-    onDiceRolled?: (event: DiceRolledEvent) => void;
-    onRoundEnded?: (event: RoundEndedEvent) => void;
-    onGameUpdated?: (event: GameUpdatedEvent) => void;
-    onGameEnded?: (event: GameEndedEvent) => void;
-}
-
-type EventHandler = LobbyEventHandler | AllLobbiesEventHandler | GameEventHandler;
+// --- Handler Types ---
+// Agrupamos os handlers num objeto genérico para flexibilidade
+type HandlerMap = Record<string, (data: any) => void>;
 
 interface SSEContextType {
     connectToLobby: (lobbyId: number) => Promise<void>;
@@ -101,6 +26,7 @@ interface SSEContextType {
     connectToGame: (gameId: number) => Promise<void>;
     disconnect: (type?: 'lobby' | 'all-lobbies' | 'game') => void;
     isConnected: boolean;
+    // Registos mantêm a assinatura original para compatibilidade
     registerLobbyHandler: (
         lobbyId: number,
         onPlayerJoined?: (event: PlayerJoinedEvent) => void,
@@ -127,384 +53,180 @@ interface SSEContextType {
 
 const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
-export function SSEProvider({children}: { children: React.ReactNode }) {
+export function SSEProvider({ children }: { children: React.ReactNode }) {
     const emitterRef = useRef<EventSource | null>(null);
     const connectionType = useRef<'lobby' | 'all-lobbies' | 'game' | null>(null);
     const currentTargetId = useRef<number | null>(null);
-    const [isConnected, setIsConnected] = React.useState(false);
-    const handler = useRef<EventHandler | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
+    
+    // Armazena os handlers registados atualmente
+    const activeHandlers = useRef<HandlerMap>({});
 
-    // ... (handlers remain the same) ...
-    const handlePlayerJoined = useCallback((event: MessageEvent) => {
-        try {
-            const data: PlayerJoinedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
-                currentHandler.onPlayerJoined?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing player-joined event:', e);
-        }
-    }, []);
-
-    const handlePlayerLeft = useCallback((event: MessageEvent) => {
-        try {
-            const data: PlayerLeftEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
-                currentHandler.onPlayerLeft?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing player-left event:', e);
-        }
-    }, []);
-
-    const handleLobbyCreated = useCallback((event: MessageEvent) => {
-        try {
-            const data: LobbyCreatedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'all-lobbies') {
-                currentHandler.onLobbyCreated?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing lobby-created event:', e);
-        }
-    }, []);
-
-    const handleLobbyUpdated = useCallback((event: MessageEvent) => {
-        try {
-            const data: LobbyUpdatedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'all-lobbies') {
-                currentHandler.onLobbyUpdated?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing lobby-updated event:', e);
-        }
-    }, []);
-
-    const handleLobbyClosed = useCallback((event: MessageEvent) => {
-        try {
-            const data: LobbyClosedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'all-lobbies') {
-                currentHandler.onLobbyClosed?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing lobby-closed event:', e);
-        }
-    }, []);
-
-    const handleCountdownStarted = useCallback((event: MessageEvent) => {
-        try {
-            const data: CountdownStartedEvent = JSON.parse(event.data)
-            const currentHandler = handler.current
-
-            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
-                currentHandler.onCountdownStarted?.(data)
-            }
-        } catch (e) {
-            console.error('Error parsing countdown-started event:', e)
-        }
-    }, [])
-
-    const handleCountdownCancelled = useCallback((event: MessageEvent) => {
-        try {
-            const data: CountdownCancelledEvent = JSON.parse(event.data)
-            const currentHandler = handler.current
-
-            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
-                currentHandler.onCountdownCancelled?.(data)
-            }
-        } catch (e) {
-            console.error('Error parsing countdown-cancelled event:', e)
-        }
-    }, [])
-
-    const handleGameStarted = useCallback((event: MessageEvent) => {
-        try {
-            const data: GameStartedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'lobby' && currentHandler.lobbyId === data.lobbyId) {
-                currentHandler.onGameStarted?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing game-started event:', e);
-        }
-    }, []);
-
-    const handleTurnChanged = useCallback((event: MessageEvent) => {
-        try {
-            const data: TurnChangedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
-                currentHandler.onTurnChanged?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing turn-changed event:', e);
-        }
-    }, []);
-
-    const handleDiceRolled = useCallback((event: MessageEvent) => {
-        try {
-            const data: DiceRolledEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
-                currentHandler.onDiceRolled?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing dice-rolled event:', e);
-        }
-    }, []);
-
-    const handleRoundEnded = useCallback((event: MessageEvent) => {
-        try {
-            const data: RoundEndedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
-                currentHandler.onRoundEnded?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing round-ended event:', e);
-        }
-    }, []);
-
-    const handleGameUpdated = useCallback((event: MessageEvent) => {
-        try {
-            const data: GameUpdatedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
-                currentHandler.onGameUpdated?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing game-updated event:', e);
-        }
-    }, []);
-
-    const handleGameEnded = useCallback((event: MessageEvent) => {
-        try {
-            const data: GameEndedEvent = JSON.parse(event.data);
-            const currentHandler = handler.current;
-            if (currentHandler?.type === 'game' && currentHandler.gameId === data.gameId) {
-                currentHandler.onGameEnded?.(data);
-            }
-        } catch (e) {
-            console.error('Error parsing game-ended event:', e);
-        }
-    }, []);
-    // ... (end handlers)
-
-    const registerLobbyHandler = useCallback((
-        lobbyId: number,
-        onPlayerJoined?: (event: PlayerJoinedEvent) => void,
-        onPlayerLeft?: (event: PlayerLeftEvent) => void,
-        onGameStarted?: (event: GameStartedEvent) => void,
-        onCountdownStarted?: (event: CountdownStartedEvent) => void,
-        onCountdownCancelled?: (event: CountdownCancelledEvent) => void
+    // --- Core Connection Logic ---
+    // Esta função centraliza toda a lógica de conectar, limpar listeners antigos, e adicionar novos.
+    const connect = useCallback((
+        url: string, 
+        type: 'lobby' | 'all-lobbies' | 'game', 
+        targetId: number | null,
+        eventListeners: Record<string, (e: MessageEvent) => void> // Mapa de nome_evento -> função_wrapper
     ) => {
-        handler.current = {
-            type: 'lobby',
-            lobbyId,
-            onPlayerJoined,
-            onPlayerLeft,
-            onGameStarted,
-            onCountdownStarted,
-            onCountdownCancelled
-        };
-    }, []);
-
-    const registerAllLobbiesHandler = useCallback((
-        onLobbyCreated?: (event: LobbyCreatedEvent) => void,
-        onLobbyUpdated?: (event: LobbyUpdatedEvent) => void,
-        onLobbyClosed?: (event: LobbyClosedEvent) => void
-    ) => {
-        handler.current = {
-            type: 'all-lobbies',
-            onLobbyCreated,
-            onLobbyUpdated,
-            onLobbyClosed
-        };
-    }, []);
-
-    const registerGameHandler = useCallback((
-        gameId: number,
-        onTurnChanged?: (event: TurnChangedEvent) => void,
-        onDiceRolled?: (event: DiceRolledEvent) => void,
-        onRoundEnded?: (event: RoundEndedEvent) => void,
-        onGameUpdated?: (event: GameUpdatedEvent) => void,
-        onGameEnded?: (event: GameEndedEvent) => void
-    ) => {
-        handler.current = {
-            type: 'game',
-            gameId,
-            onTurnChanged,
-            onDiceRolled,
-            onRoundEnded,
-            onGameUpdated,
-            onGameEnded
-        };
-    }, []);
-
-    const unregisterHandler = useCallback(() => {
-        handler.current = null;
-    }, []);
-
-    const connectToLobby = useCallback((lobbyId: number) => {
         return new Promise<void>((resolve, reject) => {
-            // If already connected to the same lobby, just resolve
-            if (emitterRef.current && connectionType.current === 'lobby' && currentTargetId.current === lobbyId) {
+            // 1. Evitar reconexão desnecessária
+            if (emitterRef.current && connectionType.current === type && currentTargetId.current === targetId) {
                 resolve();
                 return;
             }
 
-            // Close any existing connection
-            if (emitterRef.current) {
-                emitterRef.current.close();
-            }
-
-            emitterRef.current = new EventSource(RequestUri.lobby.listen(lobbyId), {
-                withCredentials: true
-            });
-            connectionType.current = 'lobby';
-            currentTargetId.current = lobbyId;
-
-            emitterRef.current.onopen = () => {
-                setIsConnected(true);
-                resolve();
-            };
-
-            emitterRef.current.onerror = (error) => {
-                console.error('SSE Error:', error);
-                setIsConnected(false);
-                if (emitterRef.current) {
-                    emitterRef.current.close();
-                    emitterRef.current = null;
-                    connectionType.current = null;
-                }
-                reject(error);
-            };
-
-
-            emitterRef.current.addEventListener('player-joined', handlePlayerJoined);
-            emitterRef.current.addEventListener('player-left', handlePlayerLeft);
-            emitterRef.current.addEventListener('game-started', handleGameStarted);
-            emitterRef.current.addEventListener('countdown-started', handleCountdownStarted)
-            emitterRef.current.addEventListener('countdown-cancelled', handleCountdownCancelled)
-        });
-    }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted]);
-
-    const connectToAllLobbies = useCallback(() => {
-        return new Promise<void>((resolve, reject) => {
-            if (emitterRef.current) {
-                if (connectionType.current === 'all-lobbies') {
-                    resolve();
-                    return;
-                }
-                emitterRef.current.close();
-            }
-
-            emitterRef.current = new EventSource(RequestUri.lobby.listenAll, {
-                withCredentials: true
-            });
-            connectionType.current = 'all-lobbies';
-            currentTargetId.current = null;
-
-            emitterRef.current.onopen = () => {
-                setIsConnected(true);
-                resolve();
-            };
-
-            emitterRef.current.onerror = (error) => {
-                console.error('SSE Error:', error);
-                setIsConnected(false);
-                if (emitterRef.current) {
-                    emitterRef.current.close();
-                    emitterRef.current = null;
-                    connectionType.current = null;
-                }
-                reject(error);
-            };
-
-            emitterRef.current.addEventListener('new-lobby', handleLobbyCreated);
-            emitterRef.current.addEventListener('lobby-updated', handleLobbyUpdated);
-            emitterRef.current.addEventListener('lobby-closed', handleLobbyClosed);
-        });
-    }, [handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed]);
-
-    const connectToGame = useCallback((gameId: number) => {
-        return new Promise<void>((resolve, reject) => {
-            // If already connected to the same game, just resolve
-            if (emitterRef.current && connectionType.current === 'game' && currentTargetId.current === gameId) {
-                resolve();
-                return;
-            }
-
+            // 2. Limpeza total da conexão anterior
             if (emitterRef.current) {
                 emitterRef.current.close();
                 emitterRef.current = null;
                 setIsConnected(false);
             }
 
-            emitterRef.current = new EventSource(`/api/games/${gameId}/listen`, {
-                withCredentials: true
-            });
-            connectionType.current = 'game';
-            currentTargetId.current = gameId;
+            // 3. Nova Conexão
+            const source = new EventSource(url, { withCredentials: true });
+            emitterRef.current = source;
+            connectionType.current = type;
+            currentTargetId.current = targetId;
 
-            emitterRef.current.onopen = () => {
+            source.onopen = () => {
                 setIsConnected(true);
                 resolve();
             };
 
-            emitterRef.current.onerror = (error) => {
-                console.error('SSE Error:', error);
+            source.onerror = (error) => {
+                console.error(`[SSE] Error in ${type}:`, error);
                 setIsConnected(false);
-                if (emitterRef.current) {
-                    emitterRef.current.close();
+                source.close();
+                // Limpar refs se a conexão morrer
+                if (emitterRef.current === source) {
                     emitterRef.current = null;
                     connectionType.current = null;
                 }
                 reject(error);
             };
 
-            emitterRef.current.addEventListener('turn-changed', handleTurnChanged);
-            emitterRef.current.addEventListener('dice-rolled', handleDiceRolled);
-            emitterRef.current.addEventListener('round-ended', handleRoundEnded);
-            emitterRef.current.addEventListener('game-updated', handleGameUpdated);
-            emitterRef.current.addEventListener('game-ended', handleGameEnded);
+            // 4. Ligar Listeners Dinamicamente
+            Object.entries(eventListeners).forEach(([event, listener]) => {
+                source.addEventListener(event, listener);
+            });
         });
-    }, [handleTurnChanged, handleDiceRolled, handleRoundEnded, handleGameUpdated, handleGameEnded]);
-
+    }, []);
 
     const disconnect = useCallback((type?: 'lobby' | 'all-lobbies' | 'game') => {
-        // If type is specified, only disconnect if the current connection matches the type
-        if (type && connectionType.current !== type) {
-            return;
-        }
+        if (type && connectionType.current !== type) return;
 
         if (emitterRef.current) {
-            emitterRef.current.removeEventListener('player-joined', handlePlayerJoined);
-            emitterRef.current.removeEventListener('player-left', handlePlayerLeft);
-            emitterRef.current.removeEventListener('game-started', handleGameStarted);
-            emitterRef.current.removeEventListener('new-lobby', handleLobbyCreated);
-            emitterRef.current.removeEventListener('lobby-updated', handleLobbyUpdated);
-            emitterRef.current.removeEventListener('lobby-closed', handleLobbyClosed);
-            emitterRef.current.removeEventListener('countdown-started', handleCountdownStarted)
-            emitterRef.current.removeEventListener('countdown-cancelled', handleCountdownCancelled)
-            emitterRef.current.removeEventListener('turn-changed', handleTurnChanged);
-            emitterRef.current.removeEventListener('dice-rolled', handleDiceRolled);
-            emitterRef.current.removeEventListener('round-ended', handleRoundEnded);
-            emitterRef.current.removeEventListener('game-updated', handleGameUpdated);
-            emitterRef.current.removeEventListener('game-ended', handleGameEnded);
-
             emitterRef.current.close();
             emitterRef.current = null;
-            connectionType.current = null;
-            currentTargetId.current = null;
-            setIsConnected(false);
         }
-    }, [handlePlayerJoined, handlePlayerLeft, handleGameStarted, handleLobbyCreated, handleLobbyUpdated, handleLobbyClosed,
-        handleTurnChanged, handleDiceRolled, handleRoundEnded, handleGameUpdated, handleGameEnded]);
+        connectionType.current = null;
+        currentTargetId.current = null;
+        setIsConnected(false);
+        activeHandlers.current = {}; // Limpar handlers
+    }, []);
+
+    // --- Helper para criar listeners seguros ---
+    // Cria uma função que faz parse do JSON e chama o handler correto se ele existir
+    const createListener = <T,>(handlerName: string, idCheck?: (data: T) => boolean) => {
+        return (event: MessageEvent) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (idCheck && !idCheck(data)) return; // Ignora eventos de outros IDs se necessário
+
+                const handler = activeHandlers.current[handlerName];
+                if (handler) handler(data);
+            } catch (e) {
+                console.error(`[SSE] Error parsing ${handlerName}:`, e);
+            }
+        };
+    };
+
+    // --- Public Registration Methods ---
+    const registerAllLobbiesHandler = useCallback((
+        onLobbyCreated?: (e: LobbyCreatedEvent) => void,
+        onLobbyUpdated?: (e: LobbyUpdatedEvent) => void,
+        onLobbyClosed?: (e: LobbyClosedEvent) => void
+    ) => {
+        // Atualiza o mapa de handlers ativos
+        activeHandlers.current = {
+            'new-lobby': onLobbyCreated as any,
+            'lobby-updated': onLobbyUpdated as any,
+            'lobby-closed': onLobbyClosed as any,
+        };
+    }, []);
+
+    const connectToAllLobbies = useCallback(() => {
+        const listeners = {
+            'new-lobby': createListener('new-lobby'),
+            'lobby-updated': createListener('lobby-updated'),
+            'lobby-closed': createListener('lobby-closed'),
+        };
+        return connect(RequestUri.lobby.listenAll, 'all-lobbies', null, listeners);
+    }, [connect]);
+
+    const registerLobbyHandler = useCallback((
+        lobbyId: number,
+        onPlayerJoined?: (e: PlayerJoinedEvent) => void,
+        onPlayerLeft?: (e: PlayerLeftEvent) => void,
+        onGameStarted?: (e: GameStartedEvent) => void,
+        onCountdownStarted?: (e: CountdownStartedEvent) => void,
+        onCountdownCancelled?: (e: CountdownCancelledEvent) => void
+    ) => {
+        activeHandlers.current = {
+            'player-joined': onPlayerJoined as any,
+            'player-left': onPlayerLeft as any,
+            'game-started': onGameStarted as any,
+            'countdown-started': onCountdownStarted as any,
+            'countdown-cancelled': onCountdownCancelled as any,
+        };
+    }, []);
+
+    const connectToLobby = useCallback((lobbyId: number) => {
+        const idCheck = (d: { lobbyId: number }) => d.lobbyId === lobbyId;
+        const listeners = {
+            'player-joined': createListener('player-joined', idCheck),
+            'player-left': createListener('player-left', idCheck),
+            'game-started': createListener('game-started', idCheck),
+            'countdown-started': createListener('countdown-started', idCheck),
+            'countdown-cancelled': createListener('countdown-cancelled', idCheck),
+        };
+        return connect(RequestUri.lobby.listen(lobbyId), 'lobby', lobbyId, listeners);
+    }, [connect]);
+
+    const registerGameHandler = useCallback((
+        gameId: number,
+        onTurnChanged?: (e: TurnChangedEvent) => void,
+        onDiceRolled?: (e: DiceRolledEvent) => void,
+        onRoundEnded?: (e: RoundEndedEvent) => void,
+        onGameUpdated?: (e: GameUpdatedEvent) => void,
+        onGameEnded?: (e: GameEndedEvent) => void
+    ) => {
+        activeHandlers.current = {
+            'turn-changed': onTurnChanged as any,
+            'dice-rolled': onDiceRolled as any,
+            'round-ended': onRoundEnded as any,
+            'game-updated': onGameUpdated as any,
+            'game-ended': onGameEnded as any,
+        };
+    }, []);
+
+    const connectToGame = useCallback((gameId: number) => {
+        const idCheck = (d: { gameId: number }) => d.gameId === gameId;
+        const listeners = {
+            'turn-changed': createListener('turn-changed', idCheck),
+            'dice-rolled': createListener('dice-rolled', idCheck),
+            'round-ended': createListener('round-ended', idCheck),
+            'game-updated': createListener('game-updated', idCheck),
+            'game-ended': createListener('game-ended', idCheck),
+        };
+        return connect(RequestUri.game.listen(gameId), 'game', gameId, listeners);
+    }, [connect]);
+
+    const unregisterHandler = useCallback(() => {
+        activeHandlers.current = {};
+    }, []);
 
     return (
         <SSEContext.Provider value={{
@@ -530,4 +252,3 @@ export function useSSE() {
     }
     return context;
 }
-

@@ -48,9 +48,15 @@
 }
 
 .profile-email {
+    color: #a0a0a0;
+    margin-bottom: 2rem;
+}
+
+.profile-balance {
+    margin-top: 10px;
     font-size: 1.2rem;
-    color: #ddd;
-    margin-top: 0.5rem;
+    color: #ffd700;
+    font-weight: bold;
 }
 
 .profile-stats-grid {
