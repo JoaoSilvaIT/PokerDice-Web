@@ -1,20 +1,25 @@
 /* Game container */
 .game-container {
     padding: 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
     min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #eb8934 100%);
+}
+
+.game-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .game-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .game-title {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
     color: #f4a261;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -47,44 +52,44 @@
 }
 
 /* Poker Table */
-.poker-table {
+.poker-table-compact {
     background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #1b5e20 100%);
-    border-radius: 200px;
-    padding: 3rem 2rem;
+    border-radius: 80px;
+    padding: 1.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 2px 8px rgba(255, 255, 255, 0.1);
-    border: 12px solid #8b4513;
+    border: 6px solid #8b4513;
     margin-bottom: 2rem;
-    min-height: 600px;
+    min-height: 350px;
     position: relative;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
 }
 
-.poker-table::before {
+.poker-table-compact::before {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 90%;
-    height: 85%;
-    border: 3px dashed rgba(139, 69, 19, 0.3);
-    border-radius: 180px;
+    width: 96%;
+    height: 94%;
+    border: 2px dashed rgba(139, 69, 19, 0.3);
+    border-radius: 50px;
     pointer-events: none;
 }
 
 /* Player Seats */
 .player-seat {
     background: linear-gradient(145deg, #1a1a2e, #16213e);
-    border: 3px solid #e9c46a;
-    border-radius: 12px;
-    padding: 1rem;
-    min-width: 140px;
-    max-width: 160px;
+    border: 2px solid #e9c46a;
+    border-radius: 8px;
+    padding: 0.4rem;
+    min-width: 110px;
+    max-width: 130px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
@@ -114,15 +119,15 @@
 }
 
 .player-avatar {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #e9c46a, #f4a261);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 0.5rem;
-    font-size: 1.5rem;
+    margin: 0 auto 0.25rem;
+    font-size: 1.2rem;
     font-weight: bold;
     color: #264653;
     border: 2px solid #264653;
@@ -183,8 +188,8 @@
     background: linear-gradient(145deg, #1a1a2e, #16213e);
     border: 3px solid #f4a261;
     border-radius: 50%;
-    width: 150px;
-    height: 150px;
+    width: 100px;
+    height: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -194,14 +199,14 @@
 }
 
 .pot-label {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: #e9c46a;
     font-weight: bold;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.1rem;
 }
 
 .pot-amount {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     color: #f4a261;
     font-weight: bold;
 }
@@ -216,12 +221,12 @@
 .betting-interface {
     background: rgba(26, 26, 46, 0.8);
     border: 2px solid #e9c46a;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 0.8rem;
     text-align: center;
     color: white;
-    width: 80%;
-    max-width: 400px;
+    width: 90%;
+    max-width: 300px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -230,7 +235,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 260px;
+    min-height: 200px;
     width: 100%;
 }
 
@@ -238,8 +243,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-    margin-top: 1rem;
+    gap: 1rem;
+    margin-top: 0.5rem;
 }
 
 .bet-amount-wrapper {
@@ -250,10 +255,10 @@
 }
 
 .bet-input {
-    width: 90px;
-    padding: 0.5rem 0.75rem;
-    font-size: 1.1rem;
-    border-radius: 8px;
+    width: 70px;
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    border-radius: 6px;
     border: 2px solid #e9c46a;
     background: #fffbe7;
     color: #264653;
@@ -267,8 +272,8 @@
 
 .prettier-quick-bets {
     display: flex;
-    gap: 1rem;
-    margin: 1rem 0 0.5rem 0;
+    gap: 0.5rem;
+    margin: 0.5rem 0 0.5rem 0;
     justify-content: center;
 }
 
@@ -276,9 +281,9 @@
     background: linear-gradient(135deg, #f4a261 60%, #e9c46a 100%);
     color: #264653;
     border: none;
-    border-radius: 50px;
-    padding: 0.6rem 1.6rem;
-    font-size: 1.1rem;
+    border-radius: 40px;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(244, 162, 97, 0.15);
     cursor: pointer;
@@ -300,13 +305,13 @@
 }
 
 .bet-button {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     background: linear-gradient(135deg, #2a9d8f 60%, #21867a 100%);
     color: #fff;
     border: none;
-    border-radius: 12px;
-    padding: 0.8rem 2.2rem;
-    font-size: 1.2rem;
+    border-radius: 10px;
+    padding: 0.6rem 1.8rem;
+    font-size: 1rem;
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(42, 157, 143, 0.15);
     cursor: pointer;
@@ -321,8 +326,8 @@
 
 .betting-interface h3 {
     color: #e9c46a;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
     text-align: center;
 }
 
@@ -338,8 +343,8 @@
 .dice-area {
     background: rgba(26, 26, 46, 0.6);
     border: 2px solid #e9c46a;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 0.5rem;
     text-align: center;
 }
 
@@ -359,14 +364,14 @@
 }
 
 .dice {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     background: white;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
+    font-size: 1.6rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -422,8 +427,8 @@
 }
 
 .game-button {
-    padding: 0.75rem 2rem;
-    font-size: 1rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
     font-weight: bold;
     border: none;
     border-radius: 8px;
@@ -628,7 +633,7 @@
 /* Turn Banner */
 .turn-banner {
     position: absolute;
-    top: 20px;
+    top: -45px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(38, 70, 83, 0.95);

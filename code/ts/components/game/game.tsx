@@ -377,82 +377,79 @@ export function Game() {
 
     return (
         <div className={styles['game-container']}>
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
-            
-            {/* Game Header */}
-            <div className={styles['game-header']}>
-                <h1 className={styles['game-title']}>Poker Dice</h1>
-                <div className={styles['game-info']}>
-                    <span className={styles['info-badge']}>Game #{gameId}</span>
-                    <span className={styles['info-badge']}>Round {currentRoundNumber}/{game.numberOfRounds}</span>
-                    <span className={styles['info-badge']}>State: {game.state}</span>
-                </div>
-            </div>
-
-            {/* Poker Table */}
-            <div className={styles['poker-table']}>
-                {/* Turn Banner */}
-                <div className={`${styles['turn-banner']} ${isMyTurn ? styles['your-turn'] : ''}`}> 
-                    {isMyTurn ? <span>🎲 It's Your Turn 🎲</span> : <span> Turn : {players.find(p => p.id === currentPlayerId)?.name}</span>}
-                </div>
-
-                {/* Players */}
-                {players.map((player) => (
-                    <PlayerSeat 
-                        key={player.id} 
-                        player={player} 
-                        isCurrentTurn={currentPlayerId === player.id} 
-                        isCurrentUser={player.id === currentUserId} 
-                    />
-                ))}
-
-                {/* Center Area */}
-                <div className={styles['table-center']}>
-                    <div className={styles['pot-display']}>
-                        <div className={styles['pot-label']}>POT</div>
-                        <div className={styles['pot-amount']}>💰 {pot}</div>
-                        {ante > 0 && <div className={styles['ante-info']}>Ante: {ante}</div>}
+            <div className={styles['game-content']}>
+                <ToastContainer toasts={toasts} removeToast={removeToast} />
+                
+                {/* Game Header */}
+                <div className={styles['game-header']}>
+                    <h1 className={styles['game-title']}>Poker Dice</h1>
+                    <div className={styles['game-info']}>
+                        <span className={styles['info-badge']}>Game #{gameId}</span>
+                        <span className={styles['info-badge']}>Round {currentRoundNumber}/{game.numberOfRounds}</span>
+                        <span className={styles['info-badge']}>State: {game.state}</span>
                     </div>
-
-                    {isBettingPhase ? (
-                        <BettingControls 
-                            isMyTurn={isMyTurn}
-                            currentTurnPlayerName={players.find(p => p.id === currentPlayerId)?.name}
-                            betAmount={betAmount}
-                            minPlayerBalance={minPlayerBalance}
-                            poorestPlayer={poorestPlayer}
-                            processingAction={processingAction}
-                            onSetBetAmount={setBetAmount}
-                            onPlaceBet={handlePlaceBet}
-                        />
-                    ) : (
-                        <DiceBoard 
-                            keptDice={keptDice}
-                            rolledDice={rolledDice}
-                            selectedIndices={selectedIndices}
-                            isMyTurn={isMyTurn}
-                            currentTurnPlayerName={players.find(p => p.id === currentPlayerId)?.name}
-                            rollsLeft={rollsLeft}
-                            onToggleSelect={handleToggleSelect}
-                        />
-                    )}
                 </div>
-            </div>
 
-            {/* Game Controls */}
-            {!isBettingPhase && (
-                <GameControls 
-                    isMyTurn={isMyTurn}
-                    rollsLeft={rollsLeft}
-                    hasRolledDice={rolledDice.length > 0}
-                    keptDiceCount={keptDice.length}
-                    hasSelectedDice={selectedIndices.length > 0}
-                    processingAction={processingAction}
-                    onRoll={handleRollDice}
-                    onHold={handleHoldSelected}
-                    onFinish={handleFinishTurn}
-                />
-            )}
+                {/* Poker Table */}
+                <div className={styles['poker-table-compact']}>
+                    {/* Players */}
+                    {players.map((player) => (
+                        <PlayerSeat 
+                            key={player.id} 
+                            player={player} 
+                            isCurrentTurn={currentPlayerId === player.id} 
+                            isCurrentUser={player.id === currentUserId} 
+                        />
+                    ))}
+
+                    {/* Center Area */}
+                    <div className={styles['table-center']}>
+                        <div className={styles['pot-display']}>
+                            <div className={styles['pot-label']}>POT</div>
+                            <div className={styles['pot-amount']}>💰 {pot}</div>
+                            {ante > 0 && <div className={styles['ante-info']}>Ante: {ante}</div>}
+                        </div>
+
+                        {isBettingPhase ? (
+                            <BettingControls 
+                                isMyTurn={isMyTurn}
+                                currentTurnPlayerName={players.find(p => p.id === currentPlayerId)?.name}
+                                betAmount={betAmount}
+                                minPlayerBalance={minPlayerBalance}
+                                poorestPlayer={poorestPlayer}
+                                processingAction={processingAction}
+                                onSetBetAmount={setBetAmount}
+                                onPlaceBet={handlePlaceBet}
+                            />
+                        ) : (
+                            <DiceBoard 
+                                keptDice={keptDice}
+                                rolledDice={rolledDice}
+                                selectedIndices={selectedIndices}
+                                isMyTurn={isMyTurn}
+                                currentTurnPlayerName={players.find(p => p.id === currentPlayerId)?.name}
+                                rollsLeft={rollsLeft}
+                                onToggleSelect={handleToggleSelect}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Game Controls */}
+                {!isBettingPhase && (
+                    <GameControls 
+                        isMyTurn={isMyTurn}
+                        rollsLeft={rollsLeft}
+                        hasRolledDice={rolledDice.length > 0}
+                        keptDiceCount={keptDice.length}
+                        hasSelectedDice={selectedIndices.length > 0}
+                        processingAction={processingAction}
+                        onRoll={handleRollDice}
+                        onHold={handleHoldSelected}
+                        onFinish={handleFinishTurn}
+                    />
+                )}
+            </div>
         </div>
     );
 }
