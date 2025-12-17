@@ -18,6 +18,7 @@ export interface GameRound {
     currentDice: string[];
     pot: number;
     winners?: PlayerInGame[];
+    players: PlayerInGame[];
 }
 
 export interface PlayerInGame {

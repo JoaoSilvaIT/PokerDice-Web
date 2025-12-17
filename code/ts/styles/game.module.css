@@ -109,6 +109,13 @@
     animation: pulse 2s infinite;
 }
 
+.player-seat.spectator {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+    border-color: #666;
+    transform: scale(0.9);
+}
+
 @keyframes pulse {
     0%, 100% {
         box-shadow: 0 0 20px rgba(42, 157, 143, 0.6);

@@ -11,4 +11,5 @@ data class GameRoundOutputModel(
     val currentDice: List<String>,
     val pot: Int,
     val winners: List<PlayerInGameOutputModel>?,
+    val players: List<PlayerInGameOutputModel>,
 )

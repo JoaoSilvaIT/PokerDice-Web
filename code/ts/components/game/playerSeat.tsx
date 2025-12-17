@@ -7,12 +7,13 @@ interface PlayerSeatProps {
     player: PlayerInGame;
     isCurrentTurn: boolean;
     isCurrentUser: boolean;
+    isSpectator?: boolean;
 }
 
-export const PlayerSeat: React.FC<PlayerSeatProps> = ({ player, isCurrentTurn, isCurrentUser }) => {
+export const PlayerSeat: React.FC<PlayerSeatProps> = ({ player, isCurrentTurn, isCurrentUser, isSpectator }) => {
     return (
         <div
-            className={`${styles['player-seat']} ${isCurrentTurn ? styles['active-turn'] : ''} ${isCurrentUser ? styles['current-user'] : ''}`}
+            className={`${styles['player-seat']} ${isCurrentTurn ? styles['active-turn'] : ''} ${isCurrentUser ? styles['current-user'] : ''} ${isSpectator ? styles['spectator'] : ''}`}
         >
             <div className={styles['player-avatar']}>
                 {player.name.charAt(0).toUpperCase()}
@@ -21,7 +22,7 @@ export const PlayerSeat: React.FC<PlayerSeatProps> = ({ player, isCurrentTurn, i
                 {player.name}
                 {isCurrentUser && ' (You)'}
             </div>
-            {player.handRank && (
+            {!isSpectator && player.handRank && (
                 <div className={styles['player-hand-rank']}>
                     {player.handRank}
                 </div>

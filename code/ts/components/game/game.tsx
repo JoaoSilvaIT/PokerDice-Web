@@ -252,9 +252,12 @@ export function Game() {
         if (!gameId || processingAction) return;
 
         // Check if ALL players have enough balance for the ante (backend validates this too)
-        const minPlayerBalance = game?.players.reduce((min, p) => Math.min(min, p.currentBalance), Infinity) ?? 0;
+        // Use players from the current round if available (exclude spectators/broke players)
+        const playersToCheck = game?.currentRound?.players || game?.players || [];
+        const minPlayerBalance = playersToCheck.reduce((min, p) => Math.min(min, p.currentBalance), Infinity) ?? 0;
+        
         if (betAmount > minPlayerBalance) {
-            const poorestPlayer = game?.players.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, game.players[0]);
+            const poorestPlayer = playersToCheck.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, playersToCheck[0]);
             showError(`💸 Insufficient funds! ${poorestPlayer?.name} only has 💰${poorestPlayer?.currentBalance}, max bet is 💰${minPlayerBalance}`);
             return;
         }
@@ -372,8 +375,10 @@ export function Game() {
     const rollsLeft = game.currentRound?.rollsLeft ?? 3;
     const keptDice = game.currentRound?.currentDice || [];
     const isBettingPhase = ante === 0;
-    const poorestPlayer = game.players.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, game.players[0]);
-    const minPlayerBalance = game.players.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
+    
+    const activePlayers = game.currentRound?.players || game.players;
+    const poorestPlayer = activePlayers.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, activePlayers[0]);
+    const minPlayerBalance = activePlayers.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
 
     return (
         <div className={styles['game-container']}>
@@ -393,14 +398,18 @@ export function Game() {
                 {/* Poker Table */}
                 <div className={styles['poker-table-compact']}>
                     {/* Players */}
-                    {players.map((player) => (
-                        <PlayerSeat 
-                            key={player.id} 
-                            player={player} 
-                            isCurrentTurn={currentPlayerId === player.id} 
-                            isCurrentUser={player.id === currentUserId} 
-                        />
-                    ))}
+                    {players.map((player) => {
+                        const isSpectator = game.currentRound && !game.currentRound.players.some(p => p.id === player.id);
+                        return (
+                            <PlayerSeat 
+                                key={player.id} 
+                                player={player} 
+                                isCurrentTurn={currentPlayerId === player.id} 
+                                isCurrentUser={player.id === currentUserId}
+                                isSpectator={isSpectator}
+                            />
+                        );
+                    })}
 
                     {/* Center Area */}
                     <div className={styles['table-center']}>

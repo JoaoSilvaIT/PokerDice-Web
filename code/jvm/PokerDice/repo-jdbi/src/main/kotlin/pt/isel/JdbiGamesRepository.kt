@@ -133,10 +133,35 @@ class JdbiGamesRepository(
     }
 
     override fun startNewRound(game: Game, ante: Int?): Game? {
-        // Filter players who can afford the MIN_ANTE (or provided ante, if any, but usually 0 at start)
-        // If ante is null, we assume MIN_ANTE for eligibility check, or just > 0
         val threshold = ante ?: MIN_ANTE
-        val eligiblePlayers = game.players.filter { it.currentBalance >= threshold }
+
+        val candidates = if (game.lobbyId != null) {
+            handle.createQuery(
+                """
+                SELECT u.id, u.username, u.balance FROM dbo.USERS u
+                JOIN dbo.LOBBY_USER lu ON u.id = lu.user_id
+                WHERE lu.lobby_id = :lobby_id
+                """
+            )
+                .bind("lobby_id", game.lobbyId)
+                .map { rs, _ ->
+                    val pid = rs.getInt("id")
+                    val existing = game.players.find { it.id == pid }
+                    val moneyWon = existing?.moneyWon ?: calculatePlayerMoneyWon(game.id, pid)
+                    PlayerInGame(pid, rs.getString("username"), rs.getInt("balance"), moneyWon)
+                }.list()
+        } else {
+            game.players.map { player ->
+                val freshBalance = handle.createQuery("SELECT balance FROM dbo.USERS WHERE id = :id")
+                    .bind("id", player.id)
+                    .mapTo(Int::class.java)
+                    .findOne()
+                    .orElse(player.currentBalance)
+                player.copy(currentBalance = freshBalance)
+            }
+        }
+
+        val eligiblePlayers = candidates.filter { it.currentBalance >= threshold }
 
         if (eligiblePlayers.size < 2) {
             return null
