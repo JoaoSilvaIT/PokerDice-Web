@@ -8,6 +8,7 @@ export const RequestUri = {
         stats: `${BASE_API_URL}/users/stats`,
         info: `${BASE_API_URL}/me`,
         easterEgg: `${BASE_API_URL}/users/easteregg`,
+        createInvite: `${BASE_API_URL}/users/invite`,
     },
     game: {
         create: `${BASE_API_URL}/games`,

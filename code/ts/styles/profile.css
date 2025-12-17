@@ -113,3 +113,21 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
 }
+
+.profile-invite-btn {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: 'm6x11', monospace;
+    margin-right: 1rem;
+}
+
+.profile-invite-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}

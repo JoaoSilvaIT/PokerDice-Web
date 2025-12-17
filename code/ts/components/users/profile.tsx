@@ -4,6 +4,7 @@ import {useNavigate} from 'react-router-dom';
 import {authService} from '../../services/authService';
 import {userService, UserStats} from '../../services/userService';
 import {useAuthentication} from '../../providers/authentication';
+import {isOk} from '../../services/utils';
 import '../../styles/profile.css';
 
 interface UserInfo {
@@ -51,6 +52,15 @@ export function Profile() {
         if (result.success) {
             clearUsername();
             navigate('/home');
+        }
+    }
+
+    async function handleCreateInvite() {
+        const result = await userService.createInvite();
+        if (isOk(result)) {
+            window.prompt("Here is your new invite code (Copy it!):", result.value);
+        } else {
+            setError(result.error);
         }
     }
 
@@ -111,8 +121,8 @@ export function Profile() {
                 </div>
 
                 <div className="profile-actions">
-                    <button onClick={handleLogout} className="profile-logout-btn">
-                        Logout
+                    <button onClick={handleCreateInvite} className="profile-invite-btn">
+                        Create Invite
                     </button>
                 </div>
             </div>

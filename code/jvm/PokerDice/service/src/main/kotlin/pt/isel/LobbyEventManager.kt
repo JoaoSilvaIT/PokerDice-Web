@@ -6,12 +6,11 @@ import org.springframework.stereotype.Component
 import pt.isel.domain.sse.Event
 import pt.isel.domain.sse.EventEmitter
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 data class ListenerInfo(
     val eventEmitter: EventEmitter,
@@ -25,9 +24,14 @@ class LobbyEventService {
         private val logger = LoggerFactory.getLogger(LobbyEventService::class.java)
     }
 
-    // Important: mutable state on a singleton service - using CopyOnWriteArrayList for thread-safety
-    private val listeners = CopyOnWriteArrayList<ListenerInfo>()
-    private val lock = ReentrantLock()
+    // Global listeners (users in lobby list) - Key: UserId
+    private val globalListeners = ConcurrentHashMap<Int, ListenerInfo>()
+
+    // Lobby-specific listeners - Key: LobbyId -> List of Listeners
+    private val lobbyListeners = ConcurrentHashMap<Int, CopyOnWriteArrayList<ListenerInfo>>()
+
+    // Reverse map for quick cleanup: EventEmitter -> Info
+    private val emitterMap = ConcurrentHashMap<EventEmitter, ListenerInfo>()
 
     // A scheduler to send the periodic keep-alive events
     private val scheduler: ScheduledExecutorService =
@@ -45,38 +49,40 @@ class LobbyEventService {
         listener: EventEmitter,
         userId: Int,
         lobbyId: Int? = null,
-    ): EventEmitter =
-        lock.withLock {
-            logger.info("adding listener for userId={}, lobbyId={}", userId, lobbyId)
+    ): EventEmitter {
+        logger.info("adding listener for userId={}, lobbyId={}", userId, lobbyId)
+        val info = ListenerInfo(listener, userId, lobbyId)
 
-            // Remove ALL existing listeners for the same userId to avoid stale connections
-            // A user can only have one active SSE connection at a time
-            val existingListeners = listeners.filter { it.userId == userId }
-            existingListeners.forEach { existing ->
-                logger.info("removing existing listener for userId={}, old lobbyId={}", userId, existing.lobbyId)
+        emitterMap[listener] = info
+
+        if (lobbyId == null) {
+            val old = globalListeners.put(userId, info)
+            if (old != null) {
+                logger.info("removing stale global listener for userId={}", userId)
                 try {
-                    existing.eventEmitter.complete()
+                    old.eventEmitter.complete()
                 } catch (_: Exception) {
-                    // Ignore errors when completing old listeners
                 }
-                listeners.remove(existing)
+                emitterMap.remove(old.eventEmitter)
             }
-
-            listeners.add(ListenerInfo(listener, userId, lobbyId))
-            listener.onCompletion {
-                removeListener(listener)
-            }
-            listener.onError {
-                removeListener(listener)
-            }
-            listener
+        } else {
+            lobbyListeners.computeIfAbsent(lobbyId) { CopyOnWriteArrayList() }.add(info)
         }
+
+        listener.onCompletion {
+            removeListener(listener)
+        }
+        listener.onError {
+            removeListener(listener)
+        }
+        return listener
+    }
 
     fun notifyPlayerJoined(
         lobbyId: Int,
         userId: Int,
         playerName: String,
-    ) = lock.withLock {
+    ) {
         logger.info("notifying player joined: lobbyId={}, userId={}, playerName={}", lobbyId, userId, playerName)
         val event = Event.PlayerJoined(lobbyId, userId, playerName)
         sendEventToLobby(event, lobbyId)
@@ -86,7 +92,7 @@ class LobbyEventService {
         lobbyId: Int,
         playerId: Int,
         timestamp: String,
-    ) = lock.withLock {
+    ) {
         logger.info("notifying player left: lobbyId={}, playerId={}", lobbyId, playerId)
         val event = Event.PlayerLeft(lobbyId, playerId, timestamp)
         sendEventToLobby(event, lobbyId)
@@ -95,116 +101,115 @@ class LobbyEventService {
     fun notifyNewLobby(
         lobbyId: Int,
         lobbyName: String,
-    ) = lock.withLock {
+    ) {
         logger.info("notifying new lobby: lobbyId={}, lobbyName={}", lobbyId, lobbyName)
         val event = Event.NewLobby(lobbyId, lobbyName)
-        sendEventToAll(event)
+        sendEventToGlobal(event)
     }
 
-    fun notifyLobbyClosed(lobbyId: Int) =
-        lock.withLock {
-            logger.info("notifying lobby closed: lobbyId={}", lobbyId)
-            val event = Event.LobbyClosed(lobbyId)
-            sendEventToAll(event)
-        }
+    fun notifyLobbyClosed(lobbyId: Int) {
+        logger.info("notifying lobby closed: lobbyId={}", lobbyId)
+        val event = Event.LobbyClosed(lobbyId)
+        sendEventToGlobal(event)
+    }
 
     fun notifyCountdownStarted(
         lobbyId: Int,
         expiresAt: Long,
-    ) = lock.withLock {
+    ) {
         logger.info("notifying countdown started: lobbyId={}, expiresAt={}", lobbyId, expiresAt)
         val event = Event.CountdownStarted(lobbyId, expiresAt)
         sendEventToLobby(event, lobbyId)
     }
 
-    fun notifyLobbyUpdated(lobbyId: Int) =
-        lock.withLock {
-            logger.info("notifying lobby updated: lobbyId={}", lobbyId)
-            val event = Event.LobbyUpdated(lobbyId)
-            sendEventToAll(event)
-        }
+    fun notifyLobbyUpdated(lobbyId: Int) {
+        logger.info("notifying lobby updated: lobbyId={}", lobbyId)
+        val event = Event.LobbyUpdated(lobbyId)
+        sendEventToGlobal(event)
+    }
 
     fun notifyGameCreated(
         lobbyId: Int,
         gameId: Int,
-    ) = lock.withLock {
+    ) {
         logger.info("notifying game created: lobbyId={}, gameId={}", lobbyId, gameId)
         val event = Event.GameStarted(lobbyId, gameId)
         sendEventToLobby(event, lobbyId)
     }
 
-    fun getListener(userId: Int): EventEmitter? =
-        lock.withLock {
-            listeners.find { it.userId == userId }?.eventEmitter
-        }
+    fun getListener(userId: Int): EventEmitter? {
+        return globalListeners[userId]?.eventEmitter
+            ?: lobbyListeners.values.asSequence().flatten().find { it.userId == userId }?.eventEmitter
+    }
 
-    fun disconnectUser(listener: EventEmitter) =
-        lock.withLock {
-            listener.complete()
-        }
+    fun disconnectUser(listener: EventEmitter) {
+        listener.complete()
+    }
 
-    private fun removeListener(listener: EventEmitter) =
-        lock.withLock {
-            val removed = listeners.removeIf { it.eventEmitter == listener }
-            if (removed) {
-                logger.info("listener removed")
+    private fun removeListener(listener: EventEmitter) {
+        val info = emitterMap.remove(listener) ?: return
+
+        if (info.lobbyId == null) {
+            if (globalListeners.remove(info.userId, info)) {
+                logger.info("global listener removed for userId={}", info.userId)
+            }
+        } else {
+            val list = lobbyListeners[info.lobbyId]
+            if (list != null) {
+                if (list.remove(info)) {
+                    logger.info("lobby listener removed for userId={} lobbyId={}", info.userId, info.lobbyId)
+                }
+                if (list.isEmpty()) {
+                    lobbyListeners.remove(info.lobbyId)
+                }
             }
         }
+    }
 
-    private fun keepAlive() =
-        lock.withLock {
-            val keepAliveEvent = Event.KeepAlive(Instant.now())
-            sendEventToAll(keepAliveEvent)
+    private fun keepAlive() {
+        val keepAliveEvent = Event.KeepAlive(Instant.now())
+        globalListeners.values.forEach { info ->
+            emitSafely(info, keepAliveEvent)
         }
+        lobbyListeners.values.forEach { list ->
+            list.forEach { info ->
+                emitSafely(info, keepAliveEvent)
+            }
+        }
+    }
 
     private fun sendEventToLobby(
         event: Event,
         lobbyId: Int,
     ) {
         logger.info("sending event to lobby {}: {}", lobbyId, event)
-        val failedListeners = mutableListOf<EventEmitter>()
-        listeners
-            .filter { it.lobbyId == lobbyId }
-            .forEach { listenerInfo ->
-                try {
-                    listenerInfo.eventEmitter.emit(event)
-                } catch (ex: Exception) {
-                    logger.info("Exception while sending event to userId={} - {}", listenerInfo.userId, ex.message)
-                    failedListeners.add(listenerInfo.eventEmitter)
-                }
-            }
-        failedListeners.forEach { removeListener(it) }
+        lobbyListeners[lobbyId]?.forEach { info ->
+            emitSafely(info, event)
+        }
     }
 
-    private fun sendEventToAll(event: Event) {
-        val failedListeners = mutableListOf<EventEmitter>()
-        listeners.forEach { listenerInfo ->
-            try {
-                listenerInfo.eventEmitter.emit(event)
-            } catch (ex: Exception) {
-                logger.info("Exception while sending keep-alive to userId={} - {}", listenerInfo.userId, ex.message)
-                failedListeners.add(listenerInfo.eventEmitter)
-            }
+    private fun sendEventToGlobal(event: Event) {
+        globalListeners.values.forEach { info ->
+            emitSafely(info, event)
         }
-        failedListeners.forEach { removeListener(it) }
     }
 
     fun sendEventToUser(
         event: Event,
         userId: Int,
-    ) = lock.withLock {
+    ) {
         logger.info("sending event to userId={}: {}", userId, event)
-        val failedListeners = mutableListOf<EventEmitter>()
-        listeners
-            .filter { it.userId == userId }
-            .forEach { listenerInfo ->
-                try {
-                    listenerInfo.eventEmitter.emit(event)
-                } catch (ex: Exception) {
-                    logger.info("Exception while sending event to userId={} - {}", userId, ex.message)
-                    failedListeners.add(listenerInfo.eventEmitter)
-                }
-            }
-        failedListeners.forEach { removeListener(it) }
+        globalListeners[userId]?.let { emitSafely(it, event) }
+        lobbyListeners.values.forEach { list ->
+            list.filter { it.userId == userId }.forEach { emitSafely(it, event) }
+        }
+    }
+
+    private fun emitSafely(info: ListenerInfo, event: Event) {
+        try {
+            info.eventEmitter.emit(event)
+        } catch (ex: Exception) {
+            logger.info("Exception while sending event to userId={} - {}", info.userId, ex.message)
+        }
     }
 }

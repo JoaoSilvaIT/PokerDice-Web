@@ -9,88 +9,29 @@ class SseEmitterBasedEventEmitter(
 ) : EventEmitter {
     override fun emit(event: Event) {
         val sseEvent =
-            when (event) {
-                is Event.PlayerJoined ->
-                    SseEmitter
-                        .event()
-                        .name("player-joined")
-                        .data(event)
-
-                is Event.PlayerLeft ->
-                    SseEmitter
-                        .event()
-                        .name("player-left")
-                        .data(event)
-
-                is Event.NewLobby ->
-                    SseEmitter
-                        .event()
-                        .name("new-lobby")
-                        .data(event)
-
-                is Event.LobbyUpdated ->
-                    SseEmitter
-                        .event()
-                        .name("lobby-updated")
-                        .data(event)
-
-                is Event.LobbyClosed ->
-                    SseEmitter
-                        .event()
-                        .name("lobby-closed")
-                        .data(event)
-
-                is Event.GameStarted ->
-                    SseEmitter
-                        .event()
-                        .name("game-started")
-                        .data(event)
-
-                is Event.TurnChanged ->
-                    SseEmitter
-                        .event()
-                        .name("turn-changed")
-                        .data(event)
-
-                is Event.DiceRolled ->
-                    SseEmitter
-                        .event()
-                        .name("dice-rolled")
-                        .data(event)
-
-                is Event.RoundUpdate ->
-                    SseEmitter
-                        .event()
-                        .name("round-update")
-                        .data(event)
-
-                is Event.RoundEnded ->
-                    SseEmitter
-                        .event()
-                        .name("round-ended")
-                        .data(event)
-
-                is Event.GameUpdated ->
-                    SseEmitter
-                        .event()
-                        .name("game-updated")
-                        .data(event)
-
-                is Event.GameEnded ->
-                    SseEmitter
-                        .event()
-                        .name("game-ended")
-                        .data(event)
-
-                is Event.KeepAlive ->
-                    SseEmitter
-                        .event()
-                        .comment(event.timestamp.epochSecond.toString())
-                is Event.CountdownStarted ->
-                    SseEmitter
-                        .event()
-                        .name("countdown-started")
-                        .data(event)
+            if (event is Event.KeepAlive) {
+                SseEmitter
+                    .event()
+                    .comment(event.timestamp.epochSecond.toString())
+            } else {
+                val eventName =
+                    when (event) {
+                        is Event.PlayerJoined -> "player-joined"
+                        is Event.PlayerLeft -> "player-left"
+                        is Event.NewLobby -> "new-lobby"
+                        is Event.LobbyUpdated -> "lobby-updated"
+                        is Event.LobbyClosed -> "lobby-closed"
+                        is Event.GameStarted -> "game-started"
+                        is Event.CountdownStarted -> "countdown-started"
+                        is Event.TurnChanged -> "turn-changed"
+                        is Event.DiceRolled -> "dice-rolled"
+                        is Event.RoundUpdate -> "round-update"
+                        is Event.RoundEnded -> "round-ended"
+                        is Event.GameUpdated -> "game-updated"
+                        is Event.GameEnded -> "game-ended"
+                        is Event.KeepAlive -> throw IllegalStateException("KeepAlive handled separately")
+                    }
+                SseEmitter.event().name(eventName).data(event)
             }
         sseEmitter.send(sseEvent)
     }

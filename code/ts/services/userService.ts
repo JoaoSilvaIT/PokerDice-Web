@@ -26,4 +26,15 @@ export const userService = {
         }
         return {success: false, error: result.error};
     },
+
+    async createInvite(): Promise<Result<string>> {
+        const result = await fetchWrapper<{ code: string }>(RequestUri.user.createInvite, {
+            method: 'POST',
+            credentials: 'include',
+        });
+        if (isOk(result)) {
+            return {success: true, value: result.value.code};
+        }
+        return {success: false, error: result.error};
+    },
 };
