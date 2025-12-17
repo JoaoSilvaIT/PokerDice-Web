@@ -155,82 +155,6 @@ export function Game() {
         }
     };
 
-    // Effect to automatically initialize round when game is RUNNING but no round
-    useEffect(() => {
-        if (game && game.state === 'RUNNING' && !game.currentRound && hostId === currentUserId && !roundStarting) {
-            initializeRound(parseInt(gameId!));
-        }
-    }, [game, hostId, currentUserId, gameId, roundStarting]);
-
-    const handleRollDice = async () => {
-        if (!gameId || processingAction) return;
-
-        // Check if it's the player's turn
-        const currentPlayerId = game?.currentRound?.turnUserId;
-        const isMyTurn = currentPlayerId === currentUserId;
-
-        if (!isMyTurn) {
-            showError("It's not your turn!");
-            return;
-        }
-
-        setProcessingAction(true);
-        setRolledDice([]);
-        setSelectedIndices([]);
-
-        const result = await gameService.rollDices(parseInt(gameId));
-        if (isOk(result)) {
-            setRolledDice(result.value.dice);
-            showSuccess('Dice rolled!');
-            // Refresh game to show updated roll count
-            const gameRes = await gameService.getGame(parseInt(gameId));
-            if (isOk(gameRes)) setGame(gameRes.value);
-        } else {
-            showError(formatError(result.error || 'Failed to roll dice', gameErrorMap));
-        }
-        setProcessingAction(false);
-    };
-
-    const handleToggleSelect = (index: number) => {
-        if (selectedIndices.includes(index)) {
-            setSelectedIndices(prev => prev.filter(i => i !== index));
-        } else {
-            setSelectedIndices(prev => [...prev, index]);
-        }
-    };
-
-    const handleHoldSelected = async () => {
-        if (!gameId || selectedIndices.length === 0 || processingAction) return;
-
-        const currentPlayerId = game?.currentRound?.turnUserId;
-        const isMyTurn = currentPlayerId === currentUserId;
-
-        if (!isMyTurn) {
-            showError("It's not your turn!");
-            return;
-        }
-
-        setProcessingAction(true);
-        const diceToKeep = selectedIndices.map(i => rolledDice[i]);
-
-        // Batch update: send all dice at once
-                    const result = await gameService.updateTurn(parseInt(gameId), diceToKeep);
-                    if (!isOk(result)) {
-                        showError(formatError(result.error || 'Failed to hold dice', gameErrorMap));
-                        setProcessingAction(false);
-                        return;
-                    }
-        showSuccess(`✅ Held ${diceToKeep.length} dice!`);
-        
-        // Keep the dice that were NOT selected (so they don't disappear)
-        setRolledDice(prev => prev.filter((_, index) => !selectedIndices.includes(index)));
-        setSelectedIndices([]);
-
-        const gameRes = await gameService.getGame(parseInt(gameId));
-        if (isOk(gameRes)) setGame(gameRes.value);
-        setProcessingAction(false);
-    };
-
     const handleFinishTurn = async () => {
         if (!gameId || processingAction) return;
 
@@ -248,7 +172,39 @@ export function Game() {
         setProcessingAction(false);
     };
 
-    const handlePlaceBet = async () => {
+    const currentRoundNumber = game.currentRound?.number || 0;
+    const players = game.players;
+    const pot = (game.currentRound?.pot !== undefined)
+        ? game.currentRound.pot
+        : (game.currentRound?.ante ? game.currentRound.ante * players.length : 0);
+    const ante = game.currentRound?.ante || 0;
+    const currentPlayerId = game.currentRound?.turnUserId;
+    const isMyTurn = currentPlayerId === currentUserId;
+    const rollsLeft = game.currentRound?.rollsLeft ?? 3;
+    const keptDice = game.currentRound?.currentDice || [];
+    const isBettingPhase = ante === 0;
+    
+    const activePlayers = game.currentRound?.players || game.players;
+    const poorestPlayer = activePlayers.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, activePlayers[0]);
+    const minPlayerBalance = activePlayers.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
+
+
+
+    // Effect to automatically initialize round when game is RUNNING but no round
+    useEffect(() => {
+        if (game && game.state === 'RUNNING' && !game.currentRound && hostId === currentUserId && !roundStarting) {
+            initializeRound(parseInt(gameId!));
+        }
+    }, [game, hostId, currentUserId, gameId, roundStarting]);
+
+    // Effect to automatically finish turn when conditions are met
+    useEffect(() => {
+        if (isMyTurn && rollsLeft === 0 && keptDice.length === 5 && !processingAction) {
+            handleFinishTurn();
+        }
+    }, [isMyTurn, rollsLeft, keptDice.length, processingAction, handleFinishTurn]);
+
+    const handleRollDice = async () => {
         if (!gameId || processingAction) return;
 
         // Check if ALL players have enough balance for the ante (backend validates this too)
@@ -363,22 +319,6 @@ export function Game() {
             />
         );
     }
-
-    const currentRoundNumber = game.currentRound?.number || 0;
-    const players = game.players;
-    const pot = (game.currentRound?.pot !== undefined)
-        ? game.currentRound.pot
-        : (game.currentRound?.ante ? game.currentRound.ante * players.length : 0);
-    const ante = game.currentRound?.ante || 0;
-    const currentPlayerId = game.currentRound?.turnUserId;
-    const isMyTurn = currentPlayerId === currentUserId;
-    const rollsLeft = game.currentRound?.rollsLeft ?? 3;
-    const keptDice = game.currentRound?.currentDice || [];
-    const isBettingPhase = ante === 0;
-    
-    const activePlayers = game.currentRound?.players || game.players;
-    const poorestPlayer = activePlayers.reduce((min, p) => p.currentBalance < min.currentBalance ? p : min, activePlayers[0]);
-    const minPlayerBalance = activePlayers.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
 
     return (
         <div className={styles['game-container']}>

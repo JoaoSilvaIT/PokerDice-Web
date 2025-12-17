@@ -88,6 +88,9 @@ export function LobbyDetails() {
                         players: prev.players.filter(p => p.id !== event.playerId)
                     };
                 });
+                setCountdownEnd(null);
+                setTimeLeft(0);
+                fetchLobbyDetails();
             },
             (event) => {
                 disconnect('lobby');
@@ -98,6 +101,7 @@ export function LobbyDetails() {
             },
             (event) => {                             
                 setCountdownEnd(null);
+                setTimeLeft(0);
             }
         );
 
