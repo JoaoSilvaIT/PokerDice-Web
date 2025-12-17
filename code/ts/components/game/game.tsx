@@ -230,23 +230,7 @@ export function Game() {
             if (isOk(gameRes)) setGame(gameRes.value);
             setProcessingAction(false);
         };
-    
-        const handleFinishTurn = async () => {
-            if (!gameId || processingAction) return;
-    
-            setProcessingAction(true);
-            const result = await gameService.nextTurn(parseInt(gameId));
-            if (isOk(result)) {
-                showSuccess('✅ Turn finished!');
-                setRolledDice([]);
-                setSelectedIndices([]);
-                const gameRes = await gameService.getGame(parseInt(gameId));
-                if (isOk(gameRes)) setGame(gameRes.value);
-            } else {
-                showError(formatError(result.error || 'Failed to finish turn', gameErrorMap));
-            }
-            setProcessingAction(false);
-        };
+
     const handleFinishTurn = async () => {
         if (!gameId || processingAction) return;
 
