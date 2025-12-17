@@ -221,7 +221,9 @@ export function Game() {
                         return;
                     }
         showSuccess(`✅ Held ${diceToKeep.length} dice!`);
-        setRolledDice([]);
+        
+        // Keep the dice that were NOT selected (so they don't disappear)
+        setRolledDice(prev => prev.filter((_, index) => !selectedIndices.includes(index)));
         setSelectedIndices([]);
 
         const gameRes = await gameService.getGame(parseInt(gameId));

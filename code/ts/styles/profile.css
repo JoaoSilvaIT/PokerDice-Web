@@ -95,6 +95,66 @@
 
 .profile-actions {
     margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.invite-code-section {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.invite-label {
+    font-size: 1.2rem;
+    color: #ffd700;
+    margin-bottom: 0.5rem;
+}
+
+.invite-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.invite-text {
+    font-family: monospace;
+    font-size: 1.5rem;
+    color: #fff;
+    letter-spacing: 2px;
+}
+
+.copy-btn {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: 'm6x11', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+}
+
+.copy-btn:active {
+    transform: translateY(0);
 }
 
 .profile-logout-btn {
@@ -124,7 +184,6 @@
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     font-family: 'm6x11', monospace;
-    margin-right: 1rem;
 }
 
 .profile-invite-btn:hover {

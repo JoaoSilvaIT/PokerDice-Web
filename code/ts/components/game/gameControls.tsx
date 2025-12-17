@@ -30,7 +30,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
             <button
                 className={`${styles['game-button']} ${styles['roll-button']}`}
                 onClick={onRoll}
-                disabled={!isMyTurn || rollsLeft <= 0 || hasRolledDice || keptDiceCount >= 5 || processingAction}
+                disabled={!isMyTurn || rollsLeft <= 0 || keptDiceCount >= 5 || processingAction}
             >
                 Roll Dice
             </button>

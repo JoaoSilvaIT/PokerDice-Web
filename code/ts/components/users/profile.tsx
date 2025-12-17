@@ -17,6 +17,7 @@ interface UserInfo {
 export function Profile() {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [stats, setStats] = useState<UserStats | null>(null);
+    const [inviteCode, setInviteCode] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [, , clearUsername] = useAuthentication();
@@ -58,7 +59,7 @@ export function Profile() {
     async function handleCreateInvite() {
         const result = await userService.createInvite();
         if (isOk(result)) {
-            window.prompt("Here is your new invite code (Copy it!):", result.value);
+            setInviteCode(result.value);
         } else {
             setError(result.error);
         }
@@ -121,10 +122,29 @@ export function Profile() {
                 </div>
 
                 <div className="profile-actions">
+                    <button onClick={handleLogout} className="profile-logout-btn">
+                        Logout
+                    </button>
                     <button onClick={handleCreateInvite} className="profile-invite-btn">
                         Create Invite
                     </button>
                 </div>
+
+                {inviteCode && (
+                    <div className="invite-code-section">
+                        <p className="invite-label">Your New Invite Code:</p>
+                        <div className="invite-box">
+                            <span className="invite-text">{inviteCode}</span>
+                            <button
+                                className="copy-btn"
+                                onClick={() => navigator.clipboard.writeText(inviteCode)}
+                                title="Copy to clipboard"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

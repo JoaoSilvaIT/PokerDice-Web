@@ -205,7 +205,10 @@ class LobbyEventService {
         }
     }
 
-    private fun emitSafely(info: ListenerInfo, event: Event) {
+    private fun emitSafely(
+        info: ListenerInfo,
+        event: Event,
+    ) {
         try {
             info.eventEmitter.emit(event)
         } catch (ex: Exception) {

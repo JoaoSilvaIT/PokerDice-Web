@@ -45,7 +45,7 @@ class GameEventService {
     ): EventEmitter {
         logger.info("adding game listener for userId={}, gameId={}", userId, gameId)
         val info = GameListenerInfo(listener, userId, gameId)
-        
+
         listenersMap.computeIfAbsent(gameId) { CopyOnWriteArrayList() }.add(info)
 
         listener.onCompletion {
