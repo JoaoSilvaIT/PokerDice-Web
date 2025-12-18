@@ -17,3 +17,7 @@ Thumbs.db
 
 # Ignorar Node Modules
 node_modules/
+
+# Ignorar Build de Frontend
+dist/
+code/ts/dist/
