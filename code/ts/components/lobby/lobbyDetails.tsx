@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import {lobbyService} from '../../services/lobbyService';
 import {gameService} from '../../services/gameService';
-import {isOk, formatError} from '../../services/utils';
+import {formatError, isOk} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
 import {ToastContainer, useToast} from '../generic/toast';
 import '../../styles/lobbyDetails.css';
@@ -76,7 +76,7 @@ export function LobbyDetails() {
                     if (prev.players.some(p => p.id === event.userId)) return prev;
                     return {
                         ...prev,
-                        players: [...prev.players, { id: event.userId, name: event.playerName }]
+                        players: [...prev.players, {id: event.userId, name: event.playerName}]
                     };
                 });
             },
@@ -96,10 +96,10 @@ export function LobbyDetails() {
                 disconnect('lobby');
                 navigate(`/games/${event.gameId}`);
             },
-            (event) => {                             
+            (event) => {
                 setCountdownEnd(event.expiresAt);
             },
-            (event) => {                             
+            (event) => {
                 setCountdownEnd(null);
                 setTimeLeft(0);
             }
@@ -176,7 +176,7 @@ export function LobbyDetails() {
 
     return (
         <div className="lobby-details-container">
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
+            <ToastContainer toasts={toasts} removeToast={removeToast}/>
             <div className="lobby-details-content">
                 <div className="lobby-details-header">
                     <h1 className="lobby-title">{lobby.name}</h1>

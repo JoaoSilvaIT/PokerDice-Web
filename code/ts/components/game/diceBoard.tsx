@@ -1,6 +1,5 @@
 import React from 'react';
-// @ts-ignore
-import styles from '../../styles/game.module.css';
+import '../../styles/game.css';
 
 interface DiceBoardProps {
     keptDice: string[];
@@ -22,27 +21,27 @@ export const DiceBoard: React.FC<DiceBoardProps> = ({
     onToggleSelect
 }) => {
     return (
-        <div className={styles['dice-area']}>
-            {/* KEPT DICE (Persisted) */}
-            <div className={styles['kept-dice-container']}>
+        <div className="dice-area">
+            {}
+            <div className="kept-dice-container">
                 <h4>Kept Dice:</h4>
-                <div className={styles['dice-row']}>
+                <div className="dice-row">
                     {keptDice.map((die, i) => (
-                        <div key={`kept-${i}`} className={`${styles['dice']} ${styles['kept']}`}>{die}</div>
+                        <div key={`kept-${i}`} className={`dice kept`}>{die}</div>
                     ))}
-                    {keptDice.length === 0 && <span className={styles['no-dice']}>No dice kept</span>}
+                    {keptDice.length === 0 && <span className="no-dice">No dice kept</span>}
                 </div>
             </div>
 
-            {/* ROLLED DICE (Transient) */}
+            {}
             {rolledDice.length > 0 && (
-                <div className={styles['rolled-dice-container']}>
+                <div className="rolled-dice-container">
                     <h4>Rolled (Select to Keep):</h4>
-                    <div className={styles['dice-row']}>
+                    <div className="dice-row">
                         {rolledDice.map((die, i) => (
                             <div
                                 key={`rolled-${i}`}
-                                className={`${styles['dice']} ${styles['selectable']} ${selectedIndices.includes(i) ? styles['selected'] : ''}`}
+                                className={`dice selectable ${selectedIndices.includes(i) ? 'selected' : ''}`}
                                 onClick={() => onToggleSelect(i)}
                             >
                                 {die}
@@ -53,13 +52,13 @@ export const DiceBoard: React.FC<DiceBoardProps> = ({
             )}
 
             {!isMyTurn && currentTurnPlayerName && (
-                <div className={styles['waiting-turn']}>
+                <div className="waiting-turn">
                     ⏳ Waiting for {currentTurnPlayerName}'s turn...
                 </div>
             )}
 
             {isMyTurn && (
-                <div className={styles['dice-info']}>
+                <div className="dice-info">
                     🎲 Rolls Left: {rollsLeft} | Dice Kept : {keptDice.length}/5
                 </div>
             )}

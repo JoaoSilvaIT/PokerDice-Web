@@ -1,6 +1,5 @@
 import React from 'react';
-// @ts-ignore
-import styles from '../../styles/game.module.css';
+import '../../styles/game.css';
 
 interface GameControlsProps {
     isMyTurn: boolean;
@@ -26,23 +25,23 @@ export const GameControls: React.FC<GameControlsProps> = ({
     onFinish
 }) => {
     return (
-        <div className={styles['game-controls']}>
+        <div className="game-controls">
             <button
-                className={`${styles['game-button']} ${styles['roll-button']}`}
+                className="game-button roll-button"
                 onClick={onRoll}
                 disabled={!isMyTurn || rollsLeft <= 0 || keptDiceCount >= 5 || processingAction}
             >
                 Roll Dice
             </button>
             <button
-                className={`${styles['game-button']} ${styles['hold-button']}`}
+                className="game-button hold-button"
                 onClick={onHold}
                 disabled={!isMyTurn || !hasSelectedDice || processingAction}
             >
                 Hold Selected
             </button>
             <button
-                className={`${styles['game-button']} ${styles['finish-turn-button']}`}
+                className="game-button finish-turn-button"
                 onClick={onFinish}
                 disabled={!isMyTurn || keptDiceCount < 5 || processingAction}
             >

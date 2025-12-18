@@ -30,9 +30,6 @@ class LobbyEventService {
     // Lobby-specific listeners - Key: LobbyId -> List of Listeners
     private val lobbyListeners = ConcurrentHashMap<Int, CopyOnWriteArrayList<ListenerInfo>>()
 
-    // Reverse map for quick cleanup: EventEmitter -> Info
-    private val emitterMap = ConcurrentHashMap<EventEmitter, ListenerInfo>()
-
     // A scheduler to send the periodic keep-alive events
     private val scheduler: ScheduledExecutorService =
         Executors.newScheduledThreadPool(1).also {
@@ -53,8 +50,6 @@ class LobbyEventService {
         logger.info("adding listener for userId={}, lobbyId={}", userId, lobbyId)
         val info = ListenerInfo(listener, userId, lobbyId)
 
-        emitterMap[listener] = info
-
         if (lobbyId == null) {
             val old = globalListeners.put(userId, info)
             if (old != null) {
@@ -63,17 +58,16 @@ class LobbyEventService {
                     old.eventEmitter.complete()
                 } catch (_: Exception) {
                 }
-                emitterMap.remove(old.eventEmitter)
             }
         } else {
             lobbyListeners.computeIfAbsent(lobbyId) { CopyOnWriteArrayList() }.add(info)
         }
 
         listener.onCompletion {
-            removeListener(listener)
+            removeListener(info)
         }
         listener.onError {
-            removeListener(listener)
+            removeListener(info)
         }
         return listener
     }
@@ -146,9 +140,7 @@ class LobbyEventService {
         listener.complete()
     }
 
-    private fun removeListener(listener: EventEmitter) {
-        val info = emitterMap.remove(listener) ?: return
-
+    private fun removeListener(info: ListenerInfo) {
         if (info.lobbyId == null) {
             if (globalListeners.remove(info.userId, info)) {
                 logger.info("global listener removed for userId={}", info.userId)

@@ -1,6 +1,5 @@
 import React from 'react';
-// @ts-ignore
-import styles from '../../styles/game.module.css';
+import '../../styles/game.css';
 import { PlayerInGame } from '../../services/gameService';
 
 interface PlayerSeatProps {
@@ -13,23 +12,23 @@ interface PlayerSeatProps {
 export const PlayerSeat: React.FC<PlayerSeatProps> = ({ player, isCurrentTurn, isCurrentUser, isSpectator }) => {
     return (
         <div
-            className={`${styles['player-seat']} ${isCurrentTurn ? styles['active-turn'] : ''} ${isCurrentUser ? styles['current-user'] : ''} ${isSpectator ? styles['spectator'] : ''}`}
+            className={`player-seat ${isCurrentTurn ? 'active-turn' : ''} ${isCurrentUser ? 'current-user' : ''} ${isSpectator ? 'spectator' : ''}`}
         >
-            <div className={styles['player-avatar']}>
+            <div className="player-avatar">
                 {player.name.charAt(0).toUpperCase()}
             </div>
-            <div className={styles['player-name']}>
+            <div className="player-name">
                 {player.name}
                 {isCurrentUser && ' (You)'}
             </div>
             {!isSpectator && player.handRank && (
-                <div className={styles['player-hand-rank']}>
+                <div className="player-hand-rank">
                     {player.handRank}
                 </div>
             )}
-            <div className={styles['player-chips']}>💰 {player.currentBalance}</div>
+            <div className="player-chips">💰 {player.currentBalance}</div>
             {isCurrentTurn && (
-                <div className={styles['turn-indicator']}>
+                <div className="turn-indicator">
                     {isCurrentUser ? '🎲 Your Turn!' : 'Playing...'}
                 </div>
             )}

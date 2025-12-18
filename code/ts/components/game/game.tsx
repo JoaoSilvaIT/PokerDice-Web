@@ -4,9 +4,8 @@ import {gameService, GameDetails} from '../../services/gameService';
 import {lobbyService} from '../../services/lobbyService';
 import {isOk, formatError} from '../../services/utils';
 import {useSSE} from '../../providers/SSEContext';
-import {ToastContainer, useToast} from '../generic/toast';
-// @ts-ignore - Vite handles CSS Modules
-import styles from '../../styles/game.module.css';
+import { ToastContainer, useToast} from '../generic/toast';
+import '../../styles/game.css';
 
 import { PlayerSeat } from './playerSeat';
 import { DiceBoard } from './diceBoard';
@@ -320,17 +319,17 @@ export function Game() {
 
     if (loading) {
         return (
-            <div className={styles['game-container']}>
-                <div className={styles['game-loading']}>Loading game...</div>
+            <div className="game-container">
+                <div className="game-loading">Loading game...</div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className={styles['game-container']}>
-                <div className={styles['game-error']}>Error: {error}</div>
-                <button onClick={() => navigate('/lobbies')} className={styles['back-to-lobbies-button']}>
+            <div className="game-container">
+                <div className="game-error">Error: {error}</div>
+                <button onClick={() => navigate('/lobbies')} className="back-to-lobbies-button">
                     Back to Lobbies
                 </button>
             </div>
@@ -339,10 +338,10 @@ export function Game() {
 
     if (!game) {
         return (
-            <div className={styles['game-container']}>
+            <div className="game-container">
                 <ToastContainer toasts={toasts} removeToast={removeToast} />
-                <div className={styles['game-error']}>Game not found</div>
-                <button onClick={() => navigate('/lobbies')} className={styles['back-to-lobbies-button']}>
+                <div className="game-error">Game not found</div>
+                <button onClick={() => navigate('/lobbies')} className="back-to-lobbies-button">
                     Back to Lobbies
                 </button>
             </div>
@@ -381,22 +380,22 @@ export function Game() {
     const minPlayerBalance = activePlayers.reduce((min, p) => Math.min(min, p.currentBalance), Infinity);
 
     return (
-        <div className={styles['game-container']}>
-            <div className={styles['game-content']}>
+        <div className="game-container">
+            <div className="game-content">
                 <ToastContainer toasts={toasts} removeToast={removeToast} />
 
                 {/* Game Header */}
-                <div className={styles['game-header']}>
-                    <h1 className={styles['game-title']}>Poker Dice</h1>
-                    <div className={styles['game-info']}>
-                        <span className={styles['info-badge']}>Game #{gameId}</span>
-                        <span className={styles['info-badge']}>Round {currentRoundNumber}/{game.numberOfRounds}</span>
-                        <span className={styles['info-badge']}>State: {game.state}</span>
+                <div className="game-header">
+                    <h1 className="game-title">Poker Dice</h1>
+                    <div className="game-info">
+                        <span className="info-badge">Game #{gameId}</span>
+                        <span className="info-badge">Round {currentRoundNumber}/{game.numberOfRounds}</span>
+                        <span className="info-badge">State: {game.state}</span>
                     </div>
                 </div>
 
                 {/* Poker Table */}
-                <div className={styles['poker-table-compact']}>
+                <div className="poker-table-compact">
                     {/* Players */}
                     {players.map((player) => {
                         const isSpectator = game.currentRound && !game.currentRound.players.some(p => p.id === player.id);
@@ -412,11 +411,11 @@ export function Game() {
                     })}
 
                     {/* Center Area */}
-                    <div className={styles['table-center']}>
-                        <div className={styles['pot-display']}>
-                            <div className={styles['pot-label']}>POT</div>
-                            <div className={styles['pot-amount']}>💰 {pot}</div>
-                            {ante > 0 && <div className={styles['ante-info']}>Ante: {ante}</div>}
+                    <div className="table-center">
+                        <div className="pot-display">
+                            <div className="pot-label">POT</div>
+                            <div className="pot-amount">💰 {pot}</div>
+                            {ante > 0 && <div className="ante-info">Ante: {ante}</div>}
                         </div>
 
                         {isBettingPhase ? (
