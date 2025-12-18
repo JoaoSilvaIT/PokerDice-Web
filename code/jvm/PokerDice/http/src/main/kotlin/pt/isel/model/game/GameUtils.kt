@@ -56,14 +56,15 @@ fun Game.toOutputModel() =
                                 moneyWon = player.moneyWon,
                             )
                         }.takeIf { it.isNotEmpty() },
-                    players = round.players.map { player ->
-                        PlayerInGameOutputModel(
-                            id = player.id,
-                            name = player.name,
-                            currentBalance = player.currentBalance,
-                            moneyWon = player.moneyWon,
-                        )
-                    }
+                    players =
+                        round.players.map { player ->
+                            PlayerInGameOutputModel(
+                                id = player.id,
+                                name = player.name,
+                                currentBalance = player.currentBalance,
+                                moneyWon = player.moneyWon,
+                            )
+                        },
                 )
             },
         players =
