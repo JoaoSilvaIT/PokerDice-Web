@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { RequestUri } from '../services/requestUri';
 
-// --- Interfaces (Mantidas patestei ra tipagem forte) ---
 interface PlayerJoinedEvent { lobbyId: number; userId: number; playerName: string; }
 interface PlayerLeftEvent { lobbyId: number; playerId: number; timestamp: string; }
 interface LobbyCreatedEvent { lobbyId: number; lobbyName: string; }
@@ -16,8 +15,6 @@ interface RoundEndedEvent { gameId: number; roundNumber: number; winnerId: numbe
 interface GameUpdatedEvent { gameId: number; }
 interface GameEndedEvent { gameId: number; }
 
-// --- Handler Types ---
-// Agrupamos os handlers num objeto genérico para flexibilidade
 type HandlerMap = Record<string, (data: any) => void>;
 
 interface SSEContextType {
@@ -62,7 +59,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
     // Armazena os handlers registados atualmente
     const activeHandlers = useRef<HandlerMap>({});
 
-    // --- Core Connection Logic ---
     // Esta função centraliza toda a lógica de conectar, limpar listeners antigos, e adicionar novos.
     const connect = useCallback((
         url: string, 
@@ -127,7 +123,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
         activeHandlers.current = {}; // Limpar handlers
     }, []);
 
-    // --- Helper para criar listeners seguros ---
     // Cria uma função que faz parse do JSON e chama o handler correto se ele existir
     const createListener = <T,>(handlerName: string, idCheck?: (data: T) => boolean) => {
         return (event: MessageEvent) => {
@@ -143,7 +138,6 @@ export function SSEProvider({ children }: { children: React.ReactNode }) {
         };
     };
 
-    // --- Public Registration Methods ---
     const registerAllLobbiesHandler = useCallback((
         onLobbyCreated?: (e: LobbyCreatedEvent) => void,
         onLobbyUpdated?: (e: LobbyUpdatedEvent) => void,

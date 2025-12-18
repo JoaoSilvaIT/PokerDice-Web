@@ -56,7 +56,6 @@ export function CreateLobbyMenu({ isOpen, onClose, onCreate, isCreating }: Creat
         }
 
         await onCreate(formData);
-        // Only reset if successful? Parent handles success navigation, so we can reset here for next time or let parent unmount/hide us.
         if (!isCreating) {
              setFormData({ name: '', description: '', minPlayers: 2, maxPlayers: 4 });
         }
