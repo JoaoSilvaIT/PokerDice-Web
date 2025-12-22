@@ -7,6 +7,10 @@ import pt.isel.domain.users.TokenValidationInfo
 import pt.isel.domain.users.User
 import pt.isel.domain.users.UserExternalInfo
 import pt.isel.domain.users.UserStatistics
+import pt.isel.domain.games.Dice
+import pt.isel.domain.games.Hand
+import pt.isel.domain.games.utils.charToFace
+import pt.isel.domain.games.utils.defineHandRank
 import java.sql.ResultSet
 import java.time.Instant
 
@@ -185,7 +189,28 @@ class JdbiUsersRepository(
         val losses = if (gamesPlayed > wins) gamesPlayed - wins else 0
         val winRate = if (gamesPlayed > 0) wins.toDouble() / gamesPlayed else 0.0
 
-        return UserStatistics(gamesPlayed, wins, losses, winRate)
+        val handFrequencies = handle.createQuery(
+            """
+            SELECT dice_values 
+            FROM dbo.TURN 
+            WHERE user_id = :user_id
+            """
+        ).bind("user_id", userId)
+            .map { rs, _ ->
+                val sqlArray = rs.getArray("dice_values")
+                val strArray = sqlArray.array as Array<String>
+                val dices = strArray.map { charStr ->
+                    val char = charStr.first()
+                    Dice(charToFace(char))
+                }
+                val hand = Hand(dices)
+                defineHandRank(hand).second
+            }
+            .list()
+            .groupingBy { it }
+            .eachCount()
+
+        return UserStatistics(gamesPlayed, wins, losses, winRate, handFrequencies)
     }
 
     override fun createToken(
